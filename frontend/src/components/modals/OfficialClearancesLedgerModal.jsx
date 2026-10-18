@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { reportApi } from '../../api';
 import AttendanceLeaveReportsModal from './AttendanceLeaveReportsModal.jsx';
 import {
@@ -78,6 +78,25 @@ export default function OfficialClearancesLedgerModal({
   const [considerations, setConsiderations] = useState([]);
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const dynamicSections = useMemo(() => {
+    const letters = new Set(['A', 'B', 'C', 'D']);
+    considerations.forEach((item) => {
+      const sec = (item.student?.section?.name || item.student?.section?.code || '')
+        .replace(/^Section\s*/i, '')
+        .replace(/^CSE-/i, '')
+        .trim();
+      if (sec) letters.add(sec.toUpperCase());
+    });
+    leaves.forEach((item) => {
+      const sec = (item.student?.section?.name || item.student?.section?.code || '')
+        .replace(/^Section\s*/i, '')
+        .replace(/^CSE-/i, '')
+        .trim();
+      if (sec) letters.add(sec.toUpperCase());
+    });
+    return Array.from(letters).sort();
+  }, [considerations, leaves]);
 
   // Print Modal state
   const [showPrintModal, setShowPrintModal] = useState(false);
@@ -779,10 +798,11 @@ export default function OfficialClearancesLedgerModal({
                     className="px-2 py-0.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
                   >
                     <option value="All">All Sections</option>
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
-                    <option value="C">Section C</option>
-                    <option value="D">Section D</option>
+                    {dynamicSections.map((sec) => (
+                      <option key={sec} value={sec}>
+                        Section {sec}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </>

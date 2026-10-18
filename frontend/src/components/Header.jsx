@@ -165,117 +165,140 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
             </button>
 
             {showNotifications && (
-              <div
-                className="notification-dropdown-panel"
-                style={{
-                  width: '380px',
-                  maxWidth: 'calc(100vw - 24px)',
-                }}
-              >
-                <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-extrabold text-slate-900">Notifications</span>
-                    {unreadNotifCount > 0 && (
-                      <span className="badge badge-rose text-[11px] py-0.5 px-2 font-black rounded-full shadow-2xs">
-                        {unreadNotifCount}
-                      </span>
-                    )}
-                  </div>
-                  {unreadNotifCount > 0 && (
-                    <button
-                      onClick={handleMarkAllRead}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1.5 cursor-pointer hover:underline"
-                    >
-                      <CheckCheck size={14} />
-                      <span>Mark all read</span>
-                    </button>
-                  )}
-                </div>
+              <>
+                {/* Mobile Backdrop to dim background and dismiss on tap outside */}
+                <div
+                  className="fixed inset-0 bg-slate-900/25 backdrop-blur-2xs z-40 sm:hidden"
+                  onClick={() => setShowNotifications(false)}
+                />
 
-                {/* PWA Attendance Reminder Controls for Faculty / TGs / HODs */}
-                {(isFaculty || ['tg', 'hod', 'admin'].includes(currentRole)) && (
-                  <div className="shrink-0 p-3 bg-gradient-to-r from-blue-50/90 to-indigo-50/70 border-b border-blue-100 flex items-center justify-between gap-2.5 text-xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm shrink-0">⏰</span>
-                      <div className="min-w-0">
-                        <span className="font-extrabold text-blue-950 block text-[11px] leading-tight">
-                          Attendance & Consideration Reminders
-                        </span>
-                        <span className="text-[10px] text-blue-700 block opacity-85 leading-tight mt-0.5">
-                          Daily at 12:30–1:30 PM & 4:00–4:30 PM IST
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {!pwaPushEnabled ? (
-                        <button
-                          type="button"
-                          onClick={() => enablePWAReminders()}
-                          className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] shadow-2xs transition-colors cursor-pointer"
-                        >
-                          Enable PWA Alert
-                        </button>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold text-[10px]">
-                          ✓ Active
+                <div
+                  className="notification-dropdown-panel fixed inset-x-3 top-[68px] sm:absolute sm:inset-x-auto sm:top-[calc(100%+8px)] sm:right-0 sm:left-auto sm:w-[380px] z-50 shadow-2xl"
+                  style={{
+                    maxWidth: 'calc(100vw - 24px)',
+                  }}
+                >
+                  <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-extrabold text-slate-900">Notifications</span>
+                      {unreadNotifCount > 0 && (
+                        <span className="badge badge-rose text-[11px] py-0.5 px-2 font-black rounded-full shadow-2xs">
+                          {unreadNotifCount}
                         </span>
                       )}
+                    </div>
+                    {unreadNotifCount > 0 && (
                       <button
-                        type="button"
-                        onClick={() => sendTestReminder('MIDDAY')}
-                        className="px-2 py-1 rounded-lg bg-white border border-blue-200 hover:bg-blue-100 text-blue-800 font-bold text-[10px] transition-colors cursor-pointer"
-                        title="Send test reminder now"
+                        onClick={handleMarkAllRead}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1.5 cursor-pointer hover:underline"
                       >
-                        Test
+                        <CheckCheck size={14} />
+                        <span>Mark all read</span>
                       </button>
-                    </div>
+                    )}
                   </div>
-                )}
 
-                <div className="notification-dropdown-scroll divide-y divide-slate-100">
-                  {notifications.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-slate-400 font-medium">
-                      No notifications yet.
-                    </div>
-                  ) : (
-                    notifications.map((n) => {
-                      const isExpanded = expandedNotifId === n._id;
-                      return (
-                        <div
-                          key={n._id}
-                          onClick={() => handleNotificationClick(n)}
-                          className={`p-4 text-xs transition-colors hover:bg-slate-50 cursor-pointer ${
-                            !n.isRead ? 'bg-blue-50/60' : 'text-slate-700'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="font-extrabold text-slate-900 flex items-start gap-2 min-w-0 flex-1">
-                              {!n.isRead && (
-                                <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0 mt-1" />
-                              )}
-                              <span className="leading-snug break-words">{n.title}</span>
-                            </div>
-                            <span className="text-[11px] text-slate-400 shrink-0 font-semibold whitespace-nowrap pt-0.5">
-                              {formatDateTimeIST(n.createdAt)}
-                            </span>
-                          </div>
-                          <div
-                            className="text-xs text-slate-600 mt-1.5 leading-relaxed break-words"
-                            style={{
-                              display: isExpanded ? 'block' : '-webkit-box',
-                              WebkitLineClamp: isExpanded ? 'unset' : 3,
-                              WebkitBoxOrient: 'vertical',
-                              overflow: isExpanded ? 'visible' : 'hidden',
-                            }}
-                          >
-                            {n.message}
-                          </div>
+                  {/* PWA Attendance Reminder Controls for Faculty / TGs / HODs */}
+                  {(isFaculty || ['tg', 'hod', 'admin'].includes(currentRole)) && (
+                    <div className="shrink-0 p-3 bg-gradient-to-r from-blue-50/90 to-indigo-50/70 border-b border-blue-100 flex items-center justify-between gap-2.5 text-xs flex-wrap sm:flex-nowrap">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm shrink-0">⏰</span>
+                        <div className="min-w-0">
+                          <span className="font-extrabold text-blue-950 block text-[11px] leading-tight">
+                            Attendance & Consideration Reminders
+                          </span>
+                          <span className="text-[10px] text-blue-700 block opacity-85 leading-tight mt-0.5">
+                            Daily at 12:30–1:30 PM & 4:00–4:30 PM IST
+                          </span>
                         </div>
-                      );
-                    })
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0 ml-auto sm:ml-0">
+                        {!pwaPushEnabled ? (
+                          <button
+                            type="button"
+                            onClick={() => enablePWAReminders()}
+                            className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] shadow-2xs transition-colors cursor-pointer"
+                          >
+                            Enable PWA Alert
+                          </button>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                            ✓ Active
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => sendTestReminder('MIDDAY')}
+                          className="px-2 py-1 rounded-lg bg-white border border-blue-200 hover:bg-blue-100 text-blue-800 font-bold text-[10px] transition-colors cursor-pointer"
+                          title="Send test reminder now"
+                        >
+                          Test
+                        </button>
+                      </div>
+                    </div>
                   )}
+
+                  <div className="notification-dropdown-scroll divide-y divide-slate-100">
+                    {notifications.length === 0 ? (
+                      <div className="p-8 text-center text-xs text-slate-400 font-medium">
+                        No notifications yet.
+                      </div>
+                    ) : (
+                      notifications.map((n) => {
+                        const isExpanded = expandedNotifId === n._id;
+                        return (
+                          <div
+                            key={n._id}
+                            onClick={() => handleNotificationClick(n)}
+                            className={`p-3.5 sm:p-4 text-xs transition-colors hover:bg-slate-50 cursor-pointer ${
+                              !n.isRead ? 'bg-blue-50/60' : 'text-slate-700'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="font-extrabold text-slate-900 flex items-start gap-2 min-w-0 flex-1">
+                                {!n.isRead && (
+                                  <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0 mt-1" />
+                                )}
+                                <span className="leading-snug break-words">{n.title}</span>
+                              </div>
+                              <span className="text-[11px] text-slate-400 shrink-0 font-semibold whitespace-nowrap pt-0.5">
+                                {formatDateTimeIST(n.createdAt)}
+                              </span>
+                            </div>
+                            <div
+                              className="text-xs text-slate-600 mt-1.5 leading-relaxed break-words"
+                              style={{
+                                display: isExpanded ? 'block' : '-webkit-box',
+                                WebkitLineClamp: isExpanded ? 'unset' : 3,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: isExpanded ? 'visible' : 'hidden',
+                              }}
+                            >
+                              {n.message}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Panel Footer */}
+                  <div className="shrink-0 px-4 py-2 border-t border-slate-100 bg-slate-50/90 flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                    <span>
+                      {notifications.length > 0
+                        ? `${notifications.length} notification${notifications.length > 1 ? 's' : ''}`
+                        : 'All caught up'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowNotifications(false)}
+                      className="text-blue-600 hover:text-blue-800 font-bold hover:underline cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
 

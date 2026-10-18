@@ -1,32 +1,108 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { X, Printer, Calendar, Users, Layers, Filter, CheckCircle2 } from 'lucide-react';
+import { masterDataApi } from '../../api';
 
 export default function PrintClearanceReportModal({
   items = [],
+  sections: initialSections = [],
   defaultSemester = 'ALL',
   onClose,
 }) {
   const [selectedSemester, setSelectedSemester] = useState(defaultSemester);
   const [selectedSection, setSelectedSection] = useState('ALL');
   const [reportType, setReportType] = useState('ALL'); // 'ALL' | 'CONSIDERATION' | 'LEAVE' | 'APPROVED_ONLY'
+  const [sections, setSections] = useState(initialSections);
+
+  // Fetch sections from master data if not provided or empty
+  useEffect(() => {
+    if (initialSections && initialSections.length > 0) {
+      setSections(initialSections);
+    } else {
+      masterDataApi.getSections()
+        .then((res) => {
+          const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+          if (list.length > 0) {
+            setSections(list);
+          }
+        })
+        .catch((err) => {
+          console.warn('Error fetching sections in PrintClearanceReportModal:', err);
+        });
+    }
+  }, [initialSections]);
 
   // Dynamic available sections based on chosen semester
   const sectionOptions = useMemo(() => {
     if (selectedSemester === 'ALL') {
+      const allUniqueLetters = new Set();
+
+      // From fetched sections in master data
+      sections.forEach((s) => {
+        const clean = (s.name || '').replace(/^Section\s*/i, '').trim() || (s.code || '').replace(/^CSE-/i, '').trim();
+        if (clean) allUniqueLetters.add(clean.toUpperCase());
+      });
+
+      // From active items
+      items.forEach((item) => {
+        const sec = (item.student?.section?.name || item.student?.section?.code || item.section?.name || item.section || '')
+          .replace(/^Section\s*/i, '')
+          .replace(/^CSE-/i, '')
+          .trim();
+        if (sec) allUniqueLetters.add(sec.toUpperCase());
+      });
+
+      // Standard department fallback if empty
+      if (allUniqueLetters.size === 0) {
+        ['A', 'B', 'C', 'D'].forEach((l) => allUniqueLetters.add(l));
+      }
+
+      const sorted = Array.from(allUniqueLetters).sort();
       return [
         { id: 'ALL', label: 'All Sections (Department-wide)' },
-        { id: 'Section A', label: 'Section A' },
-        { id: 'Section B', label: 'Section B' },
-        { id: 'Section C', label: 'Section C' },
+        ...sorted.map((letter) => ({
+          id: `Section ${letter}`,
+          label: `Section ${letter}`,
+        })),
       ];
     }
+
+    // Specific semester chosen (e.g. Semester 5)
+    const semLetters = new Set();
+
+    // Match sections from database by semester
+    sections
+      .filter((s) => Number(s.semester) === Number(selectedSemester))
+      .forEach((s) => {
+        const clean = (s.name || '').replace(/^Section\s*/i, '').trim() || (s.code || '').replace(/^CSE-/i, '').trim();
+        if (clean) semLetters.add(clean.toUpperCase());
+      });
+
+    // Match sections from items for this semester
+    items.forEach((item) => {
+      const itemSem = item.student?.semester || item.student?.section?.semester || item.semester || 5;
+      if (Number(itemSem) === Number(selectedSemester)) {
+        const sec = (item.student?.section?.name || item.student?.section?.code || item.section?.name || item.section || '')
+          .replace(/^Section\s*/i, '')
+          .replace(/^CSE-/i, '')
+          .trim();
+        if (sec) semLetters.add(sec.toUpperCase());
+      }
+    });
+
+    // Fallback if no specific sections found for this semester
+    if (semLetters.size === 0) {
+      ['A', 'B', 'C', 'D'].forEach((l) => semLetters.add(l));
+    }
+
+    const sortedSem = Array.from(semLetters).sort();
     return [
       { id: 'ALL', label: `All Sections (Semester ${selectedSemester})` },
-      { id: 'Section A', label: `Semester ${selectedSemester} — Section A` },
-      { id: 'Section B', label: `Semester ${selectedSemester} — Section B` },
-      { id: 'Section C', label: `Semester ${selectedSemester} — Section C` },
+      ...sortedSem.map((letter) => ({
+        id: `Section ${letter}`,
+        label: `Semester ${selectedSemester} — Section ${letter}`,
+      })),
     ];
-  }, [selectedSemester]);
+  }, [selectedSemester, sections, items]);
 
   const handlePrint = () => {
     // 1. Filter items based on selections
@@ -43,13 +119,23 @@ export default function PrintClearanceReportModal({
       const secName = (
         item.student?.section?.name ||
         item.student?.section?.code ||
-        'Section B'
+        item.section?.name ||
+        item.section ||
+        ''
       ).trim();
+      const secCode = (item.student?.section?.code || '').trim();
+      const secId = item.student?.section?._id ? String(item.student?.section?._id) : '';
+
+      const cleanItemSec = secName.replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim().toUpperCase();
+      const cleanTargetSec = selectedSection.replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim().toUpperCase();
 
       const matchesSec =
         selectedSection === 'ALL' ||
-        secName.toLowerCase().includes(selectedSection.toLowerCase().replace('section', '').trim()) ||
-        secName === selectedSection;
+        secId === selectedSection ||
+        secName.toLowerCase() === selectedSection.toLowerCase() ||
+        secCode.toLowerCase() === selectedSection.toLowerCase() ||
+        (cleanItemSec && cleanTargetSec && cleanItemSec === cleanTargetSec) ||
+        secName.toLowerCase().includes(cleanTargetSec.toLowerCase());
 
       const isApproved =
         item.status === 'APPROVED' ||
@@ -92,7 +178,13 @@ export default function PrintClearanceReportModal({
               item.student?.rollNumber ||
               item.applicant?.rollNumber ||
               'N/A';
-            const sec = (item.student?.section?.name || '—').replace(/Section\s*/i, '');
+            const sec = (
+              item.student?.section?.name ||
+              item.student?.section?.code ||
+              item.section?.name ||
+              item.section ||
+              '—'
+            ).replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim() || '—';
             const nature =
               item.category ||
               item.eventType ||
@@ -342,7 +434,7 @@ export default function PrintClearanceReportModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative text-slate-900 font-sans"
+        className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative text-slate-900 font-sans max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

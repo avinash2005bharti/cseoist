@@ -7681,6 +7681,20 @@ button:disabled:active,
   animation: notifDropdownIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@media (max-width: 639px) {
+  .notification-dropdown-panel {
+    position: fixed !important;
+    top: 68px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 80px) !important;
+    border-radius: 1.25rem !important;
+    transform-origin: top center !important;
+  }
+}
+
 .notification-dropdown-scroll {
   flex: 1 1 auto !important;
   min-height: 0 !important;

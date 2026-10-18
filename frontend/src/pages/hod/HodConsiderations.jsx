@@ -273,17 +273,42 @@ export default function HodConsiderations() {
     return matchesSemester && matchesSection && matchesTab;
   });
 
-  const uniqueSections = [
-    ...new Set(
-      sections
-        .map((s) => s.name?.replace(/^Section\s*/i, '').trim() || s.code)
+  const uniqueSections = (() => {
+    let secList = sections;
+    let itemList = items;
+
+    if (semesterFilter !== 'ALL') {
+      const filteredSecs = sections.filter((s) => Number(s.semester) === Number(semesterFilter));
+      if (filteredSecs.length > 0) {
+        secList = filteredSecs;
+      }
+      itemList = items.filter((i) => {
+        const sem = i.student?.semester || i.student?.section?.semester || i.semester || 5;
+        return Number(sem) === Number(semesterFilter);
+      });
+    }
+
+    const set = new Set(
+      secList
+        .map((s) => (s.name || '').replace(/^Section\s*/i, '').trim() || (s.code || '').replace(/^CSE-/i, '').trim())
         .concat(
-          items
-            .map((i) => (i.student?.section?.name || i.student?.section?.code || '').replace(/^Section\s*/i, '').trim())
+          itemList
+            .map((i) =>
+              (i.student?.section?.name || i.student?.section?.code || i.section?.name || i.section || '')
+                .replace(/^Section\s*/i, '')
+                .replace(/^CSE-/i, '')
+                .trim()
+            )
             .filter(Boolean)
         )
-    ),
-  ].filter(Boolean).sort();
+    );
+
+    if (set.size === 0) {
+      ['A', 'B', 'C', 'D'].forEach((l) => set.add(l));
+    }
+
+    return [...set].filter(Boolean).sort();
+  })();
 
   // Calculate tab counts
   const totalCount = items.length;
@@ -972,6 +997,7 @@ export default function HodConsiderations() {
       {showPrintReportModal && (
         <PrintClearanceReportModal
           items={activeItemsList}
+          sections={sections}
           defaultSemester={semesterFilter}
           onClose={() => setShowPrintReportModal(false)}
         />
