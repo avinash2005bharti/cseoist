@@ -14,6 +14,7 @@ import {
   ArrowRight,
   ChevronDown,
   FileText,
+  FileSpreadsheet,
   Send,
   Megaphone,
   Trash2,
@@ -39,7 +40,7 @@ const getStoredRejectedIds = () => {
 };
 
 export default function HodDashboard() {
-  const { currentUser, addToast } = useERP();
+  const { currentUser, addToast, openModal } = useERP();
   const navigate = useNavigate();
 
   const [summary, setSummary] = useState(null);

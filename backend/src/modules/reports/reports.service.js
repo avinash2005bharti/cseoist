@@ -205,6 +205,30 @@ const formatStatus = (status) => {
 };
 
 const applyDateFilter = (filter, query) => {
+  if (query.range && !query.from && !query.to) {
+    const now = new Date();
+    const formatYMD = (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    const todayStr = formatYMD(now);
+
+    if (query.range === 'today') {
+      query.from = todayStr;
+      query.to = todayStr;
+    } else if (query.range === 'last7days') {
+      const d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      query.from = formatYMD(d);
+      query.to = todayStr;
+    } else if (query.range === 'lastmonth') {
+      const d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      query.from = formatYMD(d);
+      query.to = todayStr;
+    }
+  }
+
   const dateConditions = [];
   if (query.date) {
     dateConditions.push({
@@ -246,12 +270,14 @@ const applyDateFilter = (filter, query) => {
 };
 
 const applyStatusFilter = (filter, query, defaultToApproved = false) => {
-  if (query.status) {
+  if (query.status && query.status !== 'ALL') {
     if (query.status.includes(',')) {
       filter.status = { $in: query.status.split(',').map((s) => s.trim().toUpperCase()) };
     } else {
       filter.status = query.status.toUpperCase();
     }
+  } else if (query.status === 'ALL') {
+    // Allow exporting all statuses
   } else if (query.approvedOnly === 'true' || query.approvedOnly === true || defaultToApproved) {
     filter.status = { $in: ['APPROVED_BY_HOD', 'APPROVED'] };
   }
@@ -382,11 +408,120 @@ export const getLeavesReport = async (query = {}, user = null) => {
   };
 };
 
+const extractSectionLetter = (sectionDocOrObj) => {
+  if (!sectionDocOrObj) return 'Unassigned';
+  const str = (
+    typeof sectionDocOrObj === 'string'
+      ? sectionDocOrObj
+      : sectionDocOrObj.code || sectionDocOrObj.name || ''
+  ).trim().toUpperCase();
+
+  const cseMatch = str.match(/CSE[\s\-_]*(?:SEM\s*\d+[\s\-_]*|\d+[\s\-_]*)?([A-Z0-9]+)/i);
+  if (cseMatch) return cseMatch[1].toUpperCase();
+
+  const secMatch = str.match(/SEC(?:TION)?[\s\-_]*([A-Z0-9]+)/i);
+  if (secMatch) return secMatch[1].toUpperCase();
+
+  const endMatch = str.match(/(?:^|[\s\-_])([A-Z0-9]+)$/i);
+  if (endMatch) return endMatch[1].toUpperCase();
+
+  return str || 'Unassigned';
+};
+
+const formatTimeFromTo = (req) => {
+  if (req.timeFrom && req.timeTo) {
+    return `${req.timeFrom} - ${req.timeTo}`;
+  }
+  if (req.timeFrom) return req.timeFrom;
+  if (req.timeTo) return req.timeTo;
+  if (req.periodTiming) return req.periodTiming;
+  return '10:50 AM - 01:20 PM';
+};
+
+const TAB_COLORS = {
+  ALL: { argb: 'FF1E3A8A' }, // Deep Institutional Navy
+  A: { argb: 'FF2563EB' },   // Blue
+  B: { argb: 'FF7C3AED' },   // Purple
+  C: { argb: 'FF059669' },   // Emerald Green
+  D: { argb: 'FFD97706' },   // Amber
+  E: { argb: 'FFE11D48' },   // Rose
+  FACULTY: { argb: 'FF475569' }, // Slate
+};
+
+const getDateRangeLabel = (query) => {
+  if (query.range === 'today') return 'Today (' + (query.from || 'Current Date') + ')';
+  if (query.range === 'last7days') return 'Last 7 Days (' + (query.from || '') + ' to ' + (query.to || '') + ')';
+  if (query.range === 'lastmonth') return 'Last Month (' + (query.from || '') + ' to ' + (query.to || '') + ')';
+  if (query.from && query.to) return `${query.from} to ${query.to}`;
+  if (query.from) return `From ${query.from}`;
+  if (query.to) return `Up to ${query.to}`;
+  return 'All Time (Full Ledger)';
+};
+
+const autoFitColumns = (worksheet, minWidth = 12) => {
+  worksheet.columns.forEach((column) => {
+    let maxLength = minWidth;
+    column.eachCell({ includeEmpty: false }, (cell) => {
+      const cellLength = cell.value ? String(cell.value).length : 0;
+      if (cellLength > maxLength) {
+        maxLength = Math.min(cellLength + 3, 38);
+      }
+    });
+    column.width = Math.max(maxLength, 10);
+  });
+};
+
+const styleTable = (worksheet, headerRowIndex, dataStartIndex, totalRows) => {
+  const headerRow = worksheet.getRow(headerRowIndex);
+  headerRow.height = 26;
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1E3A8A' },
+    };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FF94A3B8' } },
+      bottom: { style: 'medium', color: { argb: 'FF0F172A' } },
+      left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+    };
+  });
+
+  for (let r = dataStartIndex; r < dataStartIndex + totalRows; r++) {
+    const row = worksheet.getRow(r);
+    row.height = 21;
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cell.font = { size: 9.5 };
+      cell.alignment = { vertical: 'middle', horizontal: 'left' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+      };
+    });
+  }
+};
+
 export const exportConsiderationsToExcel = async (query, res) => {
   const filter = {};
-  applyStatusFilter(filter, query, true);
+  applyStatusFilter(filter, query, false);
   if (query.type && query.type !== 'ALL') filter.eventType = query.type.toUpperCase();
   applyDateFilter(filter, query);
+
+  // Filter by semester if specified
+  let targetSemester = null;
+  if (query.semester && query.semester !== 'ALL') {
+    const semNum = parseInt(String(query.semester).replace(/\D/g, ''), 10);
+    if (!isNaN(semNum)) {
+      targetSemester = semNum;
+      const studentsInSem = await Student.find({ semester: semNum }).select('_id');
+      filter.student = { $in: studentsInSem.map((s) => s._id) };
+    }
+  }
 
   const requests = await ConsiderationRequest.find(filter)
     .populate({
@@ -400,18 +535,40 @@ export const exportConsiderationsToExcel = async (query, res) => {
     .populate('hodReview.reviewedBy', 'name email')
     .sort({ createdAt: -1 });
 
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Attendance Considerations');
+  // Fetch active sections for the target semester to build section tabs
+  const sectionFilter = targetSemester ? { semester: targetSemester } : {};
+  const dbSections = await Section.find(sectionFilter);
+  const sectionLetters = new Set(['A', 'B', 'C', 'D']);
+  dbSections.forEach((s) => {
+    const letCode = extractSectionLetter(s);
+    if (letCode && letCode !== 'Unassigned') sectionLetters.add(letCode);
+  });
+  const sortedSections = Array.from(sectionLetters).sort();
 
-  worksheet.columns = [
+  // Group requests by section letter
+  const sectionMap = new Map();
+  sortedSections.forEach((sec) => sectionMap.set(sec, []));
+
+  requests.forEach((req) => {
+    const secLetter = extractSectionLetter(req.student?.section);
+    if (!sectionMap.has(secLetter)) sectionMap.set(secLetter, []);
+    sectionMap.get(secLetter).push(req);
+  });
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'CampusFlow Lite';
+  workbook.created = new Date();
+
+  const columns = [
+    { header: 'S.No.', key: 'sno', width: 8 },
     { header: 'Student Name', key: 'studentName', width: 22 },
     { header: 'Roll Number', key: 'rollNumber', width: 16 },
-    { header: 'Section', key: 'section', width: 12 },
-    { header: 'Event Title', key: 'eventTitle', width: 28 },
+    { header: 'Section', key: 'section', width: 14 },
+    { header: 'Event Title', key: 'eventTitle', width: 26 },
     { header: 'Request Type', key: 'eventType', width: 16 },
     { header: 'Start Date', key: 'startDate', width: 14 },
     { header: 'End Date', key: 'endDate', width: 14 },
-    { header: 'Requested Periods', key: 'requestedPeriods', width: 18 },
+    { header: 'Time (From - To)', key: 'timeRange', width: 22 },
     { header: 'Approved Periods', key: 'approvedPeriods', width: 18 },
     { header: 'Status', key: 'status', width: 20 },
     { header: 'Reason / Description', key: 'reason', width: 32 },
@@ -420,16 +577,24 @@ export const exportConsiderationsToExcel = async (query, res) => {
     { header: 'Decision Date', key: 'decisionDate', width: 16 },
   ];
 
-  // Header styling
-  worksheet.getRow(1).font = { bold: true };
-  worksheet.getRow(1).fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFE0E7FF' },
-  };
+  const semLabel = targetSemester ? `Semester ${targetSemester}` : 'All Semesters';
+  const dateRangeLabel = getDateRangeLabel(query);
 
-  requests.forEach((req) => {
-    worksheet.addRow({
+  // 1. SHEET 1: Consolidated "All Sections" Sheet
+  const masterSheet = workbook.addWorksheet('All Sections');
+  masterSheet.properties.tabColor = TAB_COLORS.ALL;
+  masterSheet.columns = columns;
+
+  // Sort requests section-wise (A, B, C, D...)
+  const sortedRequests = [...requests].sort((a, b) => {
+    const secA = extractSectionLetter(a.student?.section);
+    const secB = extractSectionLetter(b.student?.section);
+    return secA.localeCompare(secB);
+  });
+
+  sortedRequests.forEach((req, idx) => {
+    masterSheet.addRow({
+      sno: idx + 1,
       studentName: req.student?.user?.name || req.student?.rollNumber || 'Student',
       rollNumber: req.student?.rollNumber || 'Not provided',
       section: req.student?.section?.code || req.student?.section?.name || 'Not provided',
@@ -437,7 +602,7 @@ export const exportConsiderationsToExcel = async (query, res) => {
       eventType: req.eventType,
       startDate: req.startDate,
       endDate: req.endDate,
-      requestedPeriods: req.requestedPeriods,
+      timeRange: formatTimeFromTo(req),
       approvedPeriods: req.hodReview?.approvedPeriods || req.approvedPeriods || 0,
       status: formatStatus(req.status),
       reason: req.description || req.reason || 'Not provided',
@@ -447,13 +612,69 @@ export const exportConsiderationsToExcel = async (query, res) => {
     });
   });
 
+  styleTable(masterSheet, 1, 2, sortedRequests.length);
+  autoFitColumns(masterSheet);
+
+  // 2. SHEETS 2+: Individual Section Worksheets (sec A, sec B, sec C, sec D...)
+  sortedSections.forEach((secLetter) => {
+    const secSheet = workbook.addWorksheet(`sec ${secLetter}`);
+    secSheet.properties.tabColor = TAB_COLORS[secLetter] || { argb: 'FF3B82F6' };
+    secSheet.columns = columns;
+
+    const secRecords = sectionMap.get(secLetter) || [];
+
+    if (secRecords.length === 0) {
+      secSheet.addRow({
+        sno: '-',
+        studentName: `No consideration records found for Section ${secLetter} in the selected date range.`,
+        rollNumber: '-',
+        section: `CSE-${secLetter}`,
+        eventTitle: '-',
+        eventType: '-',
+        startDate: '-',
+        endDate: '-',
+        timeRange: '-',
+        approvedPeriods: 0,
+        status: 'None',
+        reason: 'No records matching filters',
+        tgName: '-',
+        finalReviewer: '-',
+        decisionDate: '-',
+      });
+      styleTable(secSheet, 1, 2, 1);
+    } else {
+      secRecords.forEach((req, idx) => {
+        secSheet.addRow({
+          sno: idx + 1,
+          studentName: req.student?.user?.name || req.student?.rollNumber || 'Student',
+          rollNumber: req.student?.rollNumber || 'Not provided',
+          section: req.student?.section?.code || req.student?.section?.name || `Section ${secLetter}`,
+          eventTitle: req.eventTitle,
+          eventType: req.eventType,
+          startDate: req.startDate,
+          endDate: req.endDate,
+          timeRange: formatTimeFromTo(req),
+          approvedPeriods: req.hodReview?.approvedPeriods || req.approvedPeriods || 0,
+          status: formatStatus(req.status),
+          reason: req.description || req.reason || 'Not provided',
+          tgName: req.tg?.user?.name || req.tg?.designation || 'Not assigned',
+          finalReviewer: req.hodReview?.reviewedBy?.name || 'HOD Office',
+          decisionDate: req.hodReview?.reviewedAt ? req.hodReview.reviewedAt.toISOString().slice(0, 10) : 'Pending',
+        });
+      });
+      styleTable(secSheet, 1, 2, secRecords.length);
+    }
+
+    autoFitColumns(secSheet);
+  });
+
   res.setHeader(
     'Content-Type',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   );
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename="considerations-report-${Date.now()}.xlsx"`
+    `attachment; filename="considerations_${targetSemester ? `sem${targetSemester}_` : ''}${Date.now()}.xlsx"`
   );
 
   await workbook.xlsx.write(res);
@@ -462,10 +683,21 @@ export const exportConsiderationsToExcel = async (query, res) => {
 
 export const exportLeavesToExcel = async (query, res) => {
   const filter = {};
-  applyStatusFilter(filter, query, true);
+  applyStatusFilter(filter, query, false);
   if (query.role) filter.applicantRole = query.role.toUpperCase();
   if (query.type && query.type !== 'ALL') filter.leaveType = query.type.toUpperCase();
   applyDateFilter(filter, query);
+
+  // Filter by semester if specified
+  let targetSemester = null;
+  if (query.semester && query.semester !== 'ALL') {
+    const semNum = parseInt(String(query.semester).replace(/\D/g, ''), 10);
+    if (!isNaN(semNum)) {
+      targetSemester = semNum;
+      const studentsInSem = await Student.find({ semester: semNum }).select('_id');
+      filter.student = { $in: studentsInSem.map((s) => s._id) };
+    }
+  }
 
   const leaves = await LeaveApplication.find(filter)
     .populate('applicant', 'name email role phone')
@@ -478,12 +710,41 @@ export const exportLeavesToExcel = async (query, res) => {
     .populate('finalReview.reviewedBy', 'name email')
     .sort({ createdAt: -1 });
 
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Leave Applications');
+  // Fetch active sections for section tabs
+  const sectionFilter = targetSemester ? { semester: targetSemester } : {};
+  const dbSections = await Section.find(sectionFilter);
+  const sectionLetters = new Set(['A', 'B', 'C', 'D']);
+  dbSections.forEach((s) => {
+    const letCode = extractSectionLetter(s);
+    if (letCode && letCode !== 'Unassigned') sectionLetters.add(letCode);
+  });
+  const sortedSections = Array.from(sectionLetters).sort();
 
-  worksheet.columns = [
+  // Group leaves by section letter + faculty
+  const sectionMap = new Map();
+  sortedSections.forEach((sec) => sectionMap.set(sec, []));
+  const facultyLeaves = [];
+
+  leaves.forEach((l) => {
+    if (l.applicantRole === 'TEACHER') {
+      facultyLeaves.push(l);
+    } else {
+      const secLetter = extractSectionLetter(l.student?.section);
+      if (!sectionMap.has(secLetter)) sectionMap.set(secLetter, []);
+      sectionMap.get(secLetter).push(l);
+    }
+  });
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'CampusFlow Lite';
+  workbook.created = new Date();
+
+  const columns = [
+    { header: 'S.No.', key: 'sno', width: 8 },
     { header: 'Applicant Name', key: 'name', width: 22 },
     { header: 'Role', key: 'role', width: 14 },
+    { header: 'Roll Number / ID', key: 'rollOrId', width: 18 },
+    { header: 'Section', key: 'section', width: 14 },
     { header: 'Leave Type', key: 'leaveType', width: 16 },
     { header: 'Start Date', key: 'startDate', width: 14 },
     { header: 'End Date', key: 'endDate', width: 14 },
@@ -495,17 +756,18 @@ export const exportLeavesToExcel = async (query, res) => {
     { header: 'Decision Date', key: 'decisionDate', width: 16 },
   ];
 
-  worksheet.getRow(1).font = { bold: true };
-  worksheet.getRow(1).fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFE0E7FF' },
-  };
+  // 1. SHEET 1: Consolidated "All Sections" Sheet
+  const masterSheet = workbook.addWorksheet('All Sections');
+  masterSheet.properties.tabColor = TAB_COLORS.ALL;
+  masterSheet.columns = columns;
 
-  leaves.forEach((l) => {
-    worksheet.addRow({
+  leaves.forEach((l, idx) => {
+    masterSheet.addRow({
+      sno: idx + 1,
       name: l.applicant?.name || (l.applicantRole === 'STUDENT' ? 'Student' : 'Faculty Member'),
       role: l.applicantRole === 'TEACHER' ? 'Faculty' : l.applicantRole,
+      rollOrId: l.student?.rollNumber || l.teacher?.employeeId || 'N/A',
+      section: l.student?.section?.code || l.student?.section?.name || (l.applicantRole === 'TEACHER' ? 'Faculty' : 'N/A'),
       leaveType: l.leaveType,
       startDate: l.startDate,
       endDate: l.endDate,
@@ -518,13 +780,94 @@ export const exportLeavesToExcel = async (query, res) => {
     });
   });
 
+  styleTable(masterSheet, 1, 2, leaves.length);
+  autoFitColumns(masterSheet);
+
+  // 2. SHEETS 2+: Dedicated Section Worksheets (sec A, sec B, sec C, sec D...)
+  sortedSections.forEach((secLetter) => {
+    const secSheet = workbook.addWorksheet(`sec ${secLetter}`);
+    secSheet.properties.tabColor = TAB_COLORS[secLetter] || { argb: 'FF3B82F6' };
+    secSheet.columns = columns;
+
+    const secRecords = sectionMap.get(secLetter) || [];
+
+    if (secRecords.length === 0) {
+      secSheet.addRow({
+        sno: '-',
+        name: `No leave applications found for Section ${secLetter} in the selected date range.`,
+        role: '-',
+        rollOrId: '-',
+        section: `CSE-${secLetter}`,
+        leaveType: '-',
+        startDate: '-',
+        endDate: '-',
+        totalDays: 0,
+        status: 'None',
+        reason: 'No records matching filters',
+        tgReviewer: '-',
+        finalReviewer: '-',
+        decisionDate: '-',
+      });
+      styleTable(secSheet, 1, 2, 1);
+    } else {
+      secRecords.forEach((l, idx) => {
+        secSheet.addRow({
+          sno: idx + 1,
+          name: l.applicant?.name || 'Student',
+          role: 'STUDENT',
+          rollOrId: l.student?.rollNumber || 'N/A',
+          section: l.student?.section?.code || l.student?.section?.name || `Section ${secLetter}`,
+          leaveType: l.leaveType,
+          startDate: l.startDate,
+          endDate: l.endDate,
+          totalDays: l.totalDays,
+          status: formatStatus(l.status),
+          reason: l.reason || 'Not provided',
+          tgReviewer: l.tg?.user?.name || 'Not assigned',
+          finalReviewer: l.finalReview?.reviewedBy?.name || 'HOD Office',
+          decisionDate: l.finalReview?.reviewedAt ? l.finalReview.reviewedAt.toISOString().slice(0, 10) : 'Pending',
+        });
+      });
+      styleTable(secSheet, 1, 2, secRecords.length);
+    }
+
+    autoFitColumns(secSheet);
+  });
+
+  // 3. Faculty Sheet (if any faculty leaves)
+  if (facultyLeaves.length > 0) {
+    const facSheet = workbook.addWorksheet('Faculty');
+    facSheet.properties.tabColor = TAB_COLORS.FACULTY;
+    facSheet.columns = columns;
+    facultyLeaves.forEach((l, idx) => {
+      facSheet.addRow({
+        sno: idx + 1,
+        name: l.applicant?.name || 'Faculty Member',
+        role: 'Faculty',
+        rollOrId: l.teacher?.employeeId || 'N/A',
+        section: 'Faculty',
+        leaveType: l.leaveType,
+        startDate: l.startDate,
+        endDate: l.endDate,
+        totalDays: l.totalDays,
+        status: formatStatus(l.status),
+        reason: l.reason || 'Not provided',
+        tgReviewer: 'Direct to HOD',
+        finalReviewer: l.finalReview?.reviewedBy?.name || 'HOD Office',
+        decisionDate: l.finalReview?.reviewedAt ? l.finalReview.reviewedAt.toISOString().slice(0, 10) : 'Pending',
+      });
+    });
+    styleTable(facSheet, 1, 2, facultyLeaves.length);
+    autoFitColumns(facSheet);
+  }
+
   res.setHeader(
     'Content-Type',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   );
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename="leaves-report-${Date.now()}.xlsx"`
+    `attachment; filename="leaves_${targetSemester ? `sem${targetSemester}_` : ''}${Date.now()}.xlsx"`
   );
 
   await workbook.xlsx.write(res);

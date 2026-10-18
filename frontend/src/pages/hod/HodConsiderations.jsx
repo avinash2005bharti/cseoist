@@ -115,7 +115,7 @@ const storeRejectedId = (id) => {
 };
 
 export default function HodConsiderations() {
-  const { viewAttachment, addToast } = useERP();
+  const { viewAttachment, addToast, openModal } = useERP();
   const location = useLocation();
 
   // Active Tab Filter:
@@ -558,18 +558,14 @@ export default function HodConsiderations() {
         {/* Export Excel with Excel logo */}
         <button
           type="button"
-          onClick={async () => {
-            try {
-              if (reportApi.downloadConsiderationsExcel) {
-                await reportApi.downloadConsiderationsExcel();
-                addToast('Excel Exported', 'Downloaded considerations ledger.', 'success');
-              }
-            } catch {
-              window.print();
-            }
+          onClick={() => {
+            openModal('EXPORT_REPORTS', {
+              initialType: activeTab === 'LEAVES' ? 'leaves' : 'considerations',
+              initialSemester: semesterFilter !== 'ALL' ? semesterFilter : 'ALL',
+            });
           }}
           className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-          title="Export spreadsheet (.xlsx)"
+          title="Export section-wise spreadsheet (.xlsx)"
         >
           <ExcelLogo />
           <span>Export Excel</span>

@@ -34,7 +34,9 @@ import {
   Mail,
   Phone,
   RefreshCw,
+  UserPlus,
 } from 'lucide-react';
+import CreateUserModal from '../../components/modals/CreateUserModal.jsx';
 
 export default function AdminDashboard() {
   const { openModal, addToast } = useERP();
@@ -54,6 +56,15 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('students'); // 'students' | 'teachers' | 'users' | 'sections'
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Create User ID Modal State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createModalRole, setCreateModalRole] = useState('STUDENT');
+
+  const handleOpenCreateModal = (role = 'STUDENT') => {
+    setCreateModalRole(role);
+    setShowCreateModal(true);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -202,7 +213,26 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="primary"
+            onClick={() => handleOpenCreateModal('STUDENT')}
+            className="text-xs font-bold cursor-pointer shadow-xs bg-blue-600 hover:bg-blue-700 flex items-center gap-1.5"
+          >
+            <UserPlus size={14} />
+            <span>+ New Student ID</span>
+          </Button>
+
+          <Button
+            variant="primary"
+            onClick={() => handleOpenCreateModal('TEACHER')}
+            style={{ backgroundColor: '#059669', borderColor: '#059669' }}
+            className="text-xs font-bold cursor-pointer shadow-xs hover:bg-emerald-700 text-white flex items-center gap-1.5"
+          >
+            <UserPlus size={14} />
+            <span>+ New Faculty ID</span>
+          </Button>
+
           <Button
             variant="secondary"
             onClick={fetchData}
@@ -395,7 +425,38 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {activeTab === 'students' && (
+              <Button
+                variant="primary"
+                onClick={() => handleOpenCreateModal('STUDENT')}
+                className="text-xs font-bold flex items-center gap-1.5 shadow-xs bg-blue-600 hover:bg-blue-700"
+              >
+                <UserPlus size={13} />
+                <span>+ Create Student User ID</span>
+              </Button>
+            )}
+            {activeTab === 'teachers' && (
+              <Button
+                variant="primary"
+                onClick={() => handleOpenCreateModal('TEACHER')}
+                style={{ backgroundColor: '#059669', borderColor: '#059669' }}
+                className="text-xs font-bold flex items-center gap-1.5 shadow-xs hover:bg-emerald-700 text-white"
+              >
+                <UserPlus size={13} />
+                <span>+ Create Faculty User ID</span>
+              </Button>
+            )}
+            {activeTab === 'users' && (
+              <Button
+                variant="primary"
+                onClick={() => handleOpenCreateModal('STUDENT')}
+                className="text-xs font-bold flex items-center gap-1.5 shadow-xs"
+              >
+                <UserPlus size={13} />
+                <span>+ Create User ID</span>
+              </Button>
+            )}
             <Button
               variant="secondary"
               onClick={() => navigate('/admin/users')}
@@ -1030,6 +1091,18 @@ export default function AdminDashboard() {
           </Table>
         )}
       </Card>
+
+      {/* CREATE USER MODAL (Student & Faculty ID Provisioning) */}
+      {showCreateModal && (
+        <CreateUserModal
+          initialRole={createModalRole}
+          availableSections={sections}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            fetchData();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowRight, ArrowLeft, Search, ExternalLink, Users, UserCheck, GraduationCap, Phone, Mail } from 'lucide-react';
-import { masterDataApi } from '../../api';
+import { X, ArrowRight, ArrowLeft, Search, ExternalLink, Users, UserCheck, GraduationCap, Phone, Mail, Loader2 } from 'lucide-react';
+import { masterDataApi, mentorshipApi } from '../../api';
 import { getSectionLetter } from '../../utils/constants.js';
 
 export default function SectionOverviewModal({
@@ -12,6 +12,7 @@ export default function SectionOverviewModal({
   const [selectedSection, setSelectedSection] = useState(() => getSectionLetter(initialSection) || initialSection || 'B');
   const [currentSemester, setCurrentSemester] = useState(Number(initialSemester) || 5);
   const [students, setStudents] = useState([]);
+  const [mentorGroups, setMentorGroups] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -28,12 +29,14 @@ export default function SectionOverviewModal({
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [studentsRes, sectionsRes] = await Promise.allSettled([
+      const [studentsRes, sectionsRes, groupsRes] = await Promise.allSettled([
         masterDataApi.getStudents({ all: 'true' }),
         masterDataApi.getSections(),
+        mentorshipApi.listGroups(),
       ]);
       if (studentsRes.status === 'fulfilled') setStudents(studentsRes.value?.data || []);
       if (sectionsRes.status === 'fulfilled') setDbSections(sectionsRes.value?.data || []);
+      if (groupsRes.status === 'fulfilled') setMentorGroups(groupsRes.value?.data || []);
     } finally {
       setLoading(false);
     }
@@ -104,17 +107,28 @@ export default function SectionOverviewModal({
     return !q || name.includes(q) || roll.includes(q) || enroll.includes(q) || email.includes(q);
   });
 
-  const assignedTg = currentSectionStudents[0]?.mentorGroup?.tg;
-  const assignedTgName = assignedTg?.user?.name || assignedTg?.designation || 'Prof. Test Teacher';
+  // Accurate assigned TG resolution
+  const matchedGroup = mentorGroups.find((g) => {
+    const groupSem = Number(g.semester || g.section?.semester);
+    const groupSec = getSectionLetter(g.section);
+    return groupSem === Number(currentSemester) && groupSec === selectedSection && g.isActive !== false;
+  });
+
+  const assignedTgObj = matchedGroup?.tg || currentSectionStudents[0]?.mentorGroup?.tg;
+  const assignedTgName =
+    assignedTgObj?.user?.name ||
+    assignedTgObj?.name ||
+    assignedTgObj?.designation ||
+    (matchedGroup ? 'Appointed TG' : 'Not Appointed');
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-container max-w-4xl w-[96%] max-h-[92vh] overflow-y-auto bg-white p-6 sm:p-8 rounded-3xl text-slate-900 shadow-2xl"
+        className="modal-container max-w-4xl w-[96%] max-h-[92vh] overflow-y-auto bg-white p-6 sm:p-8 rounded-3xl text-slate-900 shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header matching image3.png */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200 shrink-0">
           <div>
             <div className="flex items-center gap-2">
               <Users size={18} className="text-blue-600" />
@@ -291,66 +305,89 @@ export default function SectionOverviewModal({
         </div>
 
         {/* Student Table matching image3.png */}
-        <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-slate-50/80 text-slate-500 font-extrabold border-b border-slate-200 text-[11px] tracking-wider">
-                <th className="p-3">NAME</th>
-                <th className="p-3">ENROLLMENT</th>
-                <th className="p-3">PHONE NUMBER</th>
-                <th className="p-3">EMAIL</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
-              {filteredStudents.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="p-8 text-center text-slate-400">
-                    No students currently enrolled in Semester {currentSemester} • CSE-{selectedSection}.
-                  </td>
+        <div className="mt-3.5 rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-2xs shrink-0">
+          <div className="overflow-x-auto min-h-[220px] max-h-[380px] overflow-y-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="sticky top-0 bg-slate-50/95 backdrop-blur-xs z-10 border-b border-slate-200">
+                <tr className="text-slate-600 font-black text-[11px] tracking-wider uppercase">
+                  <th className="p-3.5">NAME</th>
+                  <th className="p-3.5">ENROLLMENT</th>
+                  <th className="p-3.5">PHONE NUMBER</th>
+                  <th className="p-3.5">EMAIL</th>
                 </tr>
-              ) : (
-                filteredStudents.map((st) => {
-                  const name = st.user?.name || st.designation || 'Student';
-                  const enroll = st.enrollmentNumber || st.rollNumber || 'Not provided';
-                  const phone = st.user?.phone || 'Not provided';
-                  const email = st.user?.email || 'Not provided';
-                  const initial = name.charAt(0).toUpperCase();
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="p-12 text-center text-slate-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Loader2 size={24} className="animate-spin text-blue-600" />
+                        <span className="text-xs font-bold text-slate-600">Loading student roster...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-12 text-center">
+                      <div className="flex flex-col items-center justify-center text-slate-500 py-2">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5 border border-blue-100">
+                          <GraduationCap size={22} />
+                        </div>
+                        <span className="text-sm font-black text-slate-800">
+                          {search ? 'No matching students found' : `No students enrolled in Semester ${currentSemester} • CSE-${selectedSection}`}
+                        </span>
+                        <p className="text-xs text-slate-400 mt-1 max-w-md m-0">
+                          {search
+                            ? `No students in CSE-${selectedSection} match "${search}". Try searching by another keyword.`
+                            : `Section CSE-${selectedSection} has 0 enrolled students out of ${activeCapacity} capacity. You can provision new student user IDs from the Admin Dashboard.`}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudents.map((st) => {
+                    const name = st.user?.name || st.designation || 'Student';
+                    const enroll = st.enrollmentNumber || st.rollNumber || 'Not provided';
+                    const phone = st.user?.phone || 'Not provided';
+                    const email = st.user?.email || 'Not provided';
+                    const initial = name.charAt(0).toUpperCase();
 
-                  return (
-                    <tr key={st._id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-3 flex items-center gap-2.5">
-                        <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[10px] border border-slate-200">
-                          {initial}
-                        </span>
-                        <span className="font-extrabold text-slate-900">{name}</span>
-                      </td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 text-slate-700 font-mono text-[11px]">
-                          {enroll}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <span className="inline-flex items-center gap-1.5 text-slate-700">
-                          <Phone size={12} className="text-emerald-600" />
-                          <span>{phone}</span>
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <span className="inline-flex items-center gap-1.5 text-blue-600 truncate max-w-xs font-medium">
-                          <Mail size={12} className="text-slate-400" />
-                          <span>{email}</span>
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                    return (
+                      <tr key={st._id} className="hover:bg-blue-50/40 transition-colors">
+                        <td className="p-3.5 flex items-center gap-2.5">
+                          <span className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black flex items-center justify-center text-[11px] border border-blue-200 shrink-0">
+                            {initial}
+                          </span>
+                          <span className="font-extrabold text-slate-900">{name}</span>
+                        </td>
+                        <td className="p-3.5">
+                          <span className="px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-800 font-mono text-[11px] font-bold">
+                            {enroll}
+                          </span>
+                        </td>
+                        <td className="p-3.5">
+                          <span className="inline-flex items-center gap-1.5 text-slate-700 font-medium">
+                            <Phone size={13} className="text-emerald-600 shrink-0" />
+                            <span>{phone}</span>
+                          </span>
+                        </td>
+                        <td className="p-3.5">
+                          <span className="inline-flex items-center gap-1.5 text-blue-600 truncate max-w-xs font-semibold">
+                            <Mail size={13} className="text-slate-400 shrink-0" />
+                            <span className="truncate">{email}</span>
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Footer matching image3.png */}
-        <div className="mt-6 pt-4 border-t border-slate-200 flex items-center justify-between">
+        <div className="mt-5 pt-4 border-t border-slate-200 flex items-center justify-between shrink-0">
           <button
             onClick={() => {
               if (onOpenClassesCentral) onOpenClassesCentral();

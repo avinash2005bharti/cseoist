@@ -74,7 +74,7 @@ export default function DashboardLayout() {
         )}
 
         {activeModal === 'EXPORT_REPORTS' && (
-          <AttendanceLeaveReportsModal onClose={closeModal} />
+          <AttendanceLeaveReportsModal onClose={closeModal} modalData={modalData} />
         )}
 
         {activeModal === 'REVIEW_ACTION' && (

@@ -302,28 +302,28 @@ export default function HodMentorship() {
             return (
               <div
                 key={t._id}
-                className={`p-5 rounded-2xl bg-white border transition-all flex flex-col justify-between shadow-2xs hover:shadow-sm ${
+                className={`p-5 rounded-2xl bg-white border transition-all flex flex-col justify-between shadow-2xs hover:shadow-sm overflow-hidden min-w-0 ${
                   isTg ? 'border-emerald-300 ring-1 ring-emerald-200' : 'border-slate-200 hover:border-blue-200'
                 }`}
               >
-                <div>
+                <div className="min-w-0">
                   {/* Top Row: Name + Availability Pill */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-base font-black text-slate-900 m-0 leading-tight">
+                  <div className="flex items-start justify-between gap-2.5 min-w-0">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-base font-black text-slate-900 m-0 leading-tight truncate" title={facultyName}>
                         {facultyName}
                       </h3>
-                      <p className="text-xs text-blue-600 font-bold m-0 mt-0.5">
+                      <p className="text-xs text-blue-600 font-bold m-0 mt-0.5 truncate">
                         {designation}
                       </p>
-                      <p className="text-xs text-slate-400 font-mono m-0 mt-0.5 truncate max-w-[200px]" title={email}>
+                      <p className="text-xs text-slate-400 font-mono m-0 mt-0.5 truncate" title={email}>
                         {email}
                       </p>
                     </div>
 
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 shrink-0 shadow-2xs">
-                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                      <span>Available (Click for Leave)</span>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 shadow-2xs">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Available</span>
                     </div>
                   </div>
 

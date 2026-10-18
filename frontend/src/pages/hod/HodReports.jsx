@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { reportApi } from '../../api';
+import { useERP } from '../../context/ERPContext.jsx';
 import {
   STATUS_LABELS,
   REQUEST_TYPE_LABELS,
@@ -31,6 +32,7 @@ import {
 } from 'lucide-react';
 
 export default function HodReports() {
+  const { openModal } = useERP();
   const [activeTab, setActiveTab] = useState('considerations'); // 'considerations' | 'leaves'
   const [status, setStatus] = useState('');
   const [type, setType] = useState('');
@@ -39,7 +41,6 @@ export default function HodReports() {
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -66,25 +67,14 @@ export default function HodReports() {
     fetchData();
   }, [activeTab, status, type, from, to]);
 
-  const handleExport = async () => {
-    setExporting(true);
-    try {
-      const params = {};
-      if (status) params.status = status;
-      if (type) params.type = type;
-      if (from) params.from = from;
-      if (to) params.to = to;
-
-      if (activeTab === 'considerations') {
-        await reportApi.downloadConsiderationsExcel(params);
-      } else {
-        await reportApi.downloadLeavesExcel(params);
-      }
-    } catch (err) {
-      alert('Export failed: ' + (err.message || 'Error'));
-    } finally {
-      setExporting(false);
-    }
+  const handleExport = () => {
+    openModal('EXPORT_REPORTS', {
+      initialType: activeTab,
+      initialSemester: 'ALL',
+      initialFrom: from,
+      initialTo: to,
+      initialStatus: status,
+    });
   };
 
   return (
@@ -96,11 +86,10 @@ export default function HodReports() {
           <Button
             variant="success"
             onClick={handleExport}
-            disabled={exporting}
-            className="text-xs font-black shadow-xs cursor-pointer"
+            className="text-xs font-black shadow-xs cursor-pointer flex items-center gap-1.5"
           >
             <Download size={15} />
-            {exporting ? 'Generating XLSX...' : 'Download Excel (.xlsx)'}
+            Export Section-wise Excel (.xlsx)
           </Button>
         }
       />

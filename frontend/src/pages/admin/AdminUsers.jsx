@@ -467,18 +467,33 @@ export default function AdminUsers() {
         title="Admin User & Academic Governance"
         description="Provision student & TG accounts, appoint leadership (HOD & TGs), and manage semester progression for student cohorts."
         action={
-          <Button
-            variant="primary"
-            onClick={() => {
-              setCreatedInfo(null);
-              setCreateAccountType('STUDENT');
-              setShowCreateModal(true);
-            }}
-            className="text-xs font-black shadow-xs cursor-pointer"
-          >
-            <UserPlus size={15} />
-            Create New Account
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="primary"
+              onClick={() => {
+                setCreatedInfo(null);
+                setCreateAccountType('STUDENT');
+                setShowCreateModal(true);
+              }}
+              className="text-xs font-black shadow-xs cursor-pointer bg-blue-600 hover:bg-blue-700 flex items-center gap-1.5"
+            >
+              <UserPlus size={14} />
+              <span>+ New Student ID</span>
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setCreatedInfo(null);
+                setCreateAccountType('TEACHER');
+                setShowCreateModal(true);
+              }}
+              style={{ backgroundColor: '#059669', borderColor: '#059669' }}
+              className="text-xs font-black shadow-xs cursor-pointer hover:bg-emerald-700 text-white flex items-center gap-1.5"
+            >
+              <UserPlus size={14} />
+              <span>+ New Faculty ID</span>
+            </Button>
+          </div>
         }
       />
 

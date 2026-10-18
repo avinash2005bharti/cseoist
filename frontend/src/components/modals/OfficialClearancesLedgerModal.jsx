@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { reportApi } from '../../api';
+import AttendanceLeaveReportsModal from './AttendanceLeaveReportsModal.jsx';
 import {
   FileText,
   FileSpreadsheet,
@@ -88,6 +89,7 @@ export default function OfficialClearancesLedgerModal({
   const [printDateScope, setPrintDateScope] = useState('today'); // 'today' | 'previous'
   const [printDateFrom, setPrintDateFrom] = useState('');
   const [printDateTo, setPrintDateTo] = useState('');
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchRecords = async (overrideParams = null) => {
     setLoading(true);
@@ -234,27 +236,8 @@ export default function OfficialClearancesLedgerModal({
     return true;
   });
 
-  const handleExportExcel = async () => {
-    try {
-      const exportParams = {
-        status: 'APPROVED_BY_HOD,APPROVED',
-        approvedOnly: true,
-      };
-      if (dateMode === 'today') {
-        exportParams.date = todayStr;
-      } else if (dateMode === 'previous') {
-        if (dateFrom) exportParams.from = dateFrom;
-        if (dateTo) exportParams.to = dateTo;
-      }
-
-      if (activeTab === 'considerations') {
-        await reportApi.downloadConsiderationsExcel(exportParams);
-      } else {
-        await reportApi.downloadLeavesExcel(exportParams);
-      }
-    } catch (err) {
-      alert('Error exporting Excel: ' + (err.message || 'Failed'));
-    }
+  const handleExportExcel = () => {
+    setShowExportModal(true);
   };
 
   const handleExportCsv = () => {
@@ -1377,6 +1360,23 @@ export default function OfficialClearancesLedgerModal({
                   </button>
                   <button
                     type="button"
+                    onClick={() => {
+                      setShowPrintModal(false);
+                      setShowExportModal(true);
+                    }}
+                    style={{
+                      backgroundColor: '#059669',
+                      color: '#FFFFFF',
+                      border: '1px solid #047857',
+                      boxShadow: '0 4px 12px rgba(5, 150, 105, 0.35)',
+                    }}
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-2 cursor-pointer transition-all hover:bg-emerald-700"
+                  >
+                    <Download size={15} style={{ color: '#FFFFFF' }} />
+                    <span style={{ color: '#FFFFFF' }}>Export Excel (.xlsx)</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={executeGenerateReport}
                     style={{
                       backgroundColor: '#2563EB',
@@ -1393,6 +1393,21 @@ export default function OfficialClearancesLedgerModal({
               </div>
             </div>
           </div>
+        )}
+
+        {showExportModal && (
+          <AttendanceLeaveReportsModal
+            modalData={{
+              initialType: activeTab,
+              initialSemester:
+                semesterFilter && semesterFilter !== 'All Semesters'
+                  ? parseInt(semesterFilter.replace(/\D/g, ''), 10)
+                  : (isTgView && assignedSemester ? assignedSemester : 'ALL'),
+              initialFrom: dateMode === 'previous' ? dateFrom : (dateMode === 'today' ? todayStr : ''),
+              initialTo: dateMode === 'previous' ? dateTo : (dateMode === 'today' ? todayStr : ''),
+            }}
+            onClose={() => setShowExportModal(false)}
+          />
         )}
       </div>
     </div>
