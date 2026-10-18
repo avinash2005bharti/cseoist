@@ -329,7 +329,7 @@ export default function AdminUsers() {
 
       addToast({
         type: 'success',
-        title: 'Account Provisioned',
+        title: 'Account Created Successfully',
         message: `Account for ${newName} created as ${createAccountType}.`,
       });
 
@@ -337,7 +337,7 @@ export default function AdminUsers() {
     } catch (err) {
       addToast({
         type: 'danger',
-        title: 'Provisioning Failed',
+        title: 'Account Creation Failed',
         message: err.response?.data?.message || err.message,
       });
     } finally {
@@ -465,7 +465,7 @@ export default function AdminUsers() {
       {/* Header */}
       <PageHeader
         title="Admin User & Academic Governance"
-        description="Provision student & TG accounts, appoint leadership (HOD & TGs), and manage semester progression for student cohorts."
+        description="Create student & faculty accounts, appoint leadership (HOD & Tutor Guardians), and manage semester progression for class sections."
         action={
           <div className="flex items-center gap-2 flex-wrap">
             <Button
@@ -635,10 +635,10 @@ export default function AdminUsers() {
               </div>
               <div>
                 <h3 className="text-sm font-black text-indigo-950">
-                  Section Cohort & Semester Progression Control
+                  Class Section & Semester Progression Control
                 </h3>
                 <p className="text-xs text-indigo-800 mt-0.5">
-                  Promote or revert sections across semesters. All enrolled students and active TG cohorts synchronize automatically.
+                  Promote or revert sections across semesters. All enrolled students and active Tutor Guardian assignments synchronize automatically.
                 </p>
               </div>
             </div>
@@ -985,7 +985,7 @@ export default function AdminUsers() {
                             </span>
                             {isTg && (
                               <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md inline-block">
-                                {u.teacherProfile?.mentoredSection || 'Cohort Assigned'}
+                                {u.teacherProfile?.mentoredSection || 'Section Assigned'}
                               </span>
                             )}
                           </div>
@@ -1107,7 +1107,7 @@ export default function AdminUsers() {
                 </div>
                 <div>
                   <h3 className="font-heading font-black text-slate-900 text-sm">
-                    Provision Academic Account
+                    Create Academic Account
                   </h3>
                   <p className="text-[11px] text-slate-500 m-0">
                     Create new student, TG, faculty, or leadership credentials
@@ -1127,7 +1127,7 @@ export default function AdminUsers() {
                 <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-1">
                   <div className="flex items-center gap-2 font-black text-sm text-emerald-800">
                     <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
-                    Account Provisioned Successfully!
+                    Account Created Successfully!
                   </div>
                   <p className="text-[11px] text-emerald-800">
                     {createdInfo.user?.name} ({createdInfo.user?.email}) is now active in the system as{' '}
@@ -1288,7 +1288,7 @@ export default function AdminUsers() {
                 {createAccountType === 'STUDENT' && (
                   <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
                     <span className="font-black text-blue-900 text-[11px] uppercase tracking-wider block">
-                      Student Enrollment & Cohort Details
+                      Student Enrollment & Section Details
                     </span>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -1503,7 +1503,7 @@ export default function AdminUsers() {
                     Cancel
                   </Button>
                   <Button type="submit" variant="primary" disabled={creating} className="cursor-pointer">
-                    {creating ? 'Provisioning...' : `Provision ${createAccountType} Account`}
+                    {creating ? 'Creating Account...' : `Create ${createAccountType} Account`}
                   </Button>
                 </div>
               </form>
@@ -1558,7 +1558,7 @@ export default function AdminUsers() {
             </div>
 
             <p className="text-xs text-slate-600">
-              This action will update the semester on the section record, move all enrolled students forward/backward, and adjust active TG cohort records.
+              This action will update the semester on the section record, move all enrolled students forward/backward, and adjust active Tutor Guardian assignment records.
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
@@ -1575,7 +1575,7 @@ export default function AdminUsers() {
                 onClick={executeMoveSemester}
                 className="cursor-pointer"
               >
-                {actionProcessing ? 'Updating Cohort...' : 'Confirm Semester Move'}
+                {actionProcessing ? 'Updating Section...' : 'Confirm Semester Move'}
               </Button>
             </div>
           </div>
@@ -1710,7 +1710,7 @@ export default function AdminUsers() {
             ) : (
               <p className="text-xs text-slate-600">
                 Are you sure you want to conclude the Tutor Guardian appointment for{' '}
-                <strong>{tgActionTarget.user.name}</strong>? Their active cohort will be deactivated and students unlinked.
+                <strong>{tgActionTarget.user.name}</strong>? Their active section assignment will be deactivated and students unlinked.
               </p>
             )}
 
@@ -1731,7 +1731,7 @@ export default function AdminUsers() {
                 {actionProcessing
                   ? 'Processing...'
                   : tgActionTarget.type === 'appoint'
-                  ? 'Appoint TG & Assign Cohort'
+                  ? 'Appoint TG & Assign Section'
                   : 'Revoke TG Appointment'}
               </Button>
             </div>
@@ -1791,7 +1791,7 @@ export default function AdminUsers() {
                     Create Academic Section
                   </h3>
                   <p className="text-[11px] text-slate-500 m-0">
-                    Provision a new section cohort for students & TG allocation
+                    Add a new class section for student & Tutor Guardian allocation
                   </p>
                 </div>
               </div>

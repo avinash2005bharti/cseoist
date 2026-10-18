@@ -145,8 +145,8 @@ export const createConsideration = async (user, data, options = {}) => {
       if (tgTeacher?.user) {
         const notif = await Notification.create({
           user: tgTeacher.user._id,
-          title: 'New Consideration Request',
-          message: `${user.name} submitted an attendance consideration request for "${data.eventTitle}".`,
+          title: 'New Attendance Consideration Application',
+          message: `${user.name} submitted an attendance consideration application for "${data.eventTitle}".`,
           type: 'CONSIDERATION',
           link: `/tg/considerations/${request._id}`,
         });
@@ -159,8 +159,8 @@ export const createConsideration = async (user, data, options = {}) => {
       for (const hod of hodUsers) {
         const notif = await Notification.create({
           user: hod._id,
-          title: 'New Consideration Request (No TG Assigned)',
-          message: `${user.name} submitted a consideration request requiring direct review.`,
+          title: 'New Attendance Consideration Application (Direct Review)',
+          message: `${user.name} submitted an attendance consideration application requiring direct HOD review.`,
           type: 'CONSIDERATION',
           link: `/hod/considerations/${request._id}`,
         });
@@ -293,8 +293,8 @@ export const createConsideration = async (user, data, options = {}) => {
       if (tgTeacher?.user) {
         const notif = await Notification.create({
           user: tgTeacher.user._id,
-          title: 'New Group Consideration Request',
-          message: `${user.name} submitted a group consideration request for "${data.eventTitle}" with ${bucket.students.length} student(s) from your section (${sectionStudentNames}).`,
+          title: 'New Group Consideration Application',
+          message: `${user.name} submitted a group consideration application for "${data.eventTitle}" with ${bucket.students.length} student(s) from your section (${sectionStudentNames}).`,
           type: 'CONSIDERATION',
           link: `/tg/considerations/${secRequest._id}`,
         });
@@ -315,8 +315,8 @@ export const createConsideration = async (user, data, options = {}) => {
     if (mStudent._id.toString() !== student._id.toString() && mStudent.user?._id) {
       const memNotif = await Notification.create({
         user: mStudent.user._id,
-        title: 'Group Attendance Consideration Request',
-        message: `${user.name} included you in a group consideration request for "${data.eventTitle}".`,
+        title: 'Group Attendance Consideration Application',
+        message: `${user.name} included you in a group consideration application for "${data.eventTitle}".`,
         type: 'CONSIDERATION',
         link: `/student/considerations`,
       });
@@ -332,8 +332,8 @@ export const createConsideration = async (user, data, options = {}) => {
   for (const hod of hodUsers) {
     const notif = await Notification.create({
       user: hod._id,
-      title: 'New Group Consideration Request',
-      message: `${user.name} submitted a group consideration request for "${data.eventTitle}" (${uniqueMemberIds.length} students across ${sectionBuckets.size} section(s)).`,
+      title: 'New Group Consideration Application',
+      message: `${user.name} submitted a group consideration application for "${data.eventTitle}" (${uniqueMemberIds.length} students across ${sectionBuckets.size} section(s)).`,
       type: 'CONSIDERATION',
       link: `/hod/considerations`,
     });
@@ -763,8 +763,10 @@ export const tgReview = async (id, user, { decision, remarks }) => {
     if (sUser?._id) {
       const notif = await Notification.create({
         user: sUser._id,
-        title: decision === 'RECOMMEND' ? 'Consideration Recommended' : 'Consideration Rejected by TG',
-        message: `Your consideration request for "${request.eventTitle}" was ${newStatus.toLowerCase().replace(/_/g, ' ')}.`,
+        title: decision === 'RECOMMEND' ? 'Attendance Consideration Recommended by TG' : 'Attendance Consideration Rejected by TG',
+        message: decision === 'RECOMMEND'
+          ? `Your attendance consideration application for "${request.eventTitle}" was recommended by your Tutor Guardian and forwarded to the Head of Department.`
+          : `Your attendance consideration application for "${request.eventTitle}" was not recommended by your Tutor Guardian.`,
         type: 'CONSIDERATION',
         link: `/student/considerations`,
       });
@@ -816,8 +818,8 @@ export const tgReview = async (id, user, { decision, remarks }) => {
     for (const hod of hodUsers) {
       const notif = await Notification.create({
         user: hod._id,
-        title: 'Consideration Awaiting HOD Approval',
-        message: `TG recommended attendance consideration for "${request.eventTitle}".`,
+        title: 'Attendance Consideration Awaiting HOD Approval',
+        message: `Tutor Guardian recommended attendance consideration application for "${request.eventTitle}".`,
         type: 'CONSIDERATION',
         link: `/hod/considerations/${request._id}`,
       });
@@ -935,8 +937,10 @@ export const hodReview = async (id, user, { decision, remarks, approvedPeriods }
     if (sUser?._id) {
       const notif = await Notification.create({
         user: sUser._id,
-        title: decision === 'APPROVE' ? 'Consideration Approved by HOD!' : 'Consideration Rejected by HOD',
-        message: `Your${request.isGroup ? ' group' : ''} consideration request for "${request.eventTitle}" was ${newStatus.toLowerCase().replace(/_/g, ' ')}${decision === 'APPROVE' ? ` (${approvedPeriods} periods credited)` : ''}.`,
+        title: decision === 'APPROVE' ? 'Attendance Consideration Approved by HOD' : 'Attendance Consideration Rejected by HOD',
+        message: decision === 'APPROVE'
+          ? `Your${request.isGroup ? ' group' : ''} attendance consideration application for "${request.eventTitle}" was approved by the Head of Department (${approvedPeriods} lecture${approvedPeriods === 1 ? '' : 's'} sanctioned).`
+          : `Your${request.isGroup ? ' group' : ''} attendance consideration application for "${request.eventTitle}" was rejected by the Head of Department.`,
         type: 'CONSIDERATION',
         link: `/student/considerations`,
       });
@@ -975,8 +979,8 @@ export const hodReview = async (id, user, { decision, remarks, approvedPeriods }
     if (tgTeacher?.user) {
       const notif = await Notification.create({
         user: tgTeacher.user._id,
-        title: `HOD Decision: Consideration ${decision}`,
-        message: `HOD completed final review on "${request.eventTitle}" (${newStatus}).`,
+        title: `HOD Decision: Attendance Consideration ${decision === 'APPROVE' ? 'Approved' : 'Rejected'}`,
+        message: `Head of Department completed final review on "${request.eventTitle}" (${decision === 'APPROVE' ? 'Approved' : 'Rejected'}).`,
         type: 'CONSIDERATION',
         link: `/tg/considerations`,
       });

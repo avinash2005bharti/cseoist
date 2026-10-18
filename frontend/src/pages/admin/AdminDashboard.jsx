@@ -373,7 +373,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h4 className="text-xs font-black text-slate-800">Excel Bulk Import</h4>
-              <p className="text-[11px] text-slate-400">Import students & faculty rosters</p>
+              <p className="text-[11px] text-slate-400">Import student & faculty records</p>
             </div>
           </div>
           <ArrowRight size={15} className="text-slate-300 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
@@ -529,7 +529,7 @@ export default function AdminDashboard() {
               }`}
             >
               <Layers size={15} />
-              <span>Section Cohorts</span>
+              <span>Class Sections</span>
               <span className="badge badge-indigo text-[10px] py-0 px-1.5 rounded-full font-black">
                 {sections.length}
               </span>
@@ -894,11 +894,11 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Directory Tab 4: Section Cohorts & Semester Progression */}
+        {/* Directory Tab 4: Class Sections & Semester Progression */}
         {activeTab === 'sections' && (
           <div>
             {loading ? (
-              <div className="py-8 text-center text-xs text-slate-400">Loading section cohorts...</div>
+              <div className="py-8 text-center text-xs text-slate-400">Loading class sections...</div>
             ) : sections.length === 0 ? (
               <div className="py-8 text-center text-xs text-slate-400 bg-slate-50 rounded-xl">
                 No section records found.
@@ -995,7 +995,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2">
             <Calendar size={18} className="text-amber-600" />
             <h3 className="font-heading font-black text-sm text-slate-900">
-              Department Head (HOD) Leave Requests Queue
+              Department Head (HOD) Leave Applications
             </h3>
           </div>
           <button

@@ -1,27 +1,28 @@
-import React, { lazy, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { useERP } from './context/ERPContext.jsx';
 import DashboardLayout from './layouts/DashboardLayout.jsx';
+import { lazyWithRetry as lazy } from './utils/lazyWithRetry.js';
 
-// Auth Pages (Lazy)
+// Auth Pages (Lazy with auto-retry)
 const LoginPage = lazy(() => import('./pages/auth/LoginPage.jsx'));
 const ChangePasswordPage = lazy(() => import('./pages/auth/ChangePasswordPage.jsx'));
 const StudentRegisterPage = lazy(() => import('./pages/auth/StudentRegisterPage.jsx'));
 const TeacherRegisterPage = lazy(() => import('./pages/auth/TeacherRegisterPage.jsx'));
 
-// Student Pages (Lazy)
+// Student Pages (Lazy with auto-retry)
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard.jsx'));
 const StudentMyRequests = lazy(() => import('./pages/student/StudentMyRequests.jsx'));
 const StudentConsiderations = lazy(() => import('./pages/student/StudentConsiderations.jsx'));
 const StudentLeaves = lazy(() => import('./pages/student/StudentLeaves.jsx'));
 const StudentProfile = lazy(() => import('./pages/student/StudentProfile.jsx'));
 
-// TG Pages (Lazy)
+// TG Pages (Lazy with auto-retry)
 const TgDashboard = lazy(() => import('./pages/tg/TgDashboard.jsx'));
 const TgRequests = lazy(() => import('./pages/tg/TgRequests.jsx'));
 const TgMyStudents = lazy(() => import('./pages/tg/TgMyStudents.jsx'));
 
-// HOD Pages (Lazy)
+// HOD Pages (Lazy with auto-retry)
 const HodDashboard = lazy(() => import('./pages/hod/HodDashboard.jsx'));
 const HodConsiderations = lazy(() => import('./pages/hod/HodConsiderations.jsx'));
 const HodLeaves = lazy(() => import('./pages/hod/HodLeaves.jsx'));
@@ -29,15 +30,16 @@ const HodMentorship = lazy(() => import('./pages/hod/HodMentorship.jsx'));
 const HodStudents = lazy(() => import('./pages/hod/HodStudents.jsx'));
 const HodTeachers = lazy(() => import('./pages/hod/HodTeachers.jsx'));
 const HodReports = lazy(() => import('./pages/hod/HodReports.jsx'));
+const HodSections = lazy(() => import('./pages/hod/HodSections.jsx'));
 
-// Admin Pages (Lazy)
+// Admin Pages (Lazy with auto-retry)
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.jsx'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers.jsx'));
 const AdminBulkImport = lazy(() => import('./pages/admin/AdminBulkImport.jsx'));
 const AdminHodLeaves = lazy(() => import('./pages/admin/AdminHodLeaves.jsx'));
 const AdminAudit = lazy(() => import('./pages/admin/AdminAudit.jsx'));
 
-// Teacher Pages (Lazy)
+// Teacher Pages (Lazy with auto-retry)
 const TeacherDashboard = lazy(() => import('./pages/teacher/TeacherDashboard.jsx'));
 const TeacherLeaves = lazy(() => import('./pages/teacher/TeacherLeaves.jsx'));
 
@@ -281,6 +283,14 @@ export default function App() {
           element={
             <RoleRouteGuard role="hod">
               <HodLeaves />
+            </RoleRouteGuard>
+          }
+        />
+        <Route
+          path="hod/sections"
+          element={
+            <RoleRouteGuard role="hod">
+              <HodSections />
             </RoleRouteGuard>
           }
         />

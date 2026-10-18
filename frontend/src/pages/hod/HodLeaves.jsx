@@ -333,10 +333,10 @@ export default function HodLeaves() {
         <div className={`flex flex-col gap-4 ${selectedItem ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
           <Card className="overflow-hidden">
             {loading ? (
-              <div className="p-12 text-center text-xs text-slate-400">Loading leave requests...</div>
+              <div className="p-12 text-center text-xs text-slate-400">Loading leave applications...</div>
             ) : filteredItems.length === 0 ? (
               <EmptyState
-                title="No leave applications found"
+                title="No Leave Applications Found"
                 description="No applications match the selected filters. Try changing the role, semester, or section filter."
                 icon={Calendar}
               />

@@ -533,8 +533,10 @@ export const tgReviewLeave = async (id, user, { decision, remarks }) => {
   // Notify student
   const notif = await Notification.create({
     user: leave.applicant,
-    title: decision === 'RECOMMEND' ? 'Leave Recommended by TG' : 'Leave Rejected by TG',
-    message: `Your leave application was ${newStatus.toLowerCase().replace(/_/g, ' ')}.`,
+    title: decision === 'RECOMMEND' ? 'Leave Application Recommended by TG' : 'Leave Application Rejected by TG',
+    message: decision === 'RECOMMEND'
+      ? 'Your leave application was recommended by your Tutor Guardian and forwarded to the Head of Department.'
+      : 'Your leave application was not recommended by your Tutor Guardian.',
     type: 'LEAVE',
     link: `/student/leaves/${leave._id}`,
   });
@@ -562,8 +564,8 @@ export const tgReviewLeave = async (id, user, { decision, remarks }) => {
     for (const hod of hodUsers) {
       const hNotif = await Notification.create({
         user: hod._id,
-        title: 'Student Leave Awaiting HOD Decision',
-        message: 'TG recommended a student leave application.',
+        title: 'Student Leave Application Awaiting HOD Decision',
+        message: 'Tutor Guardian recommended a student leave application.',
         type: 'LEAVE',
         link: `/hod/leaves/${leave._id}`,
       });
@@ -679,7 +681,9 @@ export const finalReviewLeave = async (id, user, { decision, remarks }) => {
   const notif = await Notification.create({
     user: leave.applicant,
     title: `Leave Application ${decision === 'APPROVE' ? 'Approved' : 'Rejected'}`,
-    message: `Your leave application was ${newStatus.toLowerCase().replace(/_/g, ' ')}.`,
+    message: decision === 'APPROVE'
+      ? 'Your leave application was approved by the Head of Department.'
+      : 'Your leave application was rejected by the Head of Department.',
     type: 'LEAVE',
     link: `/student/leaves/${leave._id}`,
   });
@@ -707,8 +711,8 @@ export const finalReviewLeave = async (id, user, { decision, remarks }) => {
     if (tgTeacher?.user) {
       const tgNotif = await Notification.create({
         user: tgTeacher.user._id,
-        title: `HOD Decision on Student Leave`,
-        message: `Student leave application was ${newStatus}.`,
+        title: `HOD Decision: Student Leave ${decision === 'APPROVE' ? 'Approved' : 'Rejected'}`,
+        message: `Head of Department ${decision === 'APPROVE' ? 'approved' : 'rejected'} student leave application.`,
         type: 'LEAVE',
         link: `/tg/leaves/${leave._id}`,
       });

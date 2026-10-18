@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useERP } from '../../context/ERPContext.jsx';
 import { masterDataApi } from '../../api';
+import MoveSemesterModal from './MoveSemesterModal.jsx';
 
 export default function ClassesCurriculumModal({ onClose, onUpdated }) {
   const { addToast } = useERP();
@@ -24,6 +25,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
 
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [moveTarget, setMoveTarget] = useState(null);
 
   // Section Provisioning Form State
   const [isProvisioning, setIsProvisioning] = useState(false);
@@ -572,6 +574,28 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                       >
                         <Trash2 size={15} />
                       </button>
+
+                      {/* Promote & Demote controls */}
+                      <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+                        <button
+                          type="button"
+                          disabled={sec.semester <= 1}
+                          onClick={() => setMoveTarget({ section: sec, direction: 'prev' })}
+                          className="px-2 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors shadow-2xs"
+                          title={sec.semester <= 1 ? 'Min semester' : `Demote to Semester ${sec.semester - 1}`}
+                        >
+                          ◀ Sem {sec.semester - 1}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={sec.semester >= 8}
+                          onClick={() => setMoveTarget({ section: sec, direction: 'next' })}
+                          className="px-2 py-1.5 rounded-xl border border-blue-600 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors shadow-2xs"
+                          title={sec.semester >= 8 ? 'Max semester' : `Promote to Semester ${sec.semester + 1}`}
+                        >
+                          Sem {sec.semester + 1} ▶
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -592,6 +616,19 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
             Done
           </button>
         </div>
+        {/* Move Semester Confirmation Modal */}
+        {moveTarget && (
+          <MoveSemesterModal
+            section={moveTarget.section}
+            direction={moveTarget.direction}
+            onClose={() => setMoveTarget(null)}
+            onSuccess={() => {
+              setMoveTarget(null);
+              fetchSections();
+              if (onUpdated) onUpdated();
+            }}
+          />
+        )}
       </div>
     </div>
   );

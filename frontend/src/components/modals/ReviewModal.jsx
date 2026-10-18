@@ -60,7 +60,8 @@ export default function ReviewModal({
         }
       }
 
-      addToast('Review Submitted', `Action ${decision.toLowerCase()} applied successfully.`, 'success');
+      const actionLabel = decision === 'RECOMMEND' ? 'recommended to HOD' : decision === 'APPROVE' ? 'approved' : 'rejected';
+      addToast('Review Submitted', `Application successfully ${actionLabel}.`, 'success');
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
@@ -85,7 +86,7 @@ export default function ReviewModal({
             </div>
             <div>
               <h3 className="modal-title">
-                {role} {role === 'TG' ? 'Tier-1 Review' : 'Final Decision'}
+                {role === 'TG' ? 'Tutor Guardian Review' : 'Head of Department Review'}
               </h3>
               <p className="modal-subtitle">
                 {item.eventTitle || `${item.leaveType} Leave (${item.totalDays} days)`}
@@ -263,7 +264,7 @@ export default function ReviewModal({
               size="sm"
               loading={submitting}
             >
-              Confirm {decision}
+              {decision === 'RECOMMEND' ? 'Confirm Recommendation' : decision === 'APPROVE' ? 'Confirm Approval' : 'Confirm Rejection'}
             </Button>
           </div>
         </form>

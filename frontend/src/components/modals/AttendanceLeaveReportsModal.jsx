@@ -80,7 +80,7 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
         await reportApi.downloadConsiderationsExcel(params);
         addToast(
           'Excel Generated',
-          `Downloaded section-wise considerations ledger for ${semester === 'ALL' ? 'All Semesters' : `Semester ${semester}`}.`,
+          `Downloaded attendance consideration records for ${semester === 'ALL' ? 'All Semesters' : `Semester ${semester}`}.`,
           'success'
         );
       } else {

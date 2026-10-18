@@ -18,16 +18,20 @@ import {
   Send,
   Megaphone,
   Trash2,
+  Layers,
 } from 'lucide-react';
 
-// Lazy-loaded modals for performance optimization
-const OfficialClearancesLedgerModal = lazy(() => import('../../components/modals/OfficialClearancesLedgerModal.jsx'));
-const SectionOverviewModal = lazy(() => import('../../components/modals/SectionOverviewModal.jsx'));
-const ClassesCurriculumModal = lazy(() => import('../../components/modals/ClassesCurriculumModal.jsx'));
-const AddFacultyModal = lazy(() => import('../../components/modals/AddFacultyModal.jsx'));
-const AddStudentModal = lazy(() => import('../../components/modals/AddStudentModal.jsx'));
-const PendingApprovalsModal = lazy(() => import('../../components/modals/PendingApprovalsModal.jsx'));
-const SendNoticeModal = lazy(() => import('../../components/modals/SendNoticeModal.jsx'));
+import { lazyWithRetry } from '../../utils/lazyWithRetry.js';
+
+// Lazy-loaded modals with auto-retry
+const OfficialClearancesLedgerModal = lazyWithRetry(() => import('../../components/modals/OfficialClearancesLedgerModal.jsx'));
+const SectionOverviewModal = lazyWithRetry(() => import('../../components/modals/SectionOverviewModal.jsx'));
+const ClassesCurriculumModal = lazyWithRetry(() => import('../../components/modals/ClassesCurriculumModal.jsx'));
+const AddFacultyModal = lazyWithRetry(() => import('../../components/modals/AddFacultyModal.jsx'));
+const AddStudentModal = lazyWithRetry(() => import('../../components/modals/AddStudentModal.jsx'));
+const PendingApprovalsModal = lazyWithRetry(() => import('../../components/modals/PendingApprovalsModal.jsx'));
+const SendNoticeModal = lazyWithRetry(() => import('../../components/modals/SendNoticeModal.jsx'));
+const MoveSemesterModal = lazyWithRetry(() => import('../../components/modals/MoveSemesterModal.jsx'));
 
 const HOD_REJECTED_KEY = 'campusflow_hod_rejected_ids';
 const getStoredRejectedIds = () => {
@@ -59,6 +63,7 @@ export default function HodDashboard() {
   const [showClassesModal, setShowClassesModal] = useState(false);
   const [showAddFacultyModal, setShowAddFacultyModal] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [moveModalData, setMoveModalData] = useState(null);
   const [showSendNoticeModal, setShowSendNoticeModal] = useState(false);
 
   // Selected Section Overview Semester (e.g. 5)
@@ -339,7 +344,7 @@ export default function HodDashboard() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-bold transition-all shadow-2xs cursor-pointer group"
             >
               <FileText size={15} className="text-emerald-600 group-hover:scale-110 transition-transform" />
-              <span>View Consideration</span>
+              <span>Attendance Clearances</span>
             </button>
 
             <button
@@ -381,9 +386,9 @@ export default function HodDashboard() {
       </div>
 
       {/* =======================================================================
-          MIDDLE ROW: 5 Key Stat & Action Cards
+          MIDDLE ROW: 6 Key Stat & Action Cards
           ======================================================================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {/* 1. Pending Approvals - Opens Pending Approvals Queue Modal matching Image 1 */}
         <div
           role="button"
@@ -439,7 +444,7 @@ export default function HodDashboard() {
           className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-emerald-300 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between min-h-[140px] group focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-800">Leave Requests</span>
+            <span className="text-sm font-bold text-slate-800">Leave Applications</span>
             <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200">
               <Clock size={15} />
             </div>
@@ -453,7 +458,7 @@ export default function HodDashboard() {
 
           <div className="text-xs text-slate-600 font-medium">
             <span className={pendingLeavesCount > 0 ? "text-amber-700 font-semibold" : "text-emerald-700 font-semibold"}>
-              {pendingLeavesCount > 0 ? `${pendingLeavesCount} in queue` : 'Queue clear'}
+              {pendingLeavesCount > 0 ? `${pendingLeavesCount} pending` : 'All clear'}
             </span>
           </div>
         </div>
@@ -474,7 +479,7 @@ export default function HodDashboard() {
               Add Faculty
             </span>
             <span className="block text-xs text-slate-600 font-medium truncate mt-0.5">
-              Onboard faculty member
+              Add faculty member
             </span>
           </div>
         </div>
@@ -516,7 +521,28 @@ export default function HodDashboard() {
               Manage TGs
             </span>
             <span className="block text-xs text-slate-600 font-medium truncate mt-0.5">
-              Mentorship allocations
+              Teacher Guardian allocations
+            </span>
+          </div>
+        </div>
+
+        {/* 6. Section Progression (Promote / Demote) */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/hod/sections')}
+          onKeyDown={(e) => e.key === 'Enter' && navigate('/hod/sections')}
+          className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-purple-300 hover:shadow-xs transition-all cursor-pointer flex items-center gap-3.5 min-h-[140px] group focus:outline-none focus:ring-2 focus:ring-purple-500"
+        >
+          <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <Layers size={20} />
+          </div>
+          <div className="min-w-0">
+            <span className="block text-sm font-extrabold text-slate-900 leading-snug group-hover:text-purple-700 transition-colors">
+              Section Progression
+            </span>
+            <span className="block text-xs text-slate-600 font-medium truncate mt-0.5">
+              Promote or demote sections
             </span>
           </div>
         </div>
@@ -717,6 +743,16 @@ export default function HodDashboard() {
 
                 <button
                   type="button"
+                  onClick={() => navigate('/hod/sections')}
+                  className="text-xs font-bold text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                  title="Open Section Progression management to promote or demote sections"
+                >
+                  <Layers size={13} />
+                  <span>Promote / Demote</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => {
                     const targetSec = visibleSections[0];
                     if (targetSec) openSectionDetails(targetSec);
@@ -768,6 +804,46 @@ export default function HodDashboard() {
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                       <span>Active</span>
                     </span>
+
+                    {/* Quick Promote & Demote controls directly on section card */}
+                    <div
+                      className="w-full pt-2 mt-2 border-t border-slate-200/60 flex items-center justify-between gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        disabled={Number(section.semester || selectedSemNumber) <= 1}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMoveModalData({ section, direction: 'prev' });
+                        }}
+                        className={`flex-1 py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-0.5 transition-all ${
+                          Number(section.semester || selectedSemNumber) <= 1
+                            ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'
+                            : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300 cursor-pointer shadow-2xs hover:border-slate-400'
+                        }`}
+                        title={Number(section.semester || selectedSemNumber) <= 1 ? 'Minimum semester' : `Demote to Semester ${Number(section.semester || selectedSemNumber) - 1}`}
+                      >
+                        <span>◀ Sem {Number(section.semester || selectedSemNumber) - 1}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={Number(section.semester || selectedSemNumber) >= 8}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMoveModalData({ section, direction: 'next' });
+                        }}
+                        className={`flex-1 py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-0.5 transition-all ${
+                          Number(section.semester || selectedSemNumber) >= 8
+                            ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white border-blue-700 cursor-pointer shadow-2xs'
+                        }`}
+                        title={Number(section.semester || selectedSemNumber) >= 8 ? 'Maximum semester' : `Promote to Semester ${Number(section.semester || selectedSemNumber) + 1}`}
+                      >
+                        <span>Sem {Number(section.semester || selectedSemNumber) + 1} ▶</span>
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -971,6 +1047,19 @@ export default function HodDashboard() {
               } else {
                 fetchDashboardData();
               }
+            }}
+          />
+        )}
+
+        {/* Move Semester Confirmation Modal */}
+        {moveModalData && (
+          <MoveSemesterModal
+            section={moveModalData.section}
+            direction={moveModalData.direction}
+            onClose={() => setMoveModalData(null)}
+            onSuccess={() => {
+              setMoveModalData(null);
+              fetchDashboardData();
             }}
           />
         )}

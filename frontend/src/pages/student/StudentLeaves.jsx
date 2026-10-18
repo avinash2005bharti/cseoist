@@ -70,14 +70,14 @@ export default function StudentLeaves() {
     setCancellingId(id);
     try {
       await leaveApi.cancel(id);
-      addToast('Cancelled', 'Leave application cancelled.', 'info');
+      addToast('Application Cancelled', 'Your leave application has been cancelled.', 'info');
       await fetchLeaves();
       if (selectedLeave?._id === id) {
         setSelectedLeave((prev) => (prev ? { ...prev, status: 'CANCELLED' } : null));
       }
       window.dispatchEvent(new CustomEvent('campusflow_refresh_leaves'));
     } catch (err) {
-      addToast('Error', err.message || 'Cannot cancel leave.', 'danger');
+      addToast('Error', err.message || 'Unable to cancel the leave application.', 'danger');
     } finally {
       setCancellingId(null);
     }
@@ -119,7 +119,7 @@ export default function StudentLeaves() {
       {/* Filter Tabs - occupy full width */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 w-full">
         {[
-          { label: 'All Leaves', value: '' },
+          { label: 'All Applications', value: '' },
           { label: 'Pending', value: 'PENDING' },
           { label: 'Recommended', value: 'RECOMMENDED_BY_TG' },
           { label: 'Approved', value: 'APPROVED_BY_HOD' },

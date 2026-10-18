@@ -69,10 +69,10 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
             </div>
             <div>
               <h3 className="text-base font-extrabold text-slate-900 m-0">
-                Apply for Student Leave
+                Apply for Leave
               </h3>
               <p className="text-xs text-slate-500 m-0">
-                Apply for medical, personal, or college duty leave clearance
+                Apply for medical, personal, or college duty leave
               </p>
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
           {/* Reason / Justification */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Reason / Justification <span className="text-rose-500">*</span>
+              Reason for Leave <span className="text-rose-500">*</span>
             </label>
             <textarea
               value={reason}
@@ -200,7 +200,7 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
               disabled={submitting}
               className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-60 cursor-pointer"
             >
-              {submitting ? <span>Submitting...</span> : <span>Submit Application</span>}
+              {submitting ? <span>Submitting Application...</span> : <span>Submit Application</span>}
             </button>
           </div>
         </form>

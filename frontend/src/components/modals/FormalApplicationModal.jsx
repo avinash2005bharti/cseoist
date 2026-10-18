@@ -266,7 +266,7 @@ export default function FormalApplicationModal({ item, onClose }) {
           {/* Letterhead Header Section */}
           <div className="text-center pt-3 pb-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 m-0">
-              AUTONOMOUS ACADEMIC NEXUS • DEPARTMENTAL ADMINISTRATION
+              ACADEMIC OFFICE • DEPARTMENTAL ADMINISTRATION
             </p>
             <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight m-0 mt-1">
               ORIENTAL INSTITUTE OF SCIENCE & TECHNOLOGY (OIST)
@@ -311,7 +311,7 @@ export default function FormalApplicationModal({ item, onClose }) {
               <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-indigo-100">
                 <div>
                   <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider block">
-                    Group Consideration Roster
+                    Group Consideration Student List
                   </span>
                   <span className="text-xs font-bold text-slate-800">
                     Team Lead: <span className="text-indigo-900">{studentName}</span> ({enrollmentNo})
@@ -455,9 +455,9 @@ export default function FormalApplicationModal({ item, onClose }) {
               <p className="text-xs text-slate-700 m-0 leading-relaxed">
                 <span className="text-slate-600 font-medium">Periods Approved:</span>{' '}
                 <strong className="font-bold text-blue-700 mx-1">
-                  {approvedPeriodsCount} Lecture
+                  {approvedPeriodsCount} {approvedPeriodsCount === 1 ? 'Lecture' : 'Lectures'}
                 </strong>{' '}
-                <span className="text-slate-600 font-medium ml-2">Time Slots Covered:</span>{' '}
+                <span className="text-slate-600 font-medium ml-2">Time Duration:</span>{' '}
                 <strong className="text-slate-800 ml-1">
                   {formatPeriodSlots(item.requestedPeriods)}
                 </strong>
@@ -493,7 +493,7 @@ export default function FormalApplicationModal({ item, onClose }) {
                 Teacher Guardian (TG)
               </strong>
               <span className="text-[10px] text-slate-500 block">
-                Mentor, {secVal} • Dept. of CSE
+                Tutor Guardian, {secVal} • Dept. of CSE
               </span>
               <span className="text-[9px] text-slate-400 block mt-0.5">
                 CampusFlow Digital ID Verification

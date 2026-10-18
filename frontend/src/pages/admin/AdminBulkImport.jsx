@@ -82,7 +82,7 @@ export default function AdminBulkImport() {
       addToast({
         type: 'success',
         title: 'Import Complete',
-        message: 'Master spreadsheet records processed successfully.',
+        message: 'Spreadsheet records imported successfully.',
       });
     } catch (err) {
       const errData = err.response?.data;
@@ -103,8 +103,8 @@ export default function AdminBulkImport() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Master Roster Bulk Import"
-        description="Ingest entire student batches and faculty rosters into the database using validated Excel spreadsheets."
+        title="Student & Faculty Bulk Import"
+        description="Import student batches and faculty members into the database using validated Excel spreadsheets."
       />
 
       {/* Target Selector */}

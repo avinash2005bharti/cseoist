@@ -72,7 +72,7 @@ export default function StudentConsiderations() {
     setCancellingId(id);
     try {
       await considerationApi.cancel(id);
-      addToast('Cancelled', 'Consideration request has been cancelled.', 'info');
+      addToast('Application Cancelled', 'Your attendance consideration application has been cancelled.', 'info');
       await fetchRequests();
       if (selectedRequest?._id === id) {
         setSelectedRequest((prev) => (prev ? { ...prev, status: 'CANCELLED' } : null));
@@ -104,8 +104,8 @@ export default function StudentConsiderations() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Attendance Consideration Requests"
-        description="Submit and track attendance consideration requests for hackathons, sports, and official college activities."
+        title="Attendance Consideration Applications"
+        description="Submit and track attendance consideration applications for hackathons, sports, and official college activities."
         actions={
           <div className="flex items-center gap-2.5">
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-[11px] font-bold">
@@ -117,7 +117,7 @@ export default function StudentConsiderations() {
               icon={<Plus size={16} />}
               onClick={() => openModal('REQUEST_CONSIDERATION')}
             >
-              New Request
+              Apply for Consideration
             </Button>
           </div>
         }
@@ -126,7 +126,7 @@ export default function StudentConsiderations() {
       {/* Filter Tabs - occupy full width */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 w-full">
         {[
-          { label: 'All Requests', value: '' },
+          { label: 'All Applications', value: '' },
           { label: 'Pending', value: 'PENDING' },
           { label: 'Recommended', value: 'RECOMMENDED_BY_TG' },
           { label: 'Approved', value: 'APPROVED_BY_HOD' },
@@ -156,9 +156,9 @@ export default function StudentConsiderations() {
           <Card className="w-full">
             {requests.length === 0 ? (
               <EmptyState
-                title="No Consideration Requests Found"
-                description="Submit an attendance consideration request when participating in events."
-                actionLabel="New Request"
+                title="No Attendance Consideration Applications Found"
+                description="Submit an attendance consideration application when participating in approved events."
+                actionLabel="Apply for Consideration"
                 onAction={() => openModal('REQUEST_CONSIDERATION')}
               />
             ) : (

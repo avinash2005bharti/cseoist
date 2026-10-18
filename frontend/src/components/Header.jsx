@@ -15,10 +15,10 @@ const roleEmojiMap = {
 
 const roleTitleMap = {
   student: 'Student Portal',
-  teacher: 'Faculty Portal',
-  tg: 'Mentor / TG Desk',
-  hod: 'HOD Administration',
-  admin: 'System Administrator',
+  teacher: 'Faculty Dashboard',
+  tg: 'TG Dashboard',
+  hod: 'HOD Dashboard',
+  admin: 'Administrator Portal',
 };
 
 export default function Header({ isSidebarOpen, onToggleSidebar }) {

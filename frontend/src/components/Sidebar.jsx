@@ -33,8 +33,8 @@ export default function Sidebar({ isOpen, onClose }) {
     if (isTgMode) {
       return [
         { to: '/tg', label: 'Dashboard', icon: <Home size={18} /> },
-        { to: '/tg/requests', label: 'Review Queue', icon: <CheckSquare size={18} />, badge: 'Action' },
-        { to: '/tg/students', label: 'My Students', icon: <Users size={18} /> },
+        { to: '/tg/requests', label: 'Review Applications', icon: <CheckSquare size={18} />, badge: 'Action' },
+        { to: '/tg/students', label: 'Assigned Students', icon: <Users size={18} /> },
       ];
     }
 
@@ -51,17 +51,18 @@ export default function Sidebar({ isOpen, onClose }) {
       case 'hod':
         return [
           { to: '/hod', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-          { to: '/hod/considerations', label: 'Considerations', icon: <FileText size={18} /> },
+          { to: '/hod/considerations', label: 'Attendance Considerations', icon: <FileText size={18} /> },
           { to: '/hod/leaves', label: 'Leave Approvals', icon: <Calendar size={18} /> },
-          { to: '/hod/mentorship', label: 'TG Mentorship', icon: <Layers size={18} /> },
-          { to: '/hod/students', label: 'Students Roster', icon: <GraduationCap size={18} /> },
+          { to: '/hod/sections', label: 'Section Progression', icon: <Layers size={18} /> },
+          { to: '/hod/mentorship', label: 'Teacher Guardian Allocation', icon: <Building2 size={18} /> },
+          { to: '/hod/students', label: 'Student Directory', icon: <GraduationCap size={18} /> },
           { to: '/hod/teachers', label: 'Faculty Directory', icon: <UserCheck size={18} /> },
         ];
       case 'teacher':
         return [
           { to: '/tg', label: 'Dashboard', icon: <Home size={18} /> },
-          { to: '/tg/requests', label: 'Review Queue', icon: <CheckSquare size={18} />, badge: 'Action' },
-          { to: '/tg/students', label: 'My Students', icon: <Users size={18} /> },
+          { to: '/tg/requests', label: 'Review Applications', icon: <CheckSquare size={18} />, badge: 'Action' },
+          { to: '/tg/students', label: 'Assigned Students', icon: <Users size={18} /> },
         ];
       case 'student':
       default:
@@ -69,7 +70,7 @@ export default function Sidebar({ isOpen, onClose }) {
           { to: '/student', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
           { to: '/student/considerations', label: 'Attendance Consideration', icon: <FileText size={18} /> },
           { to: '/student/leaves', label: 'Leave Applications', icon: <Calendar size={18} /> },
-          { to: '/student/profile', label: 'My Profile & Mentor', icon: <GraduationCap size={18} /> },
+          { to: '/student/profile', label: 'Profile & Tutor Guardian', icon: <GraduationCap size={18} /> },
         ];
     }
   };

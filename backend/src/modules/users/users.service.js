@@ -752,7 +752,7 @@ export const appointTG = async (userId, data = {}, actorUser = null) => {
     const notif = await Notification.create({
       user: user._id,
       title: 'Appointed as Tutor Guardian (TG)',
-      message: `You have been appointed as Tutor Guardian for Semester ${finalSemester}, ${resolvedSectionDoc?.name || 'Assigned Cohort'}.`,
+      message: `You have been appointed as Tutor Guardian for Semester ${finalSemester}, ${resolvedSectionDoc?.name || 'Assigned Section'}.`,
       type: 'SYSTEM',
       link: '/tg',
     });
@@ -763,7 +763,7 @@ export const appointTG = async (userId, data = {}, actorUser = null) => {
     group,
     teacher,
     user,
-    message: `${user.name} has been appointed as Tutor Guardian for ${resolvedSectionDoc?.name || 'cohort'}.`,
+    message: `${user.name} has been appointed as Tutor Guardian for ${resolvedSectionDoc?.name || 'assigned section'}.`,
   };
 };
 

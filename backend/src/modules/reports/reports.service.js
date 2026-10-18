@@ -455,7 +455,7 @@ const getDateRangeLabel = (query) => {
   if (query.from && query.to) return `${query.from} to ${query.to}`;
   if (query.from) return `From ${query.from}`;
   if (query.to) return `Up to ${query.to}`;
-  return 'All Time (Full Ledger)';
+  return 'All Time (Complete Records)';
 };
 
 const autoFitColumns = (worksheet, minWidth = 12) => {
@@ -565,15 +565,15 @@ export const exportConsiderationsToExcel = async (query, res) => {
     { header: 'Roll Number', key: 'rollNumber', width: 16 },
     { header: 'Section', key: 'section', width: 14 },
     { header: 'Event Title', key: 'eventTitle', width: 26 },
-    { header: 'Request Type', key: 'eventType', width: 16 },
+    { header: 'Application Type', key: 'eventType', width: 18 },
     { header: 'Start Date', key: 'startDate', width: 14 },
     { header: 'End Date', key: 'endDate', width: 14 },
     { header: 'Time (From - To)', key: 'timeRange', width: 22 },
-    { header: 'Approved Periods', key: 'approvedPeriods', width: 18 },
+    { header: 'Approved Lectures / Periods', key: 'approvedPeriods', width: 26 },
     { header: 'Status', key: 'status', width: 20 },
     { header: 'Reason / Description', key: 'reason', width: 32 },
     { header: 'Tutor Guardian (TG)', key: 'tgName', width: 20 },
-    { header: 'Final Approver', key: 'finalReviewer', width: 20 },
+    { header: 'Approving Authority', key: 'finalReviewer', width: 22 },
     { header: 'Decision Date', key: 'decisionDate', width: 16 },
   ];
 
@@ -751,8 +751,8 @@ export const exportLeavesToExcel = async (query, res) => {
     { header: 'Total Days', key: 'totalDays', width: 12 },
     { header: 'Status', key: 'status', width: 20 },
     { header: 'Reason', key: 'reason', width: 32 },
-    { header: 'TG Reviewer', key: 'tgReviewer', width: 20 },
-    { header: 'Final Reviewer', key: 'finalReviewer', width: 20 },
+    { header: 'Tutor Guardian Reviewer', key: 'tgReviewer', width: 24 },
+    { header: 'Approving Authority', key: 'finalReviewer', width: 22 },
     { header: 'Decision Date', key: 'decisionDate', width: 16 },
   ];
 
@@ -904,7 +904,7 @@ export const exportFacultyToExcel = async (res) => {
     { header: 'Designation', key: 'designation', width: 26 },
     { header: 'Department', key: 'department', width: 32 },
     { header: 'Institutional Role', key: 'role', width: 24 },
-    { header: 'Mentored Cohort', key: 'cohort', width: 24 },
+    { header: 'Assigned Section', key: 'cohort', width: 24 },
     { header: 'Email Address', key: 'email', width: 30 },
     { header: 'Phone Number', key: 'phone', width: 18 },
     { header: 'Account Status', key: 'status', width: 16 },

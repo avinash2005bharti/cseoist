@@ -441,23 +441,23 @@ export default function HodConsiderations() {
       {/* Top Header matching exact screenshot text and inline badge */}
       <div>
         <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight m-0 flex items-baseline gap-3 flex-wrap">
-          <span>Department Requests & Approvals Central</span>
+          <span>Department Applications & Attendance Clearances</span>
           <span className="text-xs font-bold text-slate-600">HOD Digital Sign-off</span>
         </h1>
         <p className="text-xs text-slate-500 font-medium mt-1 m-0">
-          Central repository of attendance considerations, student leave applications, and attendance dispute queries with direct TG bypass authority.
+          Departmental records of attendance consideration applications, student leave applications, and official clearances.
         </p>
       </div>
 
       {/* 1. Tabs Bar ON TOP with icons and counts */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5">
         {[
-          { id: 'ALL', label: 'All Requests', count: totalCount, icon: Layers },
+          { id: 'ALL', label: 'All Applications', count: totalCount, icon: Layers },
           { id: 'AWAITING_HOD', label: 'Awaiting HOD Sign-off', count: awaitingCount, icon: Clock },
-          { id: 'BYPASS_QUEUE', label: 'Direct Bypass Queue', count: bypassCount, isZap: true, icon: Zap },
+          { id: 'BYPASS_QUEUE', label: 'Direct Review Applications', count: bypassCount, isZap: true, icon: Zap },
           { id: 'LEAVES', label: 'Leave Applications', count: leavesCount, icon: Calendar },
-          { id: 'CONSIDERATIONS', label: 'Considerations', count: considerationsCount, icon: CheckCircle2 },
-          { id: 'CLEARED', label: 'Cleared & Synced', count: clearedCount, icon: CheckCheck },
+          { id: 'CONSIDERATIONS', label: 'Attendance Considerations', count: considerationsCount, icon: CheckCircle2 },
+          { id: 'CLEARED', label: 'Approved Applications', count: clearedCount, icon: CheckCheck },
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           const TabIcon = tab.icon;
@@ -535,7 +535,7 @@ export default function HodConsiderations() {
           title="Open Official Clearances Ledger"
         >
           <FileSpreadsheet size={14} className="text-blue-600 shrink-0" />
-          <span>Clearances Ledger</span>
+          <span>Approved Clearances</span>
         </button>
 
         {/* Google Live Sheet with Google Sheets logo */}
@@ -701,7 +701,7 @@ export default function HodConsiderations() {
                     {Boolean(item.isGroup && item.groupMembers && item.groupMembers.length > 0) && (
                       <div className="flex flex-wrap items-center gap-2 mt-2.5">
                         <span className="text-[10px] font-black text-indigo-900 uppercase tracking-wider bg-indigo-50 px-2 py-1 rounded-md border border-indigo-200 shadow-2xs">
-                          Roster ({item.groupMembers.length}):
+                          Group Members ({item.groupMembers.length}):
                         </span>
                         {item.groupMembers.map((m, idx) => {
                           const mName = m.user?.name || m.name || 'Student';
@@ -805,9 +805,9 @@ export default function HodConsiderations() {
                         DATE
                       </div>
                       <div className="grid grid-cols-3 text-center border-b border-slate-200">
-                        <div className="py-1 text-[10px] text-slate-400 border-r border-slate-200">from</div>
-                        <div className="py-1 text-[10px] text-slate-400 border-r border-slate-200">to</div>
-                        <div className="py-1 text-[10px] text-slate-400">nos of days</div>
+                        <div className="py-1 text-[10px] text-slate-400 border-r border-slate-200">From</div>
+                        <div className="py-1 text-[10px] text-slate-400 border-r border-slate-200">To</div>
+                        <div className="py-1 text-[10px] text-slate-400">Number of Days</div>
                       </div>
                       <div className="grid grid-cols-3 text-center">
                         <div className="py-1.5 text-xs font-bold text-slate-900 border-r border-slate-200">{fromDateStr}</div>
@@ -821,7 +821,7 @@ export default function HodConsiderations() {
                   <div className="p-3 rounded-xl bg-[#f0f8ff] border border-blue-200 flex flex-col gap-0.5">
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-700 uppercase tracking-wider">
                       <Clock size={13} className="text-blue-600" />
-                      <span>REQUESTED PERIODS</span>
+                      <span>REQUESTED LECTURES</span>
                     </div>
                     <p className="text-xs font-bold text-blue-900 m-0">
                       {formatPeriodsDisplay(item.requestedPeriods)}
@@ -832,10 +832,10 @@ export default function HodConsiderations() {
                   <div className="p-2.5 sm:p-3 rounded-xl bg-[#faf5ff] border border-purple-200 flex items-center justify-between gap-3">
                     <div>
                       <span className="block text-xs font-bold text-purple-900 leading-tight">
-                        sanctioned period
+                        Sanctioned Lectures
                       </span>
                       <span className="block text-[10px] font-medium text-purple-600 mt-0.5">
-                        (default: as requested)
+                        (Default: as requested)
                       </span>
                     </div>
 
@@ -896,7 +896,7 @@ export default function HodConsiderations() {
                         className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer border border-emerald-600"
                       >
                         <Zap size={14} className="text-white fill-white" />
-                        <span>Bypass & Approve</span>
+                        <span>Direct Approve</span>
                       </button>
 
                       <button

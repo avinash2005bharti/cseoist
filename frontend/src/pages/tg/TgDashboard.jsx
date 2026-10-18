@@ -129,7 +129,7 @@ export default function TgDashboard() {
 
       {/* 4 Primary Action / Information Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: PENDING REQUESTS */}
+        {/* Card 1: PENDING APPLICATIONS */}
         <div
           onClick={() => navigate('/tg/requests')}
           className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
@@ -139,7 +139,7 @@ export default function TgDashboard() {
               <FileText size={18} />
             </div>
             <span className="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider">
-              PENDING REQUESTS
+              PENDING APPLICATIONS
             </span>
             <span className="block text-3xl font-black text-slate-900 mt-1">
               {totalPending}
@@ -150,7 +150,7 @@ export default function TgDashboard() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600 group-hover:text-blue-700">
-            <span>Forward to HOD</span>
+            <span>Review Applications</span>
             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
@@ -176,12 +176,12 @@ export default function TgDashboard() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600 group-hover:text-blue-700">
-            <span>View Student Roster</span>
+            <span>View Student List</span>
             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
 
-        {/* Card 3: view consideration list button card */}
+        {/* Card 3: Attendance Consideration Records */}
         <div
           onClick={() => setLedgerModalTab('considerations')}
           className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs hover:border-purple-300 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
@@ -191,20 +191,20 @@ export default function TgDashboard() {
               <CheckSquare size={18} />
             </div>
             <span className="block text-base font-extrabold text-slate-900 leading-snug group-hover:text-purple-700 transition-colors">
-              view consideration list
+              Attendance Consideration Records
             </span>
             <span className="block text-xs text-slate-500 mt-1">
-              Approved clearances & sanctioned OD ledger
+              Approved attendance clearances and official records
             </span>
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-purple-700">
-            <span>Open Ledger</span>
+            <span>View Records</span>
             <ExternalLink size={14} />
           </div>
         </div>
 
-        {/* Card 4: view leave lists button card */}
+        {/* Card 4: Leave Application Records */}
         <div
           onClick={() => setLedgerModalTab('leaves')}
           className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
@@ -214,15 +214,15 @@ export default function TgDashboard() {
               <Calendar size={18} />
             </div>
             <span className="block text-base font-extrabold text-slate-900 leading-snug group-hover:text-emerald-700 transition-colors">
-              view leave lists
+              Leave Application Records
             </span>
             <span className="block text-xs text-slate-500 mt-1">
-              Section absence records & sanctioned leaves
+              Section leave records and sanctioned leaves
             </span>
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-700">
-            <span>Open Ledger</span>
+            <span>View Records</span>
             <ExternalLink size={14} />
           </div>
         </div>

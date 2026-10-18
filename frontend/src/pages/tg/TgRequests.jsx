@@ -72,8 +72,8 @@ export default function TgRequests() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="TG Review Queue"
-        description="Tier-1 evaluation of attendance considerations and leave applications for your assigned students."
+        title="Review Applications"
+        description="Review and recommend attendance consideration and leave applications for your assigned students."
       />
 
       {/* Main Mode Tabs & Status Filters */}
@@ -114,7 +114,7 @@ export default function TgRequests() {
             { id: 'PENDING', label: 'Pending Review' },
             { id: 'RECOMMENDED_BY_TG', label: 'Recommended by TG' },
             { id: 'REJECTED', label: 'Rejected' },
-            { id: 'ALL', label: 'All Requests' },
+            { id: 'ALL', label: 'All Applications' },
           ].map((st) => {
             const isSelected = statusFilter === (st.id === 'ALL' ? '' : st.id);
             let activeColor = 'bg-slate-900 text-white font-bold border-slate-900';
@@ -148,8 +148,8 @@ export default function TgRequests() {
             {activeTab === 'considerations' ? (
               considerations.length === 0 ? (
                 <EmptyState
-                  title="No Consideration Items in Queue"
-                  description="All student consideration requests have been evaluated."
+                  title="No Pending Attendance Consideration Applications"
+                  description="All attendance consideration applications for this section have been reviewed."
                 />
               ) : (
                 <>
@@ -191,7 +191,7 @@ export default function TgRequests() {
                           <div>
                             <span className="text-[10px] uppercase font-bold text-slate-400 block">Lectures</span>
                             <span className="font-bold text-slate-900 block">
-                              {r.requestedPeriods} Requested
+                              {r.requestedPeriods} Lectures
                             </span>
                           </div>
                         </div>
@@ -299,8 +299,8 @@ export default function TgRequests() {
               )
             ) : leaves.length === 0 ? (
               <EmptyState
-                title="No Leave Applications in Queue"
-                description="No student leave requests currently awaiting TG review."
+                title="No Pending Leave Applications"
+                description="There are currently no leave applications awaiting review."
               />
             ) : (
               <>

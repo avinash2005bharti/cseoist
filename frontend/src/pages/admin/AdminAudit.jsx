@@ -146,7 +146,7 @@ export default function AdminAudit() {
           <div className="p-12 text-center text-xs text-slate-400">Loading audit records...</div>
         ) : logs.length === 0 ? (
           <EmptyState
-            title="No audit records found"
+            title="No Audit Records Found"
             description="No system operations match the selected filters."
             icon={Shield}
           />

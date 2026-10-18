@@ -174,7 +174,7 @@ export default function HodMentorship() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-1">
               <span className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate">
-                MENTORED SECTION
+                ASSIGNED SECTIONS
               </span>
               <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 whitespace-nowrap">
                 View Matrix
@@ -193,7 +193,7 @@ export default function HodMentorship() {
           </div>
           <div className="min-w-0">
             <span className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate">
-              PEER CLEARANCE SETTINGS
+              CLEARANCE WORKFLOW
             </span>
             <span className="block text-xl font-black text-slate-900 mt-0.5">
               Multi-Tier Active
@@ -240,7 +240,7 @@ export default function HodMentorship() {
             }
             className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer border shadow-2xs"
           >
-            Standard Faculty ({standardFaculty.length || 4})
+            Faculty Members ({standardFaculty.length || 4})
           </button>
         </div>
 
@@ -344,7 +344,7 @@ export default function HodMentorship() {
                         Max Periods / Day
                       </span>
                       <span className="block text-sm font-extrabold text-blue-600 mt-0.5">
-                        4 slots
+                        4 Lectures
                       </span>
                     </div>
                     <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
@@ -352,7 +352,7 @@ export default function HodMentorship() {
                         Max Periods / Week
                       </span>
                       <span className="block text-sm font-extrabold text-blue-600 mt-0.5">
-                        18 slots
+                        18 Lectures
                       </span>
                     </div>
                   </div>
@@ -368,7 +368,7 @@ export default function HodMentorship() {
                       </div>
                     ) : (
                       <div className="text-xs font-semibold text-slate-500 px-1 py-1">
-                        Regular Faculty Member
+                        Department Faculty Member
                       </div>
                     )}
                   </div>

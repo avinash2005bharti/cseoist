@@ -84,13 +84,13 @@ export default function TgMyStudents() {
 
         {/* Read-only HOD Assigned Section badge (no dropdown) */}
         <div className="flex items-center gap-2 shrink-0 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200">
-          <span className="text-xs font-bold text-blue-900">Assigned Cohort:</span>
+          <span className="text-xs font-bold text-blue-900">Assigned Section:</span>
           <span className="px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-xs font-black">
             {cohort?.section?.name
               ? cohort.section.name
               : cohort?.section?.code
               ? `Section ${cohort.section.code.replace('CSE-', '')}`
-              : (cohort?.semester ? `Semester ${cohort.semester}` : 'Assigned Cohort')}
+              : (cohort?.semester ? `Semester ${cohort.semester}` : 'Assigned Section')}
           </span>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function TgMyStudents() {
             <Users size={32} className="mx-auto text-slate-300 mb-2" />
             <h3 className="text-sm font-extrabold text-slate-700">No Students Found</h3>
             <p className="text-xs text-slate-400 mt-1">
-              No students enrolled matching current search criteria.
+              No students found matching your search criteria.
             </p>
           </div>
         ) : (

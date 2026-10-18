@@ -16,7 +16,7 @@ export default function StudentProfile() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="My Profile & Mentor"
+        title="Profile & Tutor Guardian"
         description="Your academic enrollment details and assigned Tutor Guardian."
       />
 

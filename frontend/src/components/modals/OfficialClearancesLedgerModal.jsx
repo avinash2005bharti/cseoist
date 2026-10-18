@@ -509,14 +509,14 @@ export default function OfficialClearancesLedgerModal({
             <thead>
               <tr>
                 <th style="width: 28px;">#</th>
-                <th style="text-align: left;">student name</th>
-                <th style="text-align: left;">enrollment</th>
-                <th>section</th>
-                <th style="text-align: left;">${activeTab === 'leaves' ? 'category' : 'periods'}</th>
-                <th>time (from - to)</th>
-                <th>date (from - to)</th>
-                <th>number of days</th>
-                <th>status</th>
+                <th style="text-align: left;">Student Name</th>
+                <th style="text-align: left;">Enrollment No.</th>
+                <th>Section</th>
+                <th style="text-align: left;">${activeTab === 'leaves' ? 'Category' : 'Lectures / Periods'}</th>
+                <th>Time (From - To)</th>
+                <th>Date (From - To)</th>
+                <th>Number of Days</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -527,7 +527,7 @@ export default function OfficialClearancesLedgerModal({
           <div class="signatures">
             <div class="sig-box">
               <p class="sig-title">Department ERP Coordinator</p>
-              <p class="sig-sub">OIST Bhopal • Academic Ledger Desk</p>
+              <p class="sig-sub">OIST Bhopal • Department Academic Office</p>
             </div>
             <div class="sig-box">
               <p class="sig-title">Head of Department (HOD CSE)</p>
@@ -602,7 +602,7 @@ export default function OfficialClearancesLedgerModal({
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-medium m-0 mt-0.5">
-                Department of Computer Science & Engineering • Official Clearances Ledger
+                Department of Computer Science & Engineering • Approved Attendance Clearances
               </p>
             </div>
           </div>
@@ -614,7 +614,7 @@ export default function OfficialClearancesLedgerModal({
               className="px-3.5 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <FileSpreadsheet size={14} className="text-emerald-700" />
-              <span>google live sheet</span>
+              <span>Google Live Sheet</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </button>
 
@@ -623,7 +623,7 @@ export default function OfficialClearancesLedgerModal({
               className="px-3.5 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <Download size={14} className="text-emerald-700" />
-              <span>export excel</span>
+              <span>Export Excel</span>
             </button>
 
             <button
@@ -631,7 +631,7 @@ export default function OfficialClearancesLedgerModal({
               className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <Download size={14} />
-              <span>csv</span>
+              <span>Export CSV</span>
             </button>
 
             {/* Print Report Button */}
@@ -640,7 +640,7 @@ export default function OfficialClearancesLedgerModal({
               className="px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <Printer size={14} />
-              <span>print report</span>
+              <span>Print Report</span>
             </button>
           </div>
         </div>
@@ -661,7 +661,7 @@ export default function OfficialClearancesLedgerModal({
                 activeTab === 'considerations' ? '' : 'hover:bg-slate-200'
               }`}
             >
-              <span>attendance consideration list ({activeTab === 'considerations' ? filteredList.length : considerations.length})</span>
+              <span>Attendance Consideration Records ({activeTab === 'considerations' ? filteredList.length : considerations.length})</span>
             </button>
             <button
               type="button"
@@ -675,7 +675,7 @@ export default function OfficialClearancesLedgerModal({
                 activeTab === 'leaves' ? '' : 'hover:bg-slate-200'
               }`}
             >
-              <span>leave list ({activeTab === 'leaves' ? filteredList.length : leaves.length})</span>
+              <span>Leave Application Records ({activeTab === 'leaves' ? filteredList.length : leaves.length})</span>
             </button>
           </div>
 
@@ -756,7 +756,7 @@ export default function OfficialClearancesLedgerModal({
             ) : (
               <>
                 <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                  <span className="font-bold text-slate-600">semester:</span>
+                  <span className="font-bold text-slate-600">Semester:</span>
                   <select
                     value={semesterFilter}
                     onChange={(e) => setSemesterFilter(e.target.value)}
@@ -772,7 +772,7 @@ export default function OfficialClearancesLedgerModal({
                 </div>
 
                 <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                  <span className="font-bold text-slate-600">section:</span>
+                  <span className="font-bold text-slate-600">Section:</span>
                   <select
                     value={sectionFilter}
                     onChange={(e) => setSectionFilter(e.target.value)}
@@ -830,7 +830,7 @@ export default function OfficialClearancesLedgerModal({
         <div className="mt-4 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-600">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-black text-slate-800">
-              LEDGER VIEW:{' '}
+              APPROVED CLEARANCES:{' '}
               {activeTab === 'considerations'
                 ? 'Official Approved Attendance Considerations'
                 : 'Official Approved Student Leave Applications'}
@@ -855,27 +855,27 @@ export default function OfficialClearancesLedgerModal({
           <table className="w-full text-left border-collapse text-xs min-w-[980px]">
             <thead>
               <tr className="bg-slate-100/90 text-slate-700 font-black border-b border-slate-200">
-                <th className="p-3.5 border-r border-slate-200 w-[280px]">student name</th>
-                <th className="p-3.5 border-r border-slate-200 w-[140px]">enrollment</th>
-                <th className="p-3.5 border-r border-slate-200 text-center w-[75px]">section</th>
+                <th className="p-3.5 border-r border-slate-200 w-[280px]">Student Name</th>
+                <th className="p-3.5 border-r border-slate-200 w-[140px]">Enrollment No.</th>
+                <th className="p-3.5 border-r border-slate-200 text-center w-[75px]">Section</th>
                 <th className="p-3.5 border-r border-slate-200 w-[120px]">
-                  {activeTab === 'leaves' ? 'category' : 'periods'}
+                  {activeTab === 'leaves' ? 'Category' : 'Lectures / Periods'}
                 </th>
                 <th className="p-3.5 border-r border-slate-200 text-center w-[160px]" colSpan={2}>
-                  time
+                  Time
                   <div className="grid grid-cols-2 text-[10px] font-bold text-slate-500 border-t border-slate-200 mt-1 pt-1">
-                    <span>from</span>
-                    <span>to</span>
+                    <span>From</span>
+                    <span>To</span>
                   </div>
                 </th>
                 <th className="p-3.5 border-r border-slate-200 text-center w-[190px]" colSpan={2}>
-                  date
+                  Date
                   <div className="grid grid-cols-2 text-[10px] font-bold text-slate-500 border-t border-slate-200 mt-1 pt-1">
-                    <span>from</span>
-                    <span>to</span>
+                    <span>From</span>
+                    <span>To</span>
                   </div>
                 </th>
-                <th className="p-3.5 text-center w-[130px]">number of days</th>
+                <th className="p-3.5 text-center w-[130px]">Number of Days</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
@@ -948,7 +948,7 @@ export default function OfficialClearancesLedgerModal({
                           </span>
                         )}
                         <span className="text-[10px] text-slate-400 block truncate max-w-xs mt-0.5">
-                          {item.description || item.reason || 'Sanctioned attendance credit'}
+                          {item.description || item.reason || 'Approved attendance consideration'}
                         </span>
                       </td>
                       <td className="p-3.5 border-r border-slate-100 font-mono text-slate-700 text-xs">
@@ -999,7 +999,7 @@ export default function OfficialClearancesLedgerModal({
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white transition-colors cursor-pointer self-end sm:self-auto shadow-xs"
           >
-            Close Ledger
+            Close Window
           </button>
         </div>
 

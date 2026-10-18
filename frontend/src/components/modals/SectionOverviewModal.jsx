@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowRight, ArrowLeft, Search, ExternalLink, Users, UserCheck, GraduationCap, Phone, Mail, Loader2 } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft, Search, ExternalLink, Users, UserCheck, GraduationCap, Phone, Mail, Loader2, Layers } from 'lucide-react';
 import { masterDataApi, mentorshipApi } from '../../api';
 import { getSectionLetter } from '../../utils/constants.js';
+import MoveSemesterModal from './MoveSemesterModal.jsx';
 
 export default function SectionOverviewModal({
   initialSection = 'B',
@@ -15,6 +16,7 @@ export default function SectionOverviewModal({
   const [mentorGroups, setMentorGroups] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [moveTarget, setMoveTarget] = useState(null);
 
   useEffect(() => {
     if (initialSemester) setCurrentSemester(Number(initialSemester));
@@ -272,18 +274,46 @@ export default function SectionOverviewModal({
               <GraduationCap size={15} />
             </div>
             <span className="text-sm font-black text-slate-900">
-              student details
+              Student Details
             </span>
             <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-bold">
               CSE-{selectedSection} - {displayStudents.length} / {activeCapacity} Enrolled (Capacity: {activeCapacity})
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold flex items-center gap-1.5">
               <UserCheck size={14} className="text-blue-600" />
               <span>TG : {assignedTgName}</span>
             </span>
+
+            {/* Quick Promote / Demote for active section */}
+            {(() => {
+              const currentSecDoc = semesterDbSections.find((s) => getSectionLetter(s) === selectedSection);
+              if (!currentSecDoc) return null;
+              return (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={currentSemester <= 1}
+                    onClick={() => setMoveTarget({ section: currentSecDoc, direction: 'prev' })}
+                    className="px-2 py-1 rounded-lg text-xs font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 cursor-pointer shadow-2xs"
+                    title={`Demote to Semester ${currentSemester - 1}`}
+                  >
+                    ◀ Demote
+                  </button>
+                  <button
+                    type="button"
+                    disabled={currentSemester >= 8}
+                    onClick={() => setMoveTarget({ section: currentSecDoc, direction: 'next' })}
+                    className="px-2 py-1 rounded-lg text-xs font-bold border border-blue-600 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40 cursor-pointer shadow-2xs"
+                    title={`Promote to Semester ${currentSemester + 1}`}
+                  >
+                    Promote ▶
+                  </button>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -322,7 +352,7 @@ export default function SectionOverviewModal({
                     <td colSpan={4} className="p-12 text-center text-slate-500">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Loader2 size={24} className="animate-spin text-blue-600" />
-                        <span className="text-xs font-bold text-slate-600">Loading student roster...</span>
+                        <span className="text-xs font-bold text-slate-600">Loading student directory...</span>
                       </div>
                     </td>
                   </tr>
@@ -407,6 +437,19 @@ export default function SectionOverviewModal({
           </button>
         </div>
       </div>
+
+      {/* Move Semester Modal */}
+      {moveTarget && (
+        <MoveSemesterModal
+          section={moveTarget.section}
+          direction={moveTarget.direction}
+          onClose={() => setMoveTarget(null)}
+          onSuccess={() => {
+            setMoveTarget(null);
+            fetchData();
+          }}
+        />
+      )}
     </div>
   );
 }

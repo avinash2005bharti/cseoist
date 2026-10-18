@@ -14,15 +14,38 @@ export default class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({ errorInfo });
+
+    // Handle dynamic import / chunk load failures automatically
+    const msg = error?.message || (typeof error === 'string' ? error : '') || '';
+    const isChunkOrDynamicImportError =
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Importing a module script failed') ||
+      msg.includes('error loading dynamically imported module') ||
+      error?.name === 'ChunkLoadError';
+
+    if (isChunkOrDynamicImportError && typeof window !== 'undefined') {
+      const storageKey = 'cf_boundary_reload';
+      const lastAttempt = sessionStorage.getItem(storageKey);
+      const now = Date.now();
+      if (!lastAttempt || now - parseInt(lastAttempt, 10) > 15000) {
+        sessionStorage.setItem(storageKey, String(now));
+        window.location.reload();
+      }
+    }
   }
 
   handleReload = () => {
+    try {
+      sessionStorage.removeItem('cf_boundary_reload');
+      sessionStorage.removeItem('cf_lazy_auto_reload');
+    } catch {}
     window.location.reload();
   };
 
   handleReset = () => {
     try {
       localStorage.removeItem('campusflow_access_token');
+      sessionStorage.clear();
     } catch {}
     window.location.href = '/login';
   };

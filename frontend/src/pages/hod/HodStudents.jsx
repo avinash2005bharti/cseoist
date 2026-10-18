@@ -110,17 +110,17 @@ export default function HodStudents() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 font-medium m-0">
-            Official enrolled roster and section allocation ledger with supervision.
+            Official student directory and section allocation records.
           </p>
         </div>
 
-        {/* Action Buttons: Refresh & Enroll New Student */}
+        {/* Action Buttons: Refresh & Add Student */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             type="button"
             onClick={fetchData}
             className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer min-h-[42px]"
-            title="Refresh student roster"
+            title="Refresh student directory"
           >
             <RefreshCw size={15} className={loading ? 'animate-spin text-blue-600' : 'text-slate-500'} />
             <span>Refresh</span>
@@ -132,7 +132,7 @@ export default function HodStudents() {
             className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors flex items-center gap-2 cursor-pointer min-h-[42px]"
           >
             <Plus size={16} />
-            <span>Enroll New Student</span>
+            <span>Add Student</span>
           </button>
         </div>
       </div>

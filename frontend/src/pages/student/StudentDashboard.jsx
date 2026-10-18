@@ -196,7 +196,7 @@ export default function StudentDashboard() {
           </div>
           <div className="text-left">
             <span className="text-sm sm:text-base font-extrabold text-[#1E40AF] group-hover:text-blue-900 transition-colors block leading-tight">
-              Request Consideration
+              Apply for Consideration
             </span>
             <span className="text-[10px] text-blue-600 font-bold block mt-0.5">
               9:00 AM – 4:00 PM IST
@@ -228,7 +228,7 @@ export default function StudentDashboard() {
             <Clock size={18} strokeWidth={2.2} />
           </div>
           <span className="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-blue-900 transition-colors">
-            My Requests
+            Application History
           </span>
         </button>
       </div>
@@ -324,8 +324,8 @@ export default function StudentDashboard() {
             </span>
             <span className="block text-xs text-amber-600 font-medium mt-0.5">
               {pendingConsiderationsCount > 0
-                ? `${pendingConsiderationsCount} Request${pendingConsiderationsCount !== 1 ? 's' : ''} Under Review`
-                : 'No Pending Requests'}
+                ? `${pendingConsiderationsCount} Application${pendingConsiderationsCount !== 1 ? 's' : ''} Under Review`
+                : 'No Pending Applications'}
             </span>
           </div>
           <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 group-hover:bg-amber-100 group-hover:border-amber-300 transition-colors">
@@ -360,7 +360,7 @@ export default function StudentDashboard() {
         </div>
 
         <div className="text-xs text-slate-500 font-medium md:max-w-xs md:text-right">
-          Tutor Guardian reviews attendance consideration requests and leave applications before Head of Department approval.
+          Tutor Guardian reviews attendance consideration applications and leave applications before Head of Department approval.
         </div>
       </div>
 
@@ -370,14 +370,14 @@ export default function StudentDashboard() {
       <div className="rounded-2xl bg-white border border-slate-200 shadow-2xs p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider m-0">
-            Recent Attendance Consideration Requests
+            Recent Attendance Consideration Applications
           </h2>
           <button
             type="button"
             onClick={() => openModal('REQUEST_CONSIDERATION')}
             className="text-xs font-bold text-slate-700 hover:text-blue-600 flex items-center gap-1 cursor-pointer"
           >
-            <span>+ New</span>
+            <span>+ Apply</span>
           </button>
         </div>
 
@@ -387,17 +387,17 @@ export default function StudentDashboard() {
               <Inbox size={22} />
             </div>
             <h3 className="text-xs font-extrabold text-slate-800 m-0">
-              No Consideration Requests
+              No Attendance Consideration Applications Found
             </h3>
             <p className="text-xs text-slate-400 max-w-sm mt-1 mb-4 font-normal">
-              Submit attendance consideration requests for hackathons, sports tournaments, or college activities.
+              Submit attendance consideration applications for approved events, competitions, or official college activities.
             </p>
             <button
               type="button"
               onClick={() => openModal('REQUEST_CONSIDERATION')}
               className="px-4 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors cursor-pointer shadow-2xs"
             >
-              Request Consideration
+              Apply for Consideration
             </button>
           </div>
         ) : (
@@ -445,7 +445,7 @@ export default function StudentDashboard() {
             onClick={() => openModal('APPLY_LEAVE')}
             className="text-xs font-bold text-slate-700 hover:text-blue-600 flex items-center gap-1 cursor-pointer"
           >
-            <span>+ New</span>
+            <span>+ Apply</span>
           </button>
         </div>
 
