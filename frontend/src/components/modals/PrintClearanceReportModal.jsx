@@ -67,68 +67,6 @@ export default function PrintClearanceReportModal({
       return matchesSem && matchesSec && matchesType;
     });
 
-    // If 0 items, provide realistic official sample entries matching chosen semester & section
-    if (filtered.length === 0) {
-      const semNum = selectedSemester === 'ALL' ? '5' : selectedSemester;
-      const secLetter = selectedSection === 'ALL' ? 'B' : selectedSection.replace(/Section\s*/i, '');
-      filtered = [
-        {
-          _id: '3d4314f5-70d8-45d7-8cfa-5718fd6fec5d',
-          student: {
-            user: { name: 'Avinash Bharti' },
-            enrollmentNumber: `0105CS241101`,
-            rollNumber: `0105CS241101`,
-            section: { name: `Section ${secLetter}`, semester: Number(semNum) },
-          },
-          requestKind: 'CONSIDERATION',
-          category: 'Hackathon / Technical Competition',
-          selectedPeriods: ['P2', 'P3', 'P4'],
-          timeFrom: '10:50 AM',
-          timeTo: '01:20 PM',
-          startDate: '10/12/2026',
-          endDate: '10/12/2026',
-          totalDays: 1,
-          status: 'APPROVED_BY_HOD',
-        },
-        {
-          _id: '78f7f477-1a2d-4c35-b001-95f55147bf13',
-          student: {
-            user: { name: 'Priya Sharma' },
-            enrollmentNumber: `0105CS241102`,
-            rollNumber: `0105CS241102`,
-            section: { name: `Section ${secLetter}`, semester: Number(semNum) },
-          },
-          requestKind: 'CONSIDERATION',
-          category: 'Academic Conference Presentation',
-          selectedPeriods: ['P1', 'P2'],
-          timeFrom: '10:00 AM',
-          timeTo: '11:40 AM',
-          startDate: '11/12/2026',
-          endDate: '11/12/2026',
-          totalDays: 1,
-          status: 'APPROVED_BY_HOD',
-        },
-        {
-          _id: '9214cd3b-5e32-4d11-b012-89a24bf17fa1',
-          student: {
-            user: { name: 'Rahul Verma' },
-            enrollmentNumber: `0105CS241103`,
-            rollNumber: `0105CS241103`,
-            section: { name: `Section ${secLetter}`, semester: Number(semNum) },
-          },
-          requestKind: 'LEAVE',
-          leaveType: 'Medical / Sickness Leave',
-          category: 'Medical / Sickness Leave',
-          timeFrom: '10:00 AM',
-          timeTo: '04:30 PM',
-          startDate: '12/12/2026',
-          endDate: '12/12/2026',
-          totalDays: 1,
-          status: 'APPROVED_BY_HOD',
-        },
-      ];
-    }
-
     const semLabel =
       selectedSemester === 'ALL' ? 'All Semesters' : `Semester ${selectedSemester}`;
     const secLabel =
@@ -140,35 +78,38 @@ export default function PrintClearanceReportModal({
       year: 'numeric',
     });
 
-    const rowsHtml = filtered
-      .map((item, idx) => {
-        const studentName =
-          item.student?.user?.name ||
-          item.student?.name ||
-          item.applicant?.name ||
-          'Avinash Bharti';
-        const enrollNo =
-          item.student?.enrollmentNumber ||
-          item.student?.rollNumber ||
-          `0105CS24110${idx + 1}`;
-        const sec = (item.student?.section?.name || 'Section B').replace(/Section\s*/i, '');
-        const nature =
-          item.category ||
-          item.eventType ||
-          item.leaveType ||
-          item.type ||
-          (item.requestKind === 'LEAVE' ? 'Student Leave' : 'OD Consideration');
-        const periods =
-          Array.isArray(item.selectedPeriods) && item.selectedPeriods.length > 0
-            ? item.selectedPeriods.join(', ')
-            : Array.isArray(item.requestedPeriods)
-            ? item.requestedPeriods.map((p) => `P${p}`).join(', ')
-            : 'P2, P3, P4';
-        const timeStr = `${item.timeFrom || '10:50 AM'} - ${item.timeTo || '01:20 PM'}`;
-        const dateStr = `${item.startDate || '10/12/2026'} - ${item.endDate || item.startDate || '10/12/2026'}`;
-        const days = item.totalDays || 1;
-        const status = item.status || 'APPROVED_BY_HOD';
-        const isApp = status.includes('APPROV');
+    const rowsHtml = filtered.length === 0
+      ? `<tr><td colspan="10" style="padding: 24px; text-align: center; color: #64748B; font-weight: 600;">No approved clearances found for ${targetScope}.</td></tr>`
+      : filtered
+          .map((item, idx) => {
+            const studentName =
+              item.student?.user?.name ||
+              item.student?.name ||
+              item.applicant?.name ||
+              'Student';
+            const enrollNo =
+              item.student?.enrollmentNumber ||
+              item.student?.rollNumber ||
+              item.applicant?.rollNumber ||
+              'N/A';
+            const sec = (item.student?.section?.name || '—').replace(/Section\s*/i, '');
+            const nature =
+              item.category ||
+              item.eventType ||
+              item.leaveType ||
+              item.type ||
+              (item.requestKind === 'LEAVE' ? 'Student Leave' : 'OD Consideration');
+            const periods =
+              Array.isArray(item.selectedPeriods) && item.selectedPeriods.length > 0
+                ? item.selectedPeriods.join(', ')
+                : Array.isArray(item.requestedPeriods)
+                ? item.requestedPeriods.map((p) => `P${p}`).join(', ')
+                : '—';
+            const timeStr = item.timeFrom && item.timeTo ? `${item.timeFrom} - ${item.timeTo}` : '—';
+            const dateStr = item.startDate ? `${item.startDate}${item.endDate && item.endDate !== item.startDate ? ` - ${item.endDate}` : ''}` : '—';
+            const days = item.totalDays || 1;
+            const status = item.status || 'APPROVED_BY_HOD';
+            const isApp = status.includes('APPROV');
 
         return `
           <tr style="border-bottom: 1px solid #E2E8F0; font-size: 11px;">

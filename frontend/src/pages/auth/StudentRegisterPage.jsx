@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/authApi.js';
+import { masterDataApi } from '../../api/modulesApi.js';
 import {
   GraduationCap,
   User,
@@ -24,6 +25,7 @@ import {
 export default function StudentRegisterPage() {
   const navigate = useNavigate();
 
+  const [availableSections, setAvailableSections] = useState([]);
   const [step, setStep] = useState(1); // 1 = Registration form, 2 = Brevo OTP Verification
   const [formData, setFormData] = useState({
     name: '',
@@ -44,6 +46,15 @@ export default function StudentRegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // Fetch available sections on mount
+  useEffect(() => {
+    masterDataApi.getSections().then((res) => {
+      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+        setAvailableSections(res.data);
+      }
+    }).catch(() => {});
+  }, []);
 
   // Resend countdown timer
   useEffect(() => {
@@ -416,10 +427,25 @@ export default function StudentRegisterPage() {
                     onChange={handleChange}
                     className="w-full px-3 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-sm text-slate-800 font-medium cursor-pointer"
                   >
-                    <option value="Section A">Section A</option>
-                    <option value="Section B">Section B</option>
-                    <option value="Section C">Section C</option>
-                    <option value="Section D">Section D</option>
+                    {(() => {
+                      const semSecs = availableSections.filter((s) => Number(s.semester) === Number(formData.semester));
+                      const list = semSecs.length > 0 ? semSecs : availableSections;
+                      if (list.length === 0) {
+                        return (
+                          <>
+                            <option value="Section A">Section A</option>
+                            <option value="Section B">Section B</option>
+                            <option value="Section C">Section C</option>
+                            <option value="Section D">Section D</option>
+                          </>
+                        );
+                      }
+                      return list.map((s) => (
+                        <option key={s._id} value={s.name}>
+                          {s.name} ({s.code} - Sem {s.semester})
+                        </option>
+                      ));
+                    })()}
                   </select>
                 </div>
               </div>

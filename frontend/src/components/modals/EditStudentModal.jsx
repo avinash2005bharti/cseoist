@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, User, Hash, Mail, Phone, Lock, AlertCircle, CheckCircle2, Copy, Check } from 'lucide-react';
 import { masterDataApi } from '../../api';
 import { useERP } from '../../context/ERPContext.jsx';
@@ -6,6 +6,7 @@ import { useERP } from '../../context/ERPContext.jsx';
 export default function EditStudentModal({ student, onClose, onSuccess }) {
   const { addToast } = useERP();
 
+  const [availableSections, setAvailableSections] = useState([]);
   const studentUser = student?.user || {};
   const [name, setName] = useState(studentUser.name || '');
   const [rollNumber, setRollNumber] = useState(student?.rollNumber || '');
@@ -15,9 +16,17 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
   const [semester, setSemester] = useState(student?.semester || student?.section?.semester || 5);
   const [section, setSection] = useState(() => {
     const raw = student?.section?.code || student?.section?.name || '';
-    const letterMatch = raw.match(/([A-D])/i);
+    const letterMatch = raw.match(/([A-Z0-9]+)/i);
     return letterMatch ? letterMatch[1].toUpperCase() : 'B';
   });
+
+  useEffect(() => {
+    masterDataApi.getSections().then((res) => {
+      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+        setAvailableSections(res.data);
+      }
+    }).catch(() => {});
+  }, []);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -223,10 +232,28 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
                 onChange={(e) => setSection(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none cursor-pointer"
               >
-                <option value="A">Section A (CSE-A)</option>
-                <option value="B">Section B (CSE-B)</option>
-                <option value="C">Section C (CSE-C)</option>
-                <option value="D">Section D (CSE-D)</option>
+                {(() => {
+                  const semSecs = availableSections.filter((s) => Number(s.semester) === Number(semester));
+                  const list = semSecs.length > 0 ? semSecs : availableSections;
+                  if (list.length === 0) {
+                    return (
+                      <>
+                        <option value="A">Section A (CSE-A)</option>
+                        <option value="B">Section B (CSE-B)</option>
+                        <option value="C">Section C (CSE-C)</option>
+                        <option value="D">Section D (CSE-D)</option>
+                      </>
+                    );
+                  }
+                  return list.map((s) => {
+                    const cleanLetter = s.name.replace(/^Section\s*/i, '').trim();
+                    return (
+                      <option key={s._id} value={cleanLetter}>
+                        {s.name} ({s.code} - Sem {s.semester})
+                      </option>
+                    );
+                  });
+                })()}
               </select>
             </div>
           </div>

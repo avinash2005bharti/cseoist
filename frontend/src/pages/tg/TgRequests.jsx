@@ -152,72 +152,150 @@ export default function TgRequests() {
                   description="All student consideration requests have been evaluated."
                 />
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Event & Category</TableHead>
-                      <TableHead>Lectures</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <>
+                  {/* Mobile Cards View (< md) */}
+                  <div className="block md:hidden space-y-3 p-1">
                     {considerations.map((r) => (
-                      <TableRow key={r._id} isSelected={selectedItem?._id === r._id}>
-                        <TableCell>
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-extrabold text-slate-900">{r.student?.user?.name}</span>
-                            {Boolean(r.isGroup || (r.sectionStudents && r.sectionStudents.length > 0)) && (
-                              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                Group ({r.sectionStudents?.length || 'Section'})
-                              </span>
-                            )}
+                      <div
+                        key={r._id}
+                        className={`p-4 rounded-2xl bg-white border transition-all space-y-3 ${
+                          selectedItem?._id === r._id
+                            ? 'border-blue-500 shadow-sm ring-1 ring-blue-500/20'
+                            : 'border-slate-200 shadow-2xs hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h4 className="font-extrabold text-sm text-slate-900 truncate">
+                              {r.student?.user?.name || 'Student'}
+                            </h4>
+                            <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
+                              Roll: {r.student?.rollNumber || '-'} • {r.student?.section?.code || r.student?.section?.name || 'Section'}
+                            </span>
                           </div>
-                          <div className="text-[11px] text-slate-500">
-                            Roll: {r.student?.rollNumber} • {r.student?.section?.code || r.student?.section?.name}
+                          <div className="shrink-0">{getStatusBadge(r.status)}</div>
+                        </div>
+
+                        {Boolean(r.isGroup || (r.sectionStudents && r.sectionStudents.length > 0)) && (
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            Group ({r.sectionStudents?.length || 'Section'})
+                          </span>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block">Event</span>
+                            <span className="font-bold text-slate-900 block truncate">{r.eventTitle}</span>
+                            <span className="text-[11px] text-slate-500 block">{r.startDate}</span>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-bold text-slate-900">{r.eventTitle}</div>
-                          <div className="text-[11px] text-slate-500">
-                            {r.eventType} • {r.startDate}
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block">Lectures</span>
+                            <span className="font-bold text-slate-900 block">
+                              {r.requestedPeriods} Requested
+                            </span>
                           </div>
-                        </TableCell>
-                        <TableCell className="font-extrabold text-slate-900">
-                          {r.requestedPeriods}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(r.status)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1.5">
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedItem(r)}
+                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                          >
+                            <Eye size={13} />
+                            <span>Details</span>
+                          </button>
+                          {r.status === 'PENDING' && (
                             <button
-                              onClick={() => setSelectedItem(r)}
-                              className="btn btn-outline btn-xs p-1"
-                              title="Details"
+                              type="button"
+                              onClick={() =>
+                                openModal('REVIEW_ACTION', {
+                                  type: 'CONSIDERATION',
+                                  role: 'TG',
+                                  item: r,
+                                })
+                              }
+                              className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
                             >
-                              <Eye size={13} />
+                              <CheckSquare size={13} />
+                              <span>Review</span>
                             </button>
-                            {r.status === 'PENDING' && (
-                              <Button
-                                size="xs"
-                                variant="primary"
-                                onClick={() =>
-                                  openModal('REVIEW_ACTION', {
-                                    type: 'CONSIDERATION',
-                                    role: 'TG',
-                                    item: r,
-                                  })
-                                }
-                              >
-                                Review
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                          )}
+                        </div>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+
+                  {/* Desktop Table View (>= md) */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Student</TableHead>
+                          <TableHead>Event & Category</TableHead>
+                          <TableHead>Lectures</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {considerations.map((r) => (
+                          <TableRow key={r._id} isSelected={selectedItem?._id === r._id}>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-extrabold text-slate-900">{r.student?.user?.name}</span>
+                                {Boolean(r.isGroup || (r.sectionStudents && r.sectionStudents.length > 0)) && (
+                                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                    Group ({r.sectionStudents?.length || 'Section'})
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-slate-500">
+                                Roll: {r.student?.rollNumber} • {r.student?.section?.code || r.student?.section?.name}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-bold text-slate-900">{r.eventTitle}</div>
+                              <div className="text-[11px] text-slate-500">
+                                {r.eventType} • {r.startDate}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-extrabold text-slate-900">
+                              {r.requestedPeriods}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(r.status)}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => setSelectedItem(r)}
+                                  className="btn btn-outline btn-xs p-1 cursor-pointer"
+                                  title="Details"
+                                >
+                                  <Eye size={13} />
+                                </button>
+                                {r.status === 'PENDING' && (
+                                  <Button
+                                    size="xs"
+                                    variant="primary"
+                                    onClick={() =>
+                                      openModal('REVIEW_ACTION', {
+                                        type: 'CONSIDERATION',
+                                        role: 'TG',
+                                        item: r,
+                                      })
+                                    }
+                                  >
+                                    Review
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               )
             ) : leaves.length === 0 ? (
               <EmptyState
@@ -225,63 +303,137 @@ export default function TgRequests() {
                 description="No student leave requests currently awaiting TG review."
               />
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Category & Reason</TableHead>
-                    <TableHead>Range</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile Cards View (< md) */}
+                <div className="block md:hidden space-y-3 p-1">
                   {leaves.map((l) => (
-                    <TableRow key={l._id} isSelected={selectedItem?._id === l._id}>
-                      <TableCell>
-                        <div className="font-extrabold text-slate-900">{l.student?.user?.name}</div>
-                        <div className="text-[11px] text-slate-500">
-                          Roll: {l.student?.rollNumber}
+                    <div
+                      key={l._id}
+                      className={`p-4 rounded-2xl bg-white border transition-all space-y-3 ${
+                        selectedItem?._id === l._id
+                          ? 'border-blue-500 shadow-sm ring-1 ring-blue-500/20'
+                          : 'border-slate-200 shadow-2xs hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h4 className="font-extrabold text-sm text-slate-900 truncate">
+                            {l.student?.user?.name || 'Student'}
+                          </h4>
+                          <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
+                            Roll: {l.student?.rollNumber || '-'}
+                          </span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-bold text-slate-900">{l.leaveType} ({l.totalDays}d)</div>
-                        <div className="text-[11px] text-slate-500 truncate max-w-[160px]">{l.reason}</div>
-                      </TableCell>
-                      <TableCell className="text-xs text-slate-600">
-                        {l.startDate} to {l.endDate}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(l.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
+                        <div className="shrink-0">{getStatusBadge(l.status)}</div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Category</span>
+                          <span className="font-bold text-slate-900 block truncate">
+                            {l.leaveType} ({l.totalDays}d)
+                          </span>
+                          <span className="text-[11px] text-slate-500 block truncate">{l.reason}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Dates</span>
+                          <span className="font-semibold text-slate-800 block">
+                            {l.startDate} to {l.endDate}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedItem(l)}
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Eye size={13} />
+                          <span>Details</span>
+                        </button>
+                        {l.status === 'PENDING' && (
                           <button
-                            onClick={() => setSelectedItem(l)}
-                            className="btn btn-outline btn-xs p-1"
-                            title="Details"
+                            type="button"
+                            onClick={() =>
+                              openModal('REVIEW_ACTION', {
+                                type: 'LEAVE',
+                                role: 'TG',
+                                item: l,
+                              })
+                            }
+                            className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
                           >
-                            <Eye size={13} />
+                            <CheckSquare size={13} />
+                            <span>Review</span>
                           </button>
-                          {l.status === 'PENDING' && (
-                            <Button
-                              size="xs"
-                              variant="primary"
-                              onClick={() =>
-                                openModal('REVIEW_ACTION', {
-                                  type: 'LEAVE',
-                                  role: 'TG',
-                                  item: l,
-                                })
-                              }
-                            >
-                              Review
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                        )}
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+
+                {/* Desktop Table View (>= md) */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Student</TableHead>
+                        <TableHead>Category & Reason</TableHead>
+                        <TableHead>Range</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leaves.map((l) => (
+                        <TableRow key={l._id} isSelected={selectedItem?._id === l._id}>
+                          <TableCell>
+                            <div className="font-extrabold text-slate-900">{l.student?.user?.name}</div>
+                            <div className="text-[11px] text-slate-500">
+                              Roll: {l.student?.rollNumber}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-bold text-slate-900">{l.leaveType} ({l.totalDays}d)</div>
+                            <div className="text-[11px] text-slate-500 truncate max-w-[160px]">{l.reason}</div>
+                          </TableCell>
+                          <TableCell className="text-xs text-slate-600">
+                            {l.startDate} to {l.endDate}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(l.status)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setSelectedItem(l)}
+                                className="btn btn-outline btn-xs p-1 cursor-pointer"
+                                title="Details"
+                              >
+                                <Eye size={13} />
+                              </button>
+                              {l.status === 'PENDING' && (
+                                <Button
+                                  size="xs"
+                                  variant="primary"
+                                  onClick={() =>
+                                    openModal('REVIEW_ACTION', {
+                                      type: 'LEAVE',
+                                      role: 'TG',
+                                      item: l,
+                                    })
+                                  }
+                                >
+                                  Review
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </Card>
         </div>

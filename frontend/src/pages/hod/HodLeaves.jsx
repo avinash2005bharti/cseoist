@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useERP } from '../../context/ERPContext.jsx';
-import { leaveApi } from '../../api';
+import { leaveApi, masterDataApi } from '../../api';
 import {
   STATUS_LABELS,
   formatDateIST,
@@ -27,6 +27,8 @@ import {
   AlertTriangle,
   Download,
   FileText,
+  Filter,
+  ChevronDown,
 } from 'lucide-react';
 import WorkflowTimeline from '../../components/WorkflowTimeline.jsx';
 import FormalApplicationModal from '../../components/modals/FormalApplicationModal.jsx';
@@ -47,6 +49,9 @@ export default function HodLeaves() {
   const [activeRoleTab, setActiveRoleTab] = useState('ALL'); // 'ALL' | 'STUDENT' | 'TEACHER'
   const [filterMode, setFilterMode] = useState('ACTION_NEEDED'); // 'ACTION_NEEDED' | 'ALL' | 'APPROVED' | 'REJECTED'
   const [search, setSearch] = useState('');
+  const [semesterFilter, setSemesterFilter] = useState('ALL');
+  const [sectionFilter, setSectionFilter] = useState('ALL');
+  const [sections, setSections] = useState([]);
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,8 +61,14 @@ export default function HodLeaves() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await leaveApi.getHODQueue({ all: true });
-      const raw = res?.data || [];
+      const [res, secRes] = await Promise.allSettled([
+        leaveApi.getHODQueue({ all: true }),
+        masterDataApi.getSections(),
+      ]);
+      const raw = res.status === 'fulfilled' ? res.value?.data || [] : [];
+      if (secRes.status === 'fulfilled') {
+        setSections(Array.isArray(secRes.value?.data) ? secRes.value.data : []);
+      }
       const rejectedList = getStoredRejectedIds();
       const normalized = raw.map((item) => {
         if (rejectedList.includes(item._id)) {
@@ -137,6 +148,16 @@ export default function HodLeaves() {
 
     const matchesRole = activeRoleTab === 'ALL' || item.applicantRole === activeRoleTab;
 
+    const itemSem = item.student?.semester || item.student?.section?.semester || item.semester;
+    const matchesSemester =
+      semesterFilter === 'ALL' || (itemSem !== undefined && Number(itemSem) === Number(semesterFilter));
+
+    const itemSecName = item.student?.section?.name || item.student?.section?.code || item.section || '';
+    const cleanItemSec = itemSecName.replace(/^Section\s*/i, '').trim().toUpperCase();
+    const cleanFilterSec = sectionFilter.replace(/^Section\s*/i, '').trim().toUpperCase();
+    const matchesSection =
+      sectionFilter === 'ALL' || cleanItemSec === cleanFilterSec;
+
     let matchesStatus = true;
     if (filterMode === 'ACTION_NEEDED') {
       matchesStatus = isActionNeeded(item);
@@ -146,8 +167,20 @@ export default function HodLeaves() {
       matchesStatus = isRejected(item);
     }
 
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesRole && matchesStatus && matchesSemester && matchesSection;
   });
+
+  const uniqueSections = [
+    ...new Set(
+      sections
+        .map((s) => s.name?.replace(/^Section\s*/i, '').trim() || s.code)
+        .concat(
+          items
+            .map((i) => (i.student?.section?.name || i.student?.section?.code || '').replace(/^Section\s*/i, '').trim())
+            .filter(Boolean)
+        )
+    ),
+  ].filter(Boolean).sort();
 
   const getStatusBadge = (item) => {
     if (isApproved(item)) {
@@ -224,8 +257,46 @@ export default function HodLeaves() {
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl min-h-[44px] px-3.5 py-2 flex-1 sm:w-64">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Semester Filter Pill */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs text-xs font-semibold text-slate-600">
+            <Filter size={13} className="text-blue-600 shrink-0" />
+            <span>Sem:</span>
+            <select
+              value={semesterFilter}
+              onChange={(e) => setSemesterFilter(e.target.value)}
+              className="text-blue-600 font-bold bg-transparent border-none p-0 focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="ALL">All Semesters</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                <option key={s} value={s}>
+                  Sem {s}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={12} className="text-blue-600 -ml-1 pointer-events-none" />
+          </div>
+
+          {/* Section Filter Pill */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs text-xs font-semibold text-slate-600">
+            <Filter size={13} className="text-blue-600 shrink-0" />
+            <span>Sec:</span>
+            <select
+              value={sectionFilter}
+              onChange={(e) => setSectionFilter(e.target.value)}
+              className="text-blue-600 font-bold bg-transparent border-none p-0 focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="ALL">All Sections</option>
+              {uniqueSections.map((sec) => (
+                <option key={sec} value={sec}>
+                  Sec {sec}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={12} className="text-blue-600 -ml-1 pointer-events-none" />
+          </div>
+
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl min-h-[40px] px-3.5 py-1.5 flex-1 sm:w-64">
             <Search size={16} className="text-slate-400 shrink-0" />
             <input
               type="text"
@@ -236,7 +307,7 @@ export default function HodLeaves() {
             />
           </div>
 
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs min-h-[44px]">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs min-h-[40px]">
             {[
               { id: 'ACTION_NEEDED', label: 'Pending' },
               { id: 'ALL', label: 'All' },
@@ -266,49 +337,49 @@ export default function HodLeaves() {
             ) : filteredItems.length === 0 ? (
               <EmptyState
                 title="No leave applications found"
-                description="No applications match the selected filters. Try changing the role or status filter."
+                description="No applications match the selected filters. Try changing the role, semester, or section filter."
                 icon={Calendar}
               />
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Applicant</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Leave Type</TableHead>
-                    <TableHead>Dates & Duration</TableHead>
-                    <TableHead>Review Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile Card View (< 768px) */}
+                <div className="block md:hidden divide-y divide-slate-100">
                   {filteredItems.map((item) => {
                     const actionNeeded = isActionNeeded(item);
                     const applicantDisplayName =
                       item.applicant?.name ||
                       item.applicant?.designation ||
                       (item.applicantRole === 'TEACHER' ? 'Faculty Member' : 'Student');
+                    const roll = item.student?.rollNumber || item.applicant?.rollNumber || item.applicant?.enrollmentNumber;
+                    const sem = item.student?.semester || item.student?.section?.semester;
+                    const sec = item.student?.section?.name?.replace(/^Section\s*/i, '') || item.student?.section?.code;
 
                     return (
-                      <TableRow
+                      <div
                         key={item._id}
-                        className={`cursor-pointer transition-colors ${
+                        className={`p-4 flex flex-col gap-2.5 transition-colors cursor-pointer ${
                           selectedItem?._id === item._id ? 'bg-amber-50/50' : 'hover:bg-slate-50'
                         }`}
                         onClick={() => setSelectedItem(item)}
                       >
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-heading font-black text-xs text-slate-900">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h4 className="font-heading font-black text-xs text-slate-900 m-0">
                               {applicantDisplayName}
-                            </span>
-                            <span className="text-[11px] text-slate-500 truncate max-w-[160px]">
-                              {item.applicant?.email || 'authenticated'}
-                            </span>
+                            </h4>
+                            <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                              {roll ? `${roll} • ` : ''}{item.applicant?.email || 'authenticated'}
+                            </div>
+                            {sem && (
+                              <div className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                                Sem {sem} {sec ? `• Sec ${sec}` : ''}
+                              </div>
+                            )}
                           </div>
-                        </TableCell>
+                          {getStatusBadge(item)}
+                        </div>
 
-                        <TableCell>
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
                           <span
                             className={`badge text-[10px] font-bold ${
                               item.applicantRole === 'TEACHER' ? 'badge-indigo' : 'badge-slate'
@@ -316,82 +387,199 @@ export default function HodLeaves() {
                           >
                             {item.applicantRole === 'TEACHER' ? 'Faculty' : 'Student'}
                           </span>
-                        </TableCell>
-
-                        <TableCell>
                           <span className="badge badge-amber text-[10px] font-bold">
                             {item.leaveType}
                           </span>
-                        </TableCell>
+                          <span className="text-[11px] text-slate-600 font-semibold ml-auto">
+                            {item.totalDays} day{item.totalDays > 1 ? 's' : ''}
+                          </span>
+                        </div>
 
-                        <TableCell>
-                          <div className="flex flex-col text-xs">
-                            <span className="font-bold text-slate-800">
-                              {item.startDate === item.endDate
-                                ? formatDateIST(item.startDate)
-                                : `${formatDateIST(item.startDate)} to ${formatDateIST(item.endDate)}`}
-                            </span>
-                            <span className="text-[11px] text-slate-500">
-                              {item.totalDays} day{item.totalDays > 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        </TableCell>
+                        <div className="text-[11px] text-slate-500 font-medium">
+                          {item.startDate === item.endDate
+                            ? formatDateIST(item.startDate)
+                            : `${formatDateIST(item.startDate)} to ${formatDateIST(item.endDate)}`}
+                        </div>
 
-                        <TableCell>{getStatusBadge(item)}</TableCell>
+                        {/* Mobile Actions */}
+                        <div className="flex items-center justify-end gap-2 pt-1.5 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
+                          {item.documentFileId && (
+                            <button
+                              onClick={() =>
+                                viewAttachment({
+                                  fileId: item.documentFileId,
+                                  fileName: item.documentOriginalName || 'Document.pdf',
+                                })
+                              }
+                              className="btn btn-sm btn-ghost p-1.5 text-slate-500 hover:text-blue-600 cursor-pointer text-xs"
+                              title="View Proof"
+                            >
+                              <Eye size={14} />
+                              <span className="text-[11px] font-semibold">Proof</span>
+                            </button>
+                          )}
 
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                            {item.documentFileId && (
-                              <button
-                                onClick={() =>
-                                  viewAttachment({
-                                    fileId: item.documentFileId,
-                                    fileName: item.documentOriginalName || 'Document.pdf',
-                                  })
-                                }
-                                className="btn btn-sm btn-ghost p-1.5 text-slate-500 hover:text-blue-600 cursor-pointer"
-                                title="View Proof"
-                              >
-                                <Eye size={14} />
-                              </button>
-                            )}
+                          {(item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD') && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSanction(item);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                            >
+                              <FileText size={12} />
+                              <span>Order</span>
+                            </button>
+                          )}
 
-                            {(item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD') && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedSanction(item);
-                                }}
-                                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
-                              >
-                                <FileText size={12} />
-                                <span>View Order</span>
-                              </button>
-                            )}
-
-                            {actionNeeded && (
-                              <Button
-                                variant="warning"
-                                onClick={() =>
-                                  openModal('REVIEW_ACTION', {
-                                    type: 'LEAVE',
-                                    role: 'HOD',
-                                    item,
-                                  })
-                                }
-                                className="btn-sm text-[11px] font-bold py-1 px-3 cursor-pointer"
-                              >
-                                Review
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                          {actionNeeded && (
+                            <Button
+                              variant="warning"
+                              onClick={() =>
+                                openModal('REVIEW_ACTION', {
+                                  type: 'LEAVE',
+                                  role: 'HOD',
+                                  item,
+                                })
+                              }
+                              className="btn-sm text-[11px] font-bold py-1 px-3 cursor-pointer"
+                            >
+                              Review
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     );
                   })}
-                </TableBody>
-              </Table>
+                </div>
+
+                {/* Desktop Table View (>= 768px) */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Applicant</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Leave Type</TableHead>
+                        <TableHead>Dates & Duration</TableHead>
+                        <TableHead>Review Status</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredItems.map((item) => {
+                        const actionNeeded = isActionNeeded(item);
+                        const applicantDisplayName =
+                          item.applicant?.name ||
+                          item.applicant?.designation ||
+                          (item.applicantRole === 'TEACHER' ? 'Faculty Member' : 'Student');
+
+                        return (
+                          <TableRow
+                            key={item._id}
+                            className={`cursor-pointer transition-colors ${
+                              selectedItem?._id === item._id ? 'bg-amber-50/50' : 'hover:bg-slate-50'
+                            }`}
+                            onClick={() => setSelectedItem(item)}
+                          >
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-heading font-black text-xs text-slate-900">
+                                  {applicantDisplayName}
+                                </span>
+                                <span className="text-[11px] text-slate-500 truncate max-w-[160px]">
+                                  {item.applicant?.email || 'authenticated'}
+                                </span>
+                              </div>
+                            </TableCell>
+
+                            <TableCell>
+                              <span
+                                className={`badge text-[10px] font-bold ${
+                                  item.applicantRole === 'TEACHER' ? 'badge-indigo' : 'badge-slate'
+                                }`}
+                              >
+                                {item.applicantRole === 'TEACHER' ? 'Faculty' : 'Student'}
+                              </span>
+                            </TableCell>
+
+                            <TableCell>
+                              <span className="badge badge-amber text-[10px] font-bold">
+                                {item.leaveType}
+                              </span>
+                            </TableCell>
+
+                            <TableCell>
+                              <div className="flex flex-col text-xs">
+                                <span className="font-bold text-slate-800">
+                                  {item.startDate === item.endDate
+                                    ? formatDateIST(item.startDate)
+                                    : `${formatDateIST(item.startDate)} to ${formatDateIST(item.endDate)}`}
+                                </span>
+                                <span className="text-[11px] text-slate-500">
+                                  {item.totalDays} day{item.totalDays > 1 ? 's' : ''}
+                                </span>
+                              </div>
+                            </TableCell>
+
+                            <TableCell>{getStatusBadge(item)}</TableCell>
+
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                {item.documentFileId && (
+                                  <button
+                                    onClick={() =>
+                                      viewAttachment({
+                                        fileId: item.documentFileId,
+                                        fileName: item.documentOriginalName || 'Document.pdf',
+                                      })
+                                    }
+                                    className="btn btn-sm btn-ghost p-1.5 text-slate-500 hover:text-blue-600 cursor-pointer"
+                                    title="View Proof"
+                                  >
+                                    <Eye size={14} />
+                                  </button>
+                                )}
+
+                                {(item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD') && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSanction(item);
+                                    }}
+                                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                                  >
+                                    <FileText size={12} />
+                                    <span>View Order</span>
+                                  </button>
+                                )}
+
+                                {actionNeeded && (
+                                  <Button
+                                    variant="warning"
+                                    onClick={() =>
+                                      openModal('REVIEW_ACTION', {
+                                        type: 'LEAVE',
+                                        role: 'HOD',
+                                        item,
+                                      })
+                                    }
+                                    className="btn-sm text-[11px] font-bold py-1 px-3 cursor-pointer"
+                                  >
+                                    Review
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </Card>
         </div>

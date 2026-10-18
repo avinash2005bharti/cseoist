@@ -154,59 +154,127 @@ export default function StudentLeaves() {
                 onAction={() => openModal('APPLY_LEAVE')}
               />
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Type & Reason</TableHead>
-                    <TableHead>Dates</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile Cards View (< md) */}
+                <div className="block md:hidden space-y-3 p-1">
                   {leaves.map((l) => (
-                    <TableRow key={l._id} isSelected={selectedLeave?._id === l._id}>
-                      <TableCell>
-                        <div className="font-extrabold text-slate-900">
-                          {l.leaveType ? `${l.leaveType.replace(/_/g, ' ')} Leave` : 'Leave'}
+                    <div
+                      key={l._id}
+                      className={`p-4 rounded-2xl bg-white border transition-all space-y-3 ${
+                        selectedLeave?._id === l._id
+                          ? 'border-blue-500 shadow-sm ring-1 ring-blue-500/20'
+                          : 'border-slate-200 shadow-2xs hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h4 className="font-extrabold text-sm text-slate-900 truncate">
+                            {l.leaveType ? `${l.leaveType.replace(/_/g, ' ')} Leave` : 'Leave'}
+                          </h4>
+                          <span className="text-[11px] text-slate-500 font-medium block mt-0.5 truncate">
+                            {l.reason || 'Personal Leave'}
+                          </span>
                         </div>
-                        <div className="text-[11px] text-slate-500 max-w-[200px] truncate">
-                          {l.reason}
+                        <div className="shrink-0">{getStatusBadge(l.status)}</div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Dates</span>
+                          <span className="font-semibold text-slate-800">
+                            {l.startDate} {l.endDate !== l.startDate ? `to ${l.endDate}` : ''}
+                          </span>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-xs text-slate-600">
-                        {l.startDate} {l.endDate !== l.startDate ? `to ${l.endDate}` : ''}
-                      </TableCell>
-                      <TableCell className="font-bold text-slate-800">
-                        {l.totalDays} Day{l.totalDays !== 1 ? 's' : ''}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(l.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Duration</span>
+                          <span className="font-bold text-slate-900">
+                            {l.totalDays} Day{l.totalDays !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLeave(l)}
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Eye size={13} />
+                          <span>Details</span>
+                        </button>
+                        {l.status === 'PENDING' && (
                           <button
-                            onClick={() => setSelectedLeave(l)}
-                            className="btn btn-outline btn-xs p-1"
-                            title="View Details"
+                            type="button"
+                            onClick={() => handleCancel(l._id)}
+                            disabled={cancellingId === l._id}
+                            className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors disabled:opacity-50"
                           >
-                            <Eye size={13} />
+                            <Ban size={13} className={cancellingId === l._id ? 'animate-spin' : ''} />
+                            <span>Cancel</span>
                           </button>
-                          {l.status === 'PENDING' && (
-                            <button
-                              onClick={() => handleCancel(l._id)}
-                              disabled={cancellingId === l._id}
-                              className="btn btn-danger btn-xs p-1 cursor-pointer disabled:opacity-50"
-                              title="Cancel Application"
-                            >
-                              <Ban size={13} className={cancellingId === l._id ? 'animate-spin' : ''} />
-                            </button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                        )}
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+
+                {/* Desktop Table View (>= md) */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Type & Reason</TableHead>
+                        <TableHead>Dates</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leaves.map((l) => (
+                        <TableRow key={l._id} isSelected={selectedLeave?._id === l._id}>
+                          <TableCell>
+                            <div className="font-extrabold text-slate-900">
+                              {l.leaveType ? `${l.leaveType.replace(/_/g, ' ')} Leave` : 'Leave'}
+                            </div>
+                            <div className="text-[11px] text-slate-500 max-w-[200px] truncate">
+                              {l.reason}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-slate-600">
+                            {l.startDate} {l.endDate !== l.startDate ? `to ${l.endDate}` : ''}
+                          </TableCell>
+                          <TableCell className="font-bold text-slate-800">
+                            {l.totalDays} Day{l.totalDays !== 1 ? 's' : ''}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(l.status)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setSelectedLeave(l)}
+                                className="btn btn-outline btn-xs p-1 cursor-pointer"
+                                title="View Details"
+                              >
+                                <Eye size={13} />
+                              </button>
+                              {l.status === 'PENDING' && (
+                                <button
+                                  onClick={() => handleCancel(l._id)}
+                                  disabled={cancellingId === l._id}
+                                  className="btn btn-danger btn-xs p-1 cursor-pointer disabled:opacity-50"
+                                  title="Cancel Application"
+                                >
+                                  <Ban size={13} className={cancellingId === l._id ? 'animate-spin' : ''} />
+                                </button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </Card>
         </div>

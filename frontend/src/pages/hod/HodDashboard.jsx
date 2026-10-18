@@ -196,11 +196,7 @@ export default function HodDashboard() {
     return Number(sem) === Number(selectedSemNumber);
   });
 
-  const availableSemesters = [...new Set(
-    sections
-      .map((section) => Number(section.semester))
-      .filter((semester) => Number.isInteger(semester))
-  )].sort((a, b) => a - b);
+  const availableSemesters = [1, 2, 3, 4, 5, 6, 7, 8];
 
   const realAcademicYears = [...new Set(
     students
@@ -209,10 +205,11 @@ export default function HodDashboard() {
   )].sort();
 
   useEffect(() => {
-    if (selectedSemNumber === null && availableSemesters.length > 0) {
-      setSelectedSemNumber(availableSemesters[0]);
+    if (selectedSemNumber === null) {
+      const activeSem = sections.find((s) => s.semester)?.semester;
+      setSelectedSemNumber(activeSem ? Number(activeSem) : 5);
     }
-  }, [availableSemesters, selectedSemNumber]);
+  }, [sections, selectedSemNumber]);
 
   useEffect(() => {
     if (!academicYear && realAcademicYears.length > 0) {
@@ -378,64 +375,7 @@ export default function HodDashboard() {
                 — OIST CSE
               </p>
             </div>
-
-              <div className="relative shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowYearDropdown((prev) => !prev)}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800/95 backdrop-blur-md border border-white/20 hover:border-white/40 text-white text-xs sm:text-sm font-bold shadow-md transition-all cursor-pointer"
-                  title="Switch Academic Session"
-                >
-                  <Calendar size={14} className="text-blue-400" />
-                  <span>{academicYear ? `Academic Year: ${academicYear}` : 'Academic year unavailable'}</span>
-                  <ChevronDown
-                    size={14}
-                    className={`text-slate-300 ml-0.5 transition-transform duration-200 ${
-                      showYearDropdown ? 'rotate-180 text-white' : ''
-                    }`}
-                  />
-                </button>
-
-                {showYearDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-30"
-                      onClick={() => setShowYearDropdown(false)}
-                    />
-                    <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-white/20 shadow-2xl py-1.5 z-40 animate-in fade-in slide-in-from-top-2">
-                      <div className="px-3.5 py-1.5 text-[10px] font-extrabold text-sky-400 uppercase tracking-wider border-b border-white/10">
-                        Select Academic Year
-                      </div>
-                      {realAcademicYears.map((session) => (
-                        <button
-                          key={session}
-                          type="button"
-                          onClick={() => {
-                            setAcademicYear(session);
-                            setShowYearDropdown(false);
-                            addToast(
-                              'Academic Year Updated',
-                              `Active session changed to ${session}`,
-                              'info'
-                            );
-                          }}
-                          className={`w-full text-left px-3.5 py-2 text-xs font-bold transition-colors flex items-center justify-between cursor-pointer ${
-                            academicYear === session
-                              ? 'bg-blue-600/40 text-sky-300 font-extrabold'
-                              : 'text-slate-200 hover:bg-white/10'
-                          }`}
-                        >
-                          <span>{session}</span>
-                          {academicYear === session && (
-                            <span className="text-xs text-sky-400 font-black">✓</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+          </div>
         </div>
       </div>
 
@@ -819,8 +759,9 @@ export default function HodDashboard() {
                       </span>
                       <span className="block text-2xl font-black text-slate-900 leading-tight mt-1">
                         {section.studentCount}
+                        <span className="text-xs font-bold text-slate-400"> / {section.capacity || 60}</span>
                       </span>
-                      <span className="block text-[11px] text-slate-600 font-bold mt-0.5">Students</span>
+                      <span className="block text-[11px] text-slate-600 font-bold mt-0.5">Students (Quota)</span>
                     </div>
                     <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white text-emerald-600 border border-slate-200/90 text-[11px] font-bold shadow-2xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
@@ -982,6 +923,7 @@ export default function HodDashboard() {
         {showClassesModal && (
           <ClassesCurriculumModal
             onClose={() => setShowClassesModal(false)}
+            onUpdated={() => fetchDashboardData()}
           />
         )}
 

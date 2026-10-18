@@ -133,7 +133,10 @@ export const createUser = async (data) => {
   let profile = null;
 
   if (targetRole === 'STUDENT') {
-    // Find or create Section
+    const semNumber = parseInt(data.semester, 10) || 5;
+    const yearNumber = parseInt(data.year, 10) || Math.ceil(semNumber / 2) || 3;
+
+    // Find or create Section scoped by semester
     let sec = null;
     const cleanSectionName = (data.section || 'Section B').replace(/^Section\s*/i, '').trim();
     if (data.sectionId) {
@@ -142,21 +145,25 @@ export const createUser = async (data) => {
     if (!sec) {
       sec = await Section.findOne({
         department: dept._id,
+        semester: semNumber,
         $or: [
           { name: new RegExp(`^Section ${cleanSectionName}$`, 'i') },
+          { code: new RegExp(`^CSE-${cleanSectionName}-S${semNumber}$`, 'i') },
           { code: new RegExp(`^CSE-${cleanSectionName}$`, 'i') },
           { name: new RegExp(`^${cleanSectionName}$`, 'i') },
         ],
       });
     }
 
-    const semNumber = parseInt(data.semester, 10) || 5;
-    const yearNumber = parseInt(data.year, 10) || Math.ceil(semNumber / 2) || 3;
-
     if (!sec) {
+      let codeToUse = `CSE-${cleanSectionName}`;
+      const codeConflict = await Section.findOne({ code: codeToUse });
+      if (codeConflict && codeConflict.semester !== semNumber) {
+        codeToUse = `CSE-${cleanSectionName}-S${semNumber}`;
+      }
       sec = await Section.create({
         name: `Section ${cleanSectionName}`,
-        code: `CSE-${cleanSectionName}`,
+        code: codeToUse,
         department: dept._id,
         year: yearNumber,
         semester: semNumber,
@@ -215,6 +222,7 @@ export const createUser = async (data) => {
     // If TG appointment was selected
     if (isTGAppointment) {
       try {
+        const tgSemester = parseInt(data.semester, 10) || 5;
         let tgSection = null;
         if (data.sectionId) {
           tgSection = await Section.findById(data.sectionId);
@@ -222,14 +230,25 @@ export const createUser = async (data) => {
           const cleanLetter = String(data.section).replace(/Section\s*/i, '').trim();
           tgSection = await Section.findOne({
             department: dept._id,
+            semester: tgSemester,
             $or: [
+              { code: `CSE-${cleanLetter}-S${tgSemester}` },
               { code: `CSE-${cleanLetter}` },
               { name: `Section ${cleanLetter}` },
+              { name: cleanLetter },
             ],
           });
+          if (!tgSection) {
+            tgSection = await Section.findOne({
+              department: dept._id,
+              $or: [
+                { code: `CSE-${cleanLetter}` },
+                { name: `Section ${cleanLetter}` },
+              ],
+            });
+          }
         }
 
-        const tgSemester = parseInt(data.semester, 10) || tgSection?.semester || 5;
         const tgSession = data.academicYear || data.session || '2025-26';
 
         let tgStudentIds = [];
@@ -260,7 +279,9 @@ export const createUser = async (data) => {
     }
   }
 
-  return { user, profile, tempPassword: password };
+  const userSafe = user.toObject();
+  delete userSafe.passwordHash;
+  return { user: userSafe, profile };
 };
 
 export const getUserById = async (id) => {
@@ -607,6 +628,9 @@ export const appointTG = async (userId, data = {}, actorUser = null) => {
     });
   }
 
+  const finalSemester = parseInt(data.semester, 10) || 5;
+  const activeYear = data.academicYear || data.session || '2025-26';
+
   // Resolve section
   let resolvedSectionDoc = null;
   if (data.sectionId) {
@@ -614,17 +638,29 @@ export const appointTG = async (userId, data = {}, actorUser = null) => {
   } else if (data.section) {
     const cleanedCode = String(data.section).replace(/Section\s*/i, '').trim();
     resolvedSectionDoc = await Section.findOne({
+      department: dept._id,
+      semester: finalSemester,
       $or: [
+        { code: `CSE-${cleanedCode}-S${finalSemester}` },
         { code: `CSE-${cleanedCode}` },
         { name: `Section ${cleanedCode}` },
         { code: data.section },
         { name: data.section },
       ],
     });
+    if (!resolvedSectionDoc) {
+      resolvedSectionDoc = await Section.findOne({
+        department: dept._id,
+        $or: [
+          { code: `CSE-${cleanedCode}-S${finalSemester}` },
+          { code: `CSE-${cleanedCode}` },
+          { name: `Section ${cleanedCode}` },
+          { code: data.section },
+          { name: data.section },
+        ],
+      });
+    }
   }
-
-  const finalSemester = parseInt(data.semester, 10) || resolvedSectionDoc?.semester || 5;
-  const activeYear = data.academicYear || data.session || '2025-26';
 
   let finalStudentIds = Array.isArray(data.studentIds) ? [...data.studentIds] : [];
 

@@ -224,10 +224,26 @@ export default function AppointTgModal({
                 onChange={(e) => setSection(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none cursor-pointer"
               >
-                <option value="Section A">Section A (CSE-A)</option>
-                <option value="Section B">Section B (CSE-B)</option>
-                <option value="Section C">Section C (CSE-C)</option>
-                <option value="Section D">Section D (CSE-D)</option>
+                {(() => {
+                  const semNum = parseInt(semester.replace(/[^0-9]/g, '')) || 5;
+                  const semSecs = availableSections.filter((s) => Number(s.semester) === semNum);
+                  const list = semSecs.length > 0 ? semSecs : availableSections;
+                  if (list.length === 0) {
+                    return (
+                      <>
+                        <option value="Section A">Section A (CSE-A)</option>
+                        <option value="Section B">Section B (CSE-B)</option>
+                        <option value="Section C">Section C (CSE-C)</option>
+                        <option value="Section D">Section D (CSE-D)</option>
+                      </>
+                    );
+                  }
+                  return list.map((s) => (
+                    <option key={s._id} value={s.name}>
+                      {s.name} ({s.code} - Sem {s.semester})
+                    </option>
+                  ));
+                })()}
               </select>
             </div>
           </div>

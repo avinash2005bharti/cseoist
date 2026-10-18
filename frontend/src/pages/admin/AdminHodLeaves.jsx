@@ -100,65 +100,29 @@ export default function AdminHodLeaves() {
                 icon={Calendar}
               />
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Department Head</TableHead>
-                    <TableHead>Leave Type</TableHead>
-                    <TableHead>Dates & Duration</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile Cards View (< md) */}
+                <div className="block md:hidden space-y-3 p-1">
                   {filteredItems.map((item) => (
-                    <TableRow
+                    <div
                       key={item._id}
-                      className={`cursor-pointer transition-colors ${
-                        selectedItem?._id === item._id ? 'bg-amber-50/50' : 'hover:bg-slate-50'
+                      className={`p-4 rounded-2xl bg-white border transition-all space-y-3 ${
+                        selectedItem?._id === item._id
+                          ? 'border-amber-500 shadow-sm ring-1 ring-amber-500/20'
+                          : 'border-slate-200 shadow-2xs hover:border-slate-300'
                       }`}
-                      onClick={() => setSelectedItem(item)}
                     >
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-heading font-black text-xs text-slate-900">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h4 className="font-extrabold text-sm text-slate-900 truncate">
                             {item.applicant?.name || 'Department Head'}
-                          </span>
-                          <span className="text-[11px] text-slate-400 font-mono">
+                          </h4>
+                          <span className="text-[11px] text-slate-500 font-mono block mt-0.5 truncate">
                             {item.applicant?.email}
                           </span>
                         </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <span className="badge badge-amber text-[10px] font-bold">
-                          {item.leaveType}
-                        </span>
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="flex flex-col text-xs">
-                          <span className="font-bold text-slate-800">
-                            {item.startDate === item.endDate
-                              ? item.startDate
-                              : `${item.startDate} to ${item.endDate}`}
-                          </span>
-                          <span className="text-[11px] text-slate-500">
-                            {item.totalDays} day{item.totalDays > 1 ? 's' : ''}
-                          </span>
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <span className="text-xs text-slate-600 truncate max-w-[200px] block" title={item.reason}>
-                          {item.reason}
-                        </span>
-                      </TableCell>
-
-                      <TableCell>
                         <span
-                          className={`badge text-[10px] font-bold ${
+                          className={`badge text-[10px] font-bold shrink-0 ${
                             item.status === 'APPROVED'
                               ? 'badge-emerald'
                               : item.status === 'REJECTED'
@@ -168,46 +132,181 @@ export default function AdminHodLeaves() {
                         >
                           {item.status}
                         </span>
-                      </TableCell>
+                      </div>
 
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          {item.documentFileId && (
-                            <button
-                              onClick={() =>
-                                viewAttachment({
-                                  fileId: item.documentFileId,
-                                  fileName: item.documentOriginalName || 'Document.pdf',
-                                })
-                              }
-                              className="btn btn-sm btn-ghost p-1.5 text-slate-500 hover:text-blue-600"
-                              title="View Proof"
-                            >
-                              <Eye size={14} />
-                            </button>
-                          )}
-
-                          {item.status === 'PENDING' && (
-                            <Button
-                              variant="warning"
-                              onClick={() =>
-                                openModal('REVIEW_ACTION', {
-                                  type: 'LEAVE',
-                                  role: 'ADMIN',
-                                  item,
-                                })
-                              }
-                              className="btn-sm text-[11px] font-bold py-1 px-3"
-                            >
-                              Review
-                            </Button>
-                          )}
+                      <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Type & Reason</span>
+                          <span className="font-bold text-slate-900 block truncate">{item.leaveType}</span>
+                          <span className="text-[11px] text-slate-500 block truncate">{item.reason}</span>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Dates & Duration</span>
+                          <span className="font-semibold text-slate-800 block">
+                            {item.startDate === item.endDate ? item.startDate : `${item.startDate} to ${item.endDate}`}
+                          </span>
+                          <span className="text-[11px] text-slate-500 block">
+                            {item.totalDays} day{item.totalDays > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedItem(item)}
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Eye size={13} />
+                          <span>Details</span>
+                        </button>
+                        {item.documentFileId && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              viewAttachment({
+                                fileId: item.documentFileId,
+                                fileName: item.documentOriginalName || 'Document.pdf',
+                              })
+                            }
+                            className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-blue-600 border border-slate-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                          >
+                            <span>View Proof</span>
+                          </button>
+                        )}
+                        {item.status === 'PENDING' && (
+                          <Button
+                            size="xs"
+                            variant="warning"
+                            onClick={() =>
+                              openModal('REVIEW_ACTION', {
+                                type: 'LEAVE',
+                                role: 'ADMIN',
+                                item,
+                              })
+                            }
+                            className="text-xs font-bold"
+                          >
+                            Review
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+
+                {/* Desktop Table View (>= md) */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Department Head</TableHead>
+                        <TableHead>Leave Type</TableHead>
+                        <TableHead>Dates & Duration</TableHead>
+                        <TableHead>Reason</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredItems.map((item) => (
+                        <TableRow
+                          key={item._id}
+                          className={`cursor-pointer transition-colors ${
+                            selectedItem?._id === item._id ? 'bg-amber-50/50' : 'hover:bg-slate-50'
+                          }`}
+                          onClick={() => setSelectedItem(item)}
+                        >
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-heading font-black text-xs text-slate-900">
+                                {item.applicant?.name || 'Department Head'}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-mono">
+                                {item.applicant?.email}
+                              </span>
+                            </div>
+                          </TableCell>
+
+                          <TableCell>
+                            <span className="badge badge-amber text-[10px] font-bold">
+                              {item.leaveType}
+                            </span>
+                          </TableCell>
+
+                          <TableCell>
+                            <div className="flex flex-col text-xs">
+                              <span className="font-bold text-slate-800">
+                                {item.startDate === item.endDate
+                                  ? item.startDate
+                                  : `${item.startDate} to ${item.endDate}`}
+                              </span>
+                              <span className="text-[11px] text-slate-500">
+                                {item.totalDays} day{item.totalDays > 1 ? 's' : ''}
+                              </span>
+                            </div>
+                          </TableCell>
+
+                          <TableCell>
+                            <span className="text-xs text-slate-600 truncate max-w-[200px] block" title={item.reason}>
+                              {item.reason}
+                            </span>
+                          </TableCell>
+
+                          <TableCell>
+                            <span
+                              className={`badge text-[10px] font-bold ${
+                                item.status === 'APPROVED'
+                                  ? 'badge-emerald'
+                                  : item.status === 'REJECTED'
+                                  ? 'badge-danger'
+                                  : 'badge-primary'
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </TableCell>
+
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                              {item.documentFileId && (
+                                <button
+                                  onClick={() =>
+                                    viewAttachment({
+                                      fileId: item.documentFileId,
+                                      fileName: item.documentOriginalName || 'Document.pdf',
+                                    })
+                                  }
+                                  className="btn btn-sm btn-ghost p-1.5 text-slate-500 hover:text-blue-600"
+                                  title="View Proof"
+                                >
+                                  <Eye size={14} />
+                                </button>
+                              )}
+
+                              {item.status === 'PENDING' && (
+                                <Button
+                                  variant="warning"
+                                  onClick={() =>
+                                    openModal('REVIEW_ACTION', {
+                                      type: 'LEAVE',
+                                      role: 'ADMIN',
+                                      item,
+                                    })
+                                  }
+                                  className="btn-sm text-[11px] font-bold py-1 px-3"
+                                >
+                                  Review
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </Card>
         </div>

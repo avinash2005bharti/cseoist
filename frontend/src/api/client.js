@@ -109,6 +109,10 @@ export const clearAuthToken = () => {
   localStorage.removeItem('campusflow_token');
   localStorage.removeItem('campusflow_user');
   localStorage.removeItem('campusflow_role');
+  localStorage.removeItem('campusflow_hod_rejected_ids');
+  try {
+    sessionStorage.clear();
+  } catch {}
 };
 
 export default apiClient;

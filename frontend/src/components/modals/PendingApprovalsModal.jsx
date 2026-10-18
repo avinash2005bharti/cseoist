@@ -131,22 +131,22 @@ export default function PendingApprovalsModal({
                 item.student?.user?.name ||
                 item.studentName ||
                 item.applicant?.name ||
-                'Avinash Bharti';
+                'Student';
               const enrollment =
                 item.student?.enrollmentNumber ||
                 item.enrollment ||
                 item.student?.rollNumber ||
-                '0105CS241101';
+                'N/A';
               const category =
                 item.categoryTag ||
                 item.category ||
                 item.eventTitle ||
                 item.leaveType ||
-                'Hackathon / Technical Competition';
+                'Request';
               const reason =
                 item.reason ||
                 item.description ||
-                '[Hackathon / Technical Competition] xyz';
+                '—';
               const fromDate = formatDateSlash(item.startDate);
               const toDate = formatDateSlash(item.endDate || item.startDate);
 

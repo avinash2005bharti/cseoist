@@ -23,8 +23,8 @@ export default function LoginPage() {
   const location = useLocation();
 
   const [selectedRole, setSelectedRole] = useState('student');
-  const [email, setEmail] = useState('avinashbharti3007@gmail.com');
-  const [password, setPassword] = useState('Password@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,22 +32,12 @@ export default function LoginPage() {
   const [forgotNotice, setForgotNotice] = useState('');
   const [showForgotModal, setShowForgotModal] = useState(false);
 
-  // Role credentials map for quick access
-  const roleAccounts = {
-    student: { email: 'avinashbharti3007@gmail.com', pass: 'Password@123' },
-    tg: { email: 'test_teacher@mail.in', pass: 'Password@123' },
-    hod: { email: 'hod@campusflow.edu', pass: 'Password@123' },
-    admin: { email: 'admin@campusflow.edu', pass: 'Password@123' },
-  };
-
   const handleRoleSelect = (roleKey) => {
     setSelectedRole(roleKey);
-    const acc = roleAccounts[roleKey];
-    if (acc) {
-      setEmail(acc.email);
-      setPassword(acc.pass);
-    }
     setError('');
+    // Clear fields on switching role tabs to ensure no credentials linger
+    setEmail('');
+    setPassword('');
   };
 
   useEffect(() => {
@@ -56,6 +46,15 @@ export default function LoginPage() {
       setPassword('');
       setSelectedRole('student');
       setSuccessNotice('Account registered successfully! Please sign in with your credentials.');
+    } else {
+      // Force empty values on mount to defeat browser password manager autofill
+      setEmail('');
+      setPassword('');
+      const timer = setTimeout(() => {
+        setEmail('');
+        setPassword('');
+      }, 60);
+      return () => clearTimeout(timer);
     }
   }, [location.state]);
 
@@ -251,7 +250,7 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
             {/* Email Address */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
@@ -264,9 +263,13 @@ export default function LoginPage() {
                 />
                 <input
                   type="email"
+                  id="academic_email_entry"
+                  name="academic_email_entry"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
+                  autoComplete="off"
+                  spellCheck="false"
                   required
                   className="w-full pl-11 pr-4 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-sm text-slate-800 font-medium"
                 />
@@ -292,9 +295,12 @@ export default function LoginPage() {
                 />
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  id="academic_password_entry"
+                  name="academic_password_entry"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
+                  autoComplete="new-password"
                   required
                   className="w-full pl-11 pr-11 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-sm text-slate-800 font-medium"
                 />
@@ -359,10 +365,10 @@ export default function LoginPage() {
         <ForgotPasswordModal
           initialEmail={email}
           onClose={() => setShowForgotModal(false)}
-          onSuccess={(newEmail, newPass, message) => {
-            setEmail(newEmail);
-            setPassword(newPass);
-            setSuccessNotice(message || 'Password reset successfully! You can now log in.');
+          onSuccess={(newEmail, _newPass, message) => {
+            setEmail(newEmail || '');
+            setPassword('');
+            setSuccessNotice(message || 'Password reset successfully! Please log in with your new password.');
             setForgotNotice('');
             setError('');
           }}

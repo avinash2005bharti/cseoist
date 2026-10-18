@@ -229,7 +229,7 @@ export const runSeed = async () => {
     const secBStudentsData = [
       {
         name: 'Avinash Bharti',
-        email: 'avinashbharti3007@gmail.com',
+        email: 'avinash@college.edu',
         roll: '0105CS241101',
         phone: '+916200072434',
         sec: secB,
@@ -731,7 +731,7 @@ export const runSeed = async () => {
     console.log('  👩‍🏫 TG (Sec B): test_teacher@mail.in');
     console.log('  👩‍🏫 TG (Sec A): ananya.tg@campusflow.edu');
     console.log('  🧑‍🏫 Teacher:    kavita.teacher@campusflow.edu');
-    console.log('  🎓 Student (Sec B): avinashbharti3007@gmail.com (Roll 0105CS241101)');
+    console.log('  🎓 Student (Sec B): avinash@college.edu (Roll 0105CS241101)');
     console.log('  🎓 Student (Sec B): ayushmishra2372005@gmail.com (Roll 0105CS241110)');
     console.log('=============================================================\n');
 

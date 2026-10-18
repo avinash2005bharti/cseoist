@@ -73,25 +73,26 @@ export default function FormalApplicationModal({ item, onClose }) {
     item.student?.name ||
     item.applicant?.name ||
     item.student?.designation ||
-    'Avinash Bharti';
+    'Student';
 
   const enrollmentNo =
     item.student?.enrollmentNumber ||
     item.student?.rollNumber ||
-    '0105CS241101';
+    item.applicant?.rollNumber ||
+    'N/A';
 
   const semVal =
     item.student?.semester ||
     item.student?.section?.semester ||
     item.semester ||
-    5;
+    '';
 
   const secVal =
     item.student?.section?.name ||
     item.student?.section?.code ||
-    'Section B';
+    '';
 
-  const classAndSection = `Semester ${semVal} — ${secVal}`;
+  const classAndSection = semVal && secVal ? `Semester ${semVal} — ${secVal}` : (semVal ? `Semester ${semVal}` : (secVal || '—'));
 
   const clearanceNature =
     item.category ||

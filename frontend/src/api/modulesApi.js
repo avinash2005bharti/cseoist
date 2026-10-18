@@ -140,6 +140,14 @@ export const masterDataApi = {
     return apiClient.post('/sections', data);
   },
 
+  updateSection: async (id, data) => {
+    return apiClient.patch(`/sections/${id}`, data);
+  },
+
+  deleteSection: async (id) => {
+    return apiClient.delete(`/sections/${id}`);
+  },
+
   moveSectionSemester: async (id, direction) => {
     return apiClient.post(`/sections/${id}/move-semester`, { direction });
   },

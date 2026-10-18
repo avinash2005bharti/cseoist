@@ -32,6 +32,12 @@ const sectionSchema = new mongoose.Schema(
       uppercase: true,
       trim: true,
     },
+    capacity: {
+      type: Number,
+      default: 60,
+      min: 1,
+      max: 500,
+    },
   },
   {
     timestamps: true,

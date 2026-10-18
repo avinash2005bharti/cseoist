@@ -375,8 +375,8 @@ export default function OfficialClearancesLedgerModal({
       .map((item, idx) => {
         const student = item.student || {};
         const studentName = student.user?.name || item.applicant?.name || student.designation || 'Student';
-        const enrollNo = student.enrollmentNumber || student.rollNumber || item.applicant?.rollNumber || `0105CS24110${idx + 1}`;
-        const sec = (student.section?.name || 'B').replace(/Section\s*/i, '');
+        const enrollNo = student.enrollmentNumber || student.rollNumber || item.applicant?.rollNumber || 'N/A';
+        const sec = (student.section?.name || '—').replace(/Section\s*/i, '');
         const periods = Array.isArray(item.selectedPeriods) && item.selectedPeriods.length > 0
           ? item.selectedPeriods.join(', ')
           : activeTab === 'leaves'

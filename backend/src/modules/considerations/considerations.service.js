@@ -640,7 +640,8 @@ export const getConsiderationById = async (id, user) => {
   const isOwner =
     user.role === 'STUDENT' &&
     (studentUserId === user.id || groupMemberUserIds.includes(user.id));
-  const isTG = user.isTG;
+  const requestTgId = request.tg?._id?.toString() || request.tg?.toString();
+  const isTG = Boolean(user.isTG && user.teacherId && requestTgId === user.teacherId.toString());
   const isHOD = user.role === 'HOD';
   const isAdmin = user.role === 'ADMIN';
 

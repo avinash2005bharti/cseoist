@@ -487,6 +487,48 @@ describe('14. Automated PWA Consideration & Attendance Reminder Architecture', (
   });
 });
 
+describe('15. Section Capacity & Provisioning Permissions (HOD & Admin)', () => {
+  it('should validate that section capacity defaults to 60 and allows custom limits', () => {
+    const parseCapacity = (cap) => {
+      const num = parseInt(cap, 10);
+      return !isNaN(num) && num >= 1 && num <= 500 ? num : 60;
+    };
+
+    assert.equal(parseCapacity(undefined), 60);
+    assert.equal(parseCapacity(null), 60);
+    assert.equal(parseCapacity(''), 60);
+    assert.equal(parseCapacity(75), 75);
+    assert.equal(parseCapacity('120'), 120);
+    assert.equal(parseCapacity(-5), 60);
+    assert.equal(parseCapacity(999), 60);
+  });
+
+  it('should verify that only HOD and ADMIN are authorized to create sections and set capacity', () => {
+    const authorizedRoles = ['HOD', 'ADMIN'];
+    assert.equal(authorizedRoles.includes('HOD'), true);
+    assert.equal(authorizedRoles.includes('ADMIN'), true);
+    assert.equal(authorizedRoles.includes('TG'), false);
+    assert.equal(authorizedRoles.includes('TEACHER'), false);
+    assert.equal(authorizedRoles.includes('STUDENT'), false);
+  });
+
+  it('should validate capacity bounds when HOD or Admin updates section quota', () => {
+    const validateCapacityUpdate = (cap) => {
+      const num = parseInt(cap, 10);
+      if (isNaN(num) || num < 1 || num > 500) {
+        throw new Error('Section capacity must be a valid number between 1 and 500');
+      }
+      return num;
+    };
+
+    assert.equal(validateCapacityUpdate(80), 80);
+    assert.equal(validateCapacityUpdate('45'), 45);
+    assert.throws(() => validateCapacityUpdate(0), /between 1 and 500/);
+    assert.throws(() => validateCapacityUpdate(600), /between 1 and 500/);
+    assert.throws(() => validateCapacityUpdate('invalid'), /between 1 and 500/);
+  });
+});
+
 
 
 

@@ -11,7 +11,7 @@ export default function StudentProfile() {
   const profile = currentUser?.profile || {};
   const mentor = profile?.mentorGroup?.tg?.user;
 
-  const studentMobile = currentUser?.phone || profile?.studentPhone || profile?.guardianPhone || '+916200072434';
+  const studentMobile = currentUser?.phone || profile?.studentPhone || profile?.guardianPhone || 'Not Provided';
 
   return (
     <div className="flex flex-col gap-6">

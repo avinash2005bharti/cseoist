@@ -62,6 +62,16 @@ export default function AdminUsers() {
   const [sections, setSections] = useState([]);
   const [loadingSections, setLoadingSections] = useState(false);
 
+  // Create Section Modal State
+  const [showCreateSectionModal, setShowCreateSectionModal] = useState(false);
+  const [newSecName, setNewSecName] = useState('Section E');
+  const [newSecSemester, setNewSecSemester] = useState(5);
+  const [newSecCode, setNewSecCode] = useState('');
+  const [newSecCapacity, setNewSecCapacity] = useState(60);
+  const [editingSecCapacityId, setEditingSecCapacityId] = useState(null);
+  const [editCapacityVal, setEditCapacityVal] = useState(60);
+  const [creatingSection, setCreatingSection] = useState(false);
+
   // Create User Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createAccountType, setCreateAccountType] = useState('STUDENT'); // 'STUDENT' | 'TG' | 'TEACHER' | 'HOD' | 'ADMIN'
@@ -154,12 +164,81 @@ export default function AdminUsers() {
   };
 
   useEffect(() => {
+    fetchSections();
+  }, []);
+
+  useEffect(() => {
     if (activeTab === 'sections') {
       fetchSections();
     } else {
       fetchUsers();
     }
   }, [page, roleFilter, search, activeTab]);
+
+  // Handle Section Creation
+  const handleCreateSection = async (e) => {
+    e.preventDefault();
+    setCreatingSection(true);
+    try {
+      const cleanName = newSecName.replace(/^Section\s*/i, '').trim();
+      const semNum = Number(newSecSemester);
+      const codeToUse = (newSecCode || `CSE-${cleanName}-S${semNum}`).toUpperCase().trim();
+      await masterDataApi.createSection({
+        name: `Section ${cleanName}`,
+        code: codeToUse,
+        semester: semNum,
+        year: Math.ceil(semNum / 2),
+        capacity: Number(newSecCapacity) || 60,
+      });
+      addToast({
+        type: 'success',
+        title: 'Section Created',
+        message: `Section ${cleanName} created with capacity ${Number(newSecCapacity) || 60} for Semester ${semNum}.`,
+      });
+      setShowCreateSectionModal(false);
+      setNewSecName('');
+      setNewSecCode('');
+      setNewSecCapacity(60);
+      fetchSections();
+    } catch (err) {
+      addToast({
+        type: 'danger',
+        title: 'Section Creation Failed',
+        message: err.response?.data?.message || err.message,
+      });
+    } finally {
+      setCreatingSection(false);
+    }
+  };
+
+  // Handle Section Capacity Update (Admin permission)
+  const handleUpdateSectionCapacity = async (secId, capNum) => {
+    const num = Number(capNum);
+    if (!num || num < 1 || num > 500) {
+      addToast({
+        type: 'danger',
+        title: 'Invalid Capacity',
+        message: 'Section capacity must be a number between 1 and 500.',
+      });
+      return;
+    }
+    try {
+      await masterDataApi.updateSection(secId, { capacity: num });
+      addToast({
+        type: 'success',
+        title: 'Capacity Updated',
+        message: `Section capacity updated to ${num} students.`,
+      });
+      setEditingSecCapacityId(null);
+      fetchSections();
+    } catch (err) {
+      addToast({
+        type: 'danger',
+        title: 'Update Failed',
+        message: err.response?.data?.message || err.message,
+      });
+    }
+  };
 
   // Handle Status Toggle
   const handleToggleStatus = async (user) => {
@@ -549,14 +628,30 @@ export default function AdminUsers() {
               </div>
             </div>
 
-            <Button
-              variant="secondary"
-              onClick={fetchSections}
-              className="text-xs cursor-pointer bg-white"
-            >
-              <RefreshCw size={13} className={loadingSections ? 'animate-spin' : ''} />
-              Refresh Sections
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setNewSecName('Section E');
+                  setNewSecSemester(5);
+                  setNewSecCode('CSE-E-S5');
+                  setShowCreateSectionModal(true);
+                }}
+                className="text-xs font-bold cursor-pointer"
+              >
+                <Layers size={13} />
+                Create Section
+              </Button>
+
+              <Button
+                variant="secondary"
+                onClick={fetchSections}
+                className="text-xs cursor-pointer bg-white"
+              >
+                <RefreshCw size={13} className={loadingSections ? 'animate-spin' : ''} />
+                Refresh Sections
+              </Button>
+            </div>
           </div>
 
           {/* Section Cards Grid */}
@@ -623,9 +718,53 @@ export default function AdminUsers() {
                         <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 text-xs">
                           <span className="text-slate-500 font-bold">Enrolled Students:</span>
                           <span className="font-black text-slate-900 bg-white px-2 py-0.5 rounded-lg border border-slate-200">
-                            {sec.studentCount} Students
+                            {sec.studentCount} / {sec.capacity || 60} Students
                           </span>
                         </div>
+
+                        {editingSecCapacityId === sec._id ? (
+                          <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-blue-50 border border-blue-200 text-xs">
+                            <span className="font-bold text-blue-900 text-[11px] shrink-0">Capacity:</span>
+                            <input
+                              type="number"
+                              min="1"
+                              max="500"
+                              value={editCapacityVal}
+                              onChange={(e) => setEditCapacityVal(e.target.value)}
+                              className="w-16 px-1.5 py-0.5 rounded border border-blue-300 bg-white text-xs font-bold"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateSectionCapacity(sec._id, editCapacityVal)}
+                              className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold text-[10px] cursor-pointer"
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingSecCapacityId(null)}
+                              className="px-1.5 py-0.5 rounded bg-white text-slate-500 font-bold text-[10px] border border-slate-200 cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between px-1 text-[11px]">
+                            <span className="text-slate-500 font-medium">
+                              Capacity Quota: <strong className="text-slate-800">{sec.capacity || 60}</strong>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingSecCapacityId(sec._id);
+                                setEditCapacityVal(sec.capacity || 60);
+                              }}
+                              className="text-blue-600 hover:text-blue-800 font-bold cursor-pointer"
+                            >
+                              Edit Quota
+                            </button>
+                          </div>
+                        )}
 
                         <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs">
                           <div className="flex items-center gap-1.5 text-emerald-900 font-bold">
@@ -1190,10 +1329,25 @@ export default function AdminUsers() {
                           onChange={(e) => setNewStudentSection(e.target.value)}
                           className="form-select w-full bg-white border-slate-200 rounded-xl py-2 px-3 text-xs"
                         >
-                          <option value="Section A">Section A (CSE-A)</option>
-                          <option value="Section B">Section B (CSE-B)</option>
-                          <option value="Section C">Section C (CSE-C)</option>
-                          <option value="Section D">Section D (CSE-D)</option>
+                          {(() => {
+                            const semSecs = sections.filter((s) => Number(s.semester) === Number(newStudentSemester));
+                            const listToRender = semSecs.length > 0 ? semSecs : sections;
+                            if (listToRender.length === 0) {
+                              return (
+                                <>
+                                  <option value="Section A">Section A (CSE-A)</option>
+                                  <option value="Section B">Section B (CSE-B)</option>
+                                  <option value="Section C">Section C (CSE-C)</option>
+                                  <option value="Section D">Section D (CSE-D)</option>
+                                </>
+                              );
+                            }
+                            return listToRender.map((s) => (
+                              <option key={s._id} value={s.name}>
+                                {s.name} ({s.code} - Sem {s.semester})
+                              </option>
+                            ));
+                          })()}
                         </select>
                       </div>
                     </div>
@@ -1253,10 +1407,25 @@ export default function AdminUsers() {
                           onChange={(e) => setNewTgSection(e.target.value)}
                           className="form-select w-full bg-white border-slate-200 rounded-xl py-2 px-3 text-xs"
                         >
-                          <option value="Section A">Section A (CSE-A)</option>
-                          <option value="Section B">Section B (CSE-B)</option>
-                          <option value="Section C">Section C (CSE-C)</option>
-                          <option value="Section D">Section D (CSE-D)</option>
+                          {(() => {
+                            const semSecs = sections.filter((s) => Number(s.semester) === Number(newTgSemester));
+                            const listToRender = semSecs.length > 0 ? semSecs : sections;
+                            if (listToRender.length === 0) {
+                              return (
+                                <>
+                                  <option value="Section A">Section A (CSE-A)</option>
+                                  <option value="Section B">Section B (CSE-B)</option>
+                                  <option value="Section C">Section C (CSE-C)</option>
+                                  <option value="Section D">Section D (CSE-D)</option>
+                                </>
+                              );
+                            }
+                            return listToRender.map((s) => (
+                              <option key={s._id} value={s.name}>
+                                {s.name} ({s.code} - Sem {s.semester})
+                              </option>
+                            ));
+                          })()}
                         </select>
                       </div>
                     </div>
@@ -1487,10 +1656,25 @@ export default function AdminUsers() {
                     onChange={(e) => setTgModalSection(e.target.value)}
                     className="form-select w-full bg-slate-50 border-slate-200 rounded-xl py-2 px-3 text-xs font-bold"
                   >
-                    <option value="Section A">Section A (CSE-A)</option>
-                    <option value="Section B">Section B (CSE-B)</option>
-                    <option value="Section C">Section C (CSE-C)</option>
-                    <option value="Section D">Section D (CSE-D)</option>
+                    {(() => {
+                      const semSecs = sections.filter((s) => Number(s.semester) === Number(tgModalSemester));
+                      const listToRender = semSecs.length > 0 ? semSecs : sections;
+                      if (listToRender.length === 0) {
+                        return (
+                          <>
+                            <option value="Section A">Section A (CSE-A)</option>
+                            <option value="Section B">Section B (CSE-B)</option>
+                            <option value="Section C">Section C (CSE-C)</option>
+                            <option value="Section D">Section D (CSE-D)</option>
+                          </>
+                        );
+                      }
+                      return listToRender.map((s) => (
+                        <option key={s._id} value={s.name}>
+                          {s.name} ({s.code} - Sem {s.semester})
+                        </option>
+                      ));
+                    })()}
                   </select>
                 </div>
 
@@ -1574,6 +1758,134 @@ export default function AdminUsers() {
                 Acknowledge
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 6: CREATE SECTION MODAL */}
+      {showCreateSectionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                  <Layers size={18} />
+                </div>
+                <div>
+                  <h3 className="font-heading font-black text-slate-900 text-sm">
+                    Create Academic Section
+                  </h3>
+                  <p className="text-[11px] text-slate-500 m-0">
+                    Provision a new section cohort for students & TG allocation
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateSectionModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSection} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">
+                  Section Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newSecName}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewSecName(val);
+                    const clean = val.replace(/^Section\s*/i, '').trim();
+                    setNewSecCode(`CSE-${clean || 'X'}-S${newSecSemester}`);
+                  }}
+                  placeholder="e.g. Section E"
+                  className="input-field w-full text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Semester <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={newSecSemester}
+                    onChange={(e) => {
+                      const sem = Number(e.target.value);
+                      setNewSecSemester(sem);
+                      const clean = newSecName.replace(/^Section\s*/i, '').trim();
+                      setNewSecCode(`CSE-${clean || 'X'}-S${sem}`);
+                    }}
+                    className="form-select w-full bg-slate-50 border-slate-200 rounded-xl py-2 px-3 text-xs font-bold"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <option key={s} value={s}>
+                        Semester {s} (Year {Math.ceil(s / 2)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Section Code <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newSecCode}
+                    onChange={(e) => setNewSecCode(e.target.value.toUpperCase())}
+                    placeholder="CSE-E-S5"
+                    className="input-field w-full text-xs font-mono uppercase bg-slate-50"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Capacity (Quota) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="500"
+                    required
+                    value={newSecCapacity}
+                    onChange={(e) => setNewSecCapacity(e.target.value)}
+                    placeholder="60"
+                    className="input-field w-full text-xs font-bold bg-slate-50"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-[11px]">
+                Newly created sections will be saved in the database and become immediately available for student registration, TG appointments, and HOD dashboards.
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={creatingSection}
+                  onClick={() => setShowCreateSectionModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={creatingSection}
+                  className="cursor-pointer"
+                >
+                  {creatingSection ? 'Creating...' : 'Create Section'}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

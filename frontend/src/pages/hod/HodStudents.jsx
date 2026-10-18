@@ -32,87 +32,13 @@ export default function HodStudents() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [studentToEdit, setStudentToEdit] = useState(null);
 
-  const fallbackStudents = [
-    {
-      _id: 'st-1',
-      user: {
-        name: 'Test Student 1',
-        email: 'teststudent1@mail.in',
-        phone: '+91876543210',
-        isActive: true,
-      },
-      rollNumber: '0103CS241001',
-      enrollmentNumber: '0103CS241001',
-      section: { name: 'Section A', semester: 5 },
-      semester: 5,
-      batch: 'Batch 2023',
-    },
-    {
-      _id: 'st-2',
-      user: {
-        name: 'Avinash Bharti',
-        email: 'avinashbharti3007@gmail.com',
-        phone: '+916200072434',
-        isActive: true,
-      },
-      rollNumber: '0103CS241101',
-      enrollmentNumber: '0103CS241101',
-      section: { name: 'Section B', semester: 5 },
-      semester: 5,
-      batch: 'Batch 2023',
-    },
-    {
-      _id: 'st-3',
-      user: {
-        name: 'Ayush Mishra',
-        email: 'ayushmishra2372005@gmail.com',
-        phone: '+919502378451',
-        isActive: true,
-      },
-      rollNumber: '0103CS241110',
-      enrollmentNumber: '0103CS241110',
-      section: { name: 'Section B', semester: 5 },
-      semester: 5,
-      batch: 'Batch 2023',
-    },
-    {
-      _id: 'st-4',
-      user: {
-        name: 'Ayushi Sahu',
-        email: 'sahuayushi535@gmail.com',
-        phone: '+917222961376',
-        isActive: true,
-      },
-      rollNumber: '0103CS241113',
-      enrollmentNumber: '0103CS241113',
-      section: { name: 'Section B', semester: 5 },
-      semester: 5,
-      batch: 'Batch 2023',
-    },
-    {
-      _id: 'st-5',
-      user: {
-        name: 'Deepak Sharma',
-        email: 'deepak12@gmail.com',
-        phone: '+919876543210',
-        isActive: true,
-      },
-      rollNumber: '0103CS241127',
-      enrollmentNumber: '0103CS241127',
-      section: { name: 'Section B', semester: 5 },
-      semester: 5,
-      batch: 'Batch 2023',
-    },
-  ];
-
   const fetchData = async () => {
     setLoading(true);
     try {
       const res = await masterDataApi.getStudents();
-      const list = res?.data?.length > 0 ? res.data : fallbackStudents;
-      setStudents(list);
-    } catch {
-      setStudents(fallbackStudents);
+      setStudents(Array.isArray(res?.data) ? res.data : []);
+    } catch (err) {
+      setStudents([]);
     } finally {
       setLoading(false);
     }
@@ -133,9 +59,7 @@ export default function HodStudents() {
       addToast('Student Removed', `${studentName} was removed from the roster.`, 'info');
       fetchData();
     } catch (err) {
-      // Optimistic delete for fallback/mock items
-      setStudents((prev) => prev.filter((s) => s._id !== student._id));
-      addToast('Student Removed', `${studentName} was removed from the roster.`, 'info');
+      addToast('Error', err?.message || 'Failed to remove student.', 'error');
     }
   };
 

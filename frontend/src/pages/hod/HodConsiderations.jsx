@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext.jsx';
-import { considerationApi, leaveApi, reportApi } from '../../api';
+import { considerationApi, leaveApi, reportApi, masterDataApi } from '../../api';
 import OfficialClearancesLedgerModal from '../../components/modals/OfficialClearancesLedgerModal.jsx';
 import FormalApplicationModal from '../../components/modals/FormalApplicationModal.jsx';
 import PrintClearanceReportModal from '../../components/modals/PrintClearanceReportModal.jsx';
@@ -91,66 +91,6 @@ function formatPeriodsDisplay(periods) {
   return `${periods.length} Periods • ${formattedSlots.join(', ')}`;
 }
 
-// Faithful fallback request items matching Image 1 & reference screenshots
-const INITIAL_FALLBACK_REQUESTS = [
-  {
-    _id: '3d4314f5-70d8-45d7-8cfa-5718fd6fec5d',
-    requestKind: 'CONSIDERATION',
-    eventType: 'HACKATHON',
-    category: 'Hackathon / Technical Competition',
-    student: {
-      user: { name: 'Avinash Bharti' },
-      rollNumber: '0105CS241101',
-      enrollmentNumber: '0105CS241101',
-      section: { name: 'Section B', semester: 5 },
-    },
-    startDate: '2026-10-12',
-    endDate: '2026-10-12',
-    requestedPeriods: [2, 3, 4],
-    approvedPeriods: 3,
-    status: 'APPROVED_BY_HOD',
-    description: '[Hackathon / Technical Competition] hacthon',
-    semester: 5,
-  },
-  {
-    _id: '78f7f477-1a2d-4c35-b001-95f55147bf13',
-    requestKind: 'CONSIDERATION',
-    eventType: 'HACKATHON',
-    category: 'Hackathon / Technical Competition',
-    student: {
-      user: { name: 'Avinash Bharti' },
-      rollNumber: '0105CS241101',
-      enrollmentNumber: '0105CS241101',
-      section: { name: 'Section B', semester: 5 },
-    },
-    startDate: '2026-10-12',
-    endDate: '2026-10-12',
-    requestedPeriods: [2, 3, 4],
-    approvedPeriods: 3,
-    status: 'PENDING',
-    description: '[Hackathon / Technical Competition] xyz',
-    semester: 5,
-  },
-  {
-    _id: '89a24bf1-5e32-4d11-b012-9214cd3b7fa1',
-    requestKind: 'LEAVE',
-    leaveType: 'Medical / Sickness Leave',
-    category: 'Medical / Sickness Leave',
-    student: {
-      user: { name: 'Avinash Bharti' },
-      rollNumber: '0105CS241101',
-      enrollmentNumber: '0105CS241101',
-      section: { name: 'Section B', semester: 5 },
-    },
-    startDate: '2026-10-12',
-    endDate: '2026-10-12',
-    totalDays: 1,
-    status: 'APPROVED_BY_HOD',
-    description: '[Medical Leave] Viral fever recovery with doctor endorsement',
-    semester: 5,
-  },
-];
-
 const HOD_REJECTED_KEY = 'campusflow_hod_rejected_ids';
 
 const getStoredRejectedIds = () => {
@@ -174,23 +114,6 @@ const storeRejectedId = (id) => {
   }
 };
 
-const getInitialRequests = () => {
-  const rejected = getStoredRejectedIds();
-  return INITIAL_FALLBACK_REQUESTS.map((item) => {
-    if (rejected.includes(item._id)) {
-      return {
-        ...item,
-        status: 'REJECTED',
-        hodReview: {
-          decision: 'REJECT',
-          remarks: 'Authorization Declined by Department',
-        },
-      };
-    }
-    return item;
-  });
-};
-
 export default function HodConsiderations() {
   const { viewAttachment, addToast } = useERP();
   const location = useLocation();
@@ -199,12 +122,13 @@ export default function HodConsiderations() {
   // 'ALL' | 'AWAITING_HOD' | 'BYPASS_QUEUE' | 'LEAVES' | 'CONSIDERATIONS' | 'CLEARED'
   const [activeTab, setActiveTab] = useState('ALL');
   const [semesterFilter, setSemesterFilter] = useState('ALL');
+  const [sectionFilter, setSectionFilter] = useState('ALL');
+  const [sections, setSections] = useState([]);
   const [showLedgerModal, setShowLedgerModal] = useState(false);
   const [selectedSanctionItem, setSelectedSanctionItem] = useState(null);
   const [showPrintReportModal, setShowPrintReportModal] = useState(false);
 
-  // Initialize with fallback items so state mutations are retained even if DB is empty
-  const [items, setItems] = useState(getInitialRequests);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Per-card sanctioned periods stepper state: { [itemId]: count }
@@ -213,13 +137,18 @@ export default function HodConsiderations() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [consRes, leavesRes] = await Promise.allSettled([
+      const [consRes, leavesRes, secRes] = await Promise.allSettled([
         considerationApi.getHODQueue({ all: true }),
         leaveApi.getHODQueue({ all: true }),
+        masterDataApi.getSections(),
       ]);
 
       const consData = consRes.status === 'fulfilled' ? consRes.value?.data || [] : [];
       const leavesData = leavesRes.status === 'fulfilled' ? leavesRes.value?.data || [] : [];
+      if (secRes.status === 'fulfilled') {
+        const secList = Array.isArray(secRes.value?.data) ? secRes.value.data : [];
+        setSections(secList);
+      }
 
       const taggedCons = consData.map((c) => ({
         ...c,
@@ -232,8 +161,7 @@ export default function HodConsiderations() {
 
       const combined = [...taggedCons, ...taggedLeaves];
       const rejectedList = getStoredRejectedIds();
-      const baseList = combined.length > 0 ? combined : INITIAL_FALLBACK_REQUESTS;
-      const normalizedCombined = baseList.map((item) => {
+      const normalizedCombined = combined.map((item) => {
         if (rejectedList.includes(item._id)) {
           return {
             ...item,
@@ -317,11 +245,17 @@ export default function HodConsiderations() {
 
   const activeItemsList = items;
 
-  // Filter based on activeTab and semesterFilter
+  // Filter based on activeTab, semesterFilter, and sectionFilter
   const filteredItems = activeItemsList.filter((item) => {
-    const itemSem = item.student?.semester || item.student?.section?.semester || item.semester || 5;
+    const itemSem = item.student?.semester || item.student?.section?.semester || item.semester;
     const matchesSemester =
-      semesterFilter === 'ALL' || Number(itemSem) === Number(semesterFilter);
+      semesterFilter === 'ALL' || (itemSem !== undefined && Number(itemSem) === Number(semesterFilter));
+
+    const itemSecName = item.student?.section?.name || item.student?.section?.code || item.section || '';
+    const cleanItemSec = itemSecName.replace(/^Section\s*/i, '').trim().toUpperCase();
+    const cleanFilterSec = sectionFilter.replace(/^Section\s*/i, '').trim().toUpperCase();
+    const matchesSection =
+      sectionFilter === 'ALL' || cleanItemSec === cleanFilterSec;
 
     let matchesTab = true;
     if (activeTab === 'AWAITING_HOD') {
@@ -336,11 +270,23 @@ export default function HodConsiderations() {
       matchesTab = isApproved(item);
     }
 
-    return matchesSemester && matchesTab;
+    return matchesSemester && matchesSection && matchesTab;
   });
 
+  const uniqueSections = [
+    ...new Set(
+      sections
+        .map((s) => s.name?.replace(/^Section\s*/i, '').trim() || s.code)
+        .concat(
+          items
+            .map((i) => (i.student?.section?.name || i.student?.section?.code || '').replace(/^Section\s*/i, '').trim())
+            .filter(Boolean)
+        )
+    ),
+  ].filter(Boolean).sort();
+
   // Calculate tab counts
-  const totalCount = items.length > 0 ? items.length : 15;
+  const totalCount = items.length;
   const awaitingCount = items.filter(isActionNeeded).length;
   const bypassCount = items.filter(isBypassQueue).length;
   const leavesCount = items.filter((i) => i.requestKind === 'LEAVE').length;
@@ -562,6 +508,25 @@ export default function HodConsiderations() {
           <ChevronDown size={12} className="text-blue-600 -ml-1 pointer-events-none" />
         </div>
 
+        {/* Section Filter Pill */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-2xs text-xs font-semibold text-slate-600">
+          <Filter size={12} className="text-blue-600 shrink-0" />
+          <span>Section:</span>
+          <select
+            value={sectionFilter}
+            onChange={(e) => setSectionFilter(e.target.value)}
+            className="text-blue-600 font-bold bg-transparent border-none p-0 focus:outline-none cursor-pointer pr-1"
+          >
+            <option value="ALL">All Sections</option>
+            {uniqueSections.map((sec) => (
+              <option key={sec} value={sec}>
+                Section {sec}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={12} className="text-blue-600 -ml-1 pointer-events-none" />
+        </div>
+
         {/* Clearances Ledger with ledger icon */}
         <button
           type="button"
@@ -651,16 +616,25 @@ export default function HodConsiderations() {
       </div>
 
       {/* Request Cards Ledger matching screenshot */}
-      <div className="flex flex-col gap-5 pt-1">
-        {filteredItems.map((item) => {
-          const approved = isApproved(item);
-          const rejected = isRejected(item);
-          const pending = !approved && !rejected;
+      {filteredItems.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center flex flex-col items-center justify-center my-3 shadow-2xs">
+          <FileText size={36} className="text-slate-300 mb-3" />
+          <h3 className="text-sm sm:text-base font-extrabold text-slate-800 m-0">No Requests Found</h3>
+          <p className="text-xs text-slate-500 mt-1 max-w-sm m-0">
+            There are no consideration or leave requests matching the active filters.
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-5 pt-1">
+          {filteredItems.map((item) => {
+            const approved = isApproved(item);
+            const rejected = isRejected(item);
+            const pending = !approved && !rejected;
 
-          const studentName = item.student?.user?.name || 'Avinash Bharti';
-          const rollNo = item.student?.rollNumber || '0105CS241101';
-          const enrollNo = item.student?.enrollmentNumber || rollNo;
-          const itemIdStr = item._id ? `#${item._id}` : '#78f7f477-1a2d-4c35-b001-95f55147bf13';
+            const studentName = item.student?.user?.name || item.student?.name || item.applicant?.name || 'Student';
+            const rollNo = item.student?.rollNumber || item.applicant?.rollNumber || 'N/A';
+            const enrollNo = item.student?.enrollmentNumber || rollNo;
+            const itemIdStr = item._id ? `#${item._id}` : '';
 
           const categoryName =
             item.category ||
@@ -981,6 +955,7 @@ export default function HodConsiderations() {
           );
         })}
       </div>
+    )}
 
       {/* Official Clearances Ledger Modal */}
       {showLedgerModal && (

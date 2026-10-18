@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, UserPlus, Mail, Phone, Lock, Hash, Calendar, AlertCircle } from 'lucide-react';
-import { authApi } from '../../api';
+import { authApi, masterDataApi } from '../../api';
 import { useERP } from '../../context/ERPContext.jsx';
 
 export default function AddStudentModal({ onClose, onSuccess }) {
   const { addToast } = useERP();
 
+  const [availableSections, setAvailableSections] = useState([]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [enrollmentNo, setEnrollmentNo] = useState('');
@@ -18,6 +19,14 @@ export default function AddStudentModal({ onClose, onSuccess }) {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    masterDataApi.getSections().then((res) => {
+      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+        setAvailableSections(res.data);
+      }
+    }).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -163,10 +172,25 @@ export default function AddStudentModal({ onClose, onSuccess }) {
                 onChange={(e) => setSection(e.target.value)}
                 className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none"
               >
-                <option value="Section A">Section A</option>
-                <option value="Section B">Section B</option>
-                <option value="Section C">Section C</option>
-                <option value="Section D">Section D</option>
+                {(() => {
+                  const semSecs = availableSections.filter((s) => Number(s.semester) === Number(semester));
+                  const list = semSecs.length > 0 ? semSecs : availableSections;
+                  if (list.length === 0) {
+                    return (
+                      <>
+                        <option value="Section A">Section A</option>
+                        <option value="Section B">Section B</option>
+                        <option value="Section C">Section C</option>
+                        <option value="Section D">Section D</option>
+                      </>
+                    );
+                  }
+                  return list.map((s) => (
+                    <option key={s._id} value={s.name}>
+                      {s.name} ({s.code} - Sem {s.semester})
+                    </option>
+                  ));
+                })()}
               </select>
             </div>
           </div>

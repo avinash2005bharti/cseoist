@@ -162,72 +162,149 @@ export default function StudentConsiderations() {
                 onAction={() => openModal('REQUEST_CONSIDERATION')}
               />
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Event & Category</TableHead>
-                    <TableHead>Dates</TableHead>
-                    <TableHead>Lectures</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile Cards View (< md) */}
+                <div className="block md:hidden space-y-3 p-1">
                   {requests.map((r) => (
-                    <TableRow
+                    <div
                       key={r._id}
-                      isSelected={selectedRequest?._id === r._id}
+                      className={`p-4 rounded-2xl bg-white border transition-all space-y-3 ${
+                        selectedRequest?._id === r._id
+                          ? 'border-blue-500 shadow-sm ring-1 ring-blue-500/20'
+                          : 'border-slate-200 shadow-2xs hover:border-slate-300'
+                      }`}
                     >
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-extrabold text-slate-900">{r.eventTitle}</span>
-                          {Boolean(r.isGroup || (r.groupMembers && r.groupMembers.length > 0)) && (
-                            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                              Group ({r.groupMembers?.length || 'Team'})
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-slate-500 font-medium">
-                          {r.eventType ? r.eventType.replace(/_/g, ' ') : 'Activity'} • {r.organizer || 'Official'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs text-slate-600">
-                        {r.startDate} {r.endDate !== r.startDate ? `to ${r.endDate}` : ''}
-                      </TableCell>
-                      <TableCell className="font-bold text-slate-800">
-                        {r.requestedPeriods} {r.requestedPeriods === 1 ? 'Lecture' : 'Lectures'}
-                        {r.hodReview?.approvedPeriods && (
-                          <span className="text-emerald-700 block text-[11px]">
-                            Approved: {r.hodReview.approvedPeriods}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h4 className="font-extrabold text-sm text-slate-900 truncate">{r.eventTitle}</h4>
+                          <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
+                            {r.eventType ? r.eventType.replace(/_/g, ' ') : 'Activity'} • {r.organizer || 'Official'}
                           </span>
-                        )}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(r.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => setSelectedRequest(r)}
-                            className="btn btn-outline btn-xs p-1"
-                            title="View Audit Stepper"
-                          >
-                            <Eye size={13} />
-                          </button>
-                          {r.status === 'PENDING' && (
-                            <button
-                              onClick={() => handleCancel(r._id)}
-                              disabled={cancellingId === r._id}
-                              className="btn btn-danger btn-xs p-1 cursor-pointer disabled:opacity-50"
-                              title="Cancel Request"
-                            >
-                              <Ban size={13} className={cancellingId === r._id ? 'animate-spin' : ''} />
-                            </button>
-                          )}
                         </div>
-                      </TableCell>
-                    </TableRow>
+                        <div className="shrink-0">{getStatusBadge(r.status)}</div>
+                      </div>
+
+                      {Boolean(r.isGroup || (r.groupMembers && r.groupMembers.length > 0)) && (
+                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          Group ({r.groupMembers?.length || 'Team'})
+                        </span>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Dates</span>
+                          <span className="font-semibold text-slate-800">
+                            {r.startDate} {r.endDate !== r.startDate ? `to ${r.endDate}` : ''}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Lectures</span>
+                          <span className="font-bold text-slate-900">
+                            {r.requestedPeriods} {r.requestedPeriods === 1 ? 'Lecture' : 'Lectures'}
+                            {r.hodReview?.approvedPeriods && (
+                              <span className="text-emerald-700 font-bold block text-[11px]">
+                                Approved: {r.hodReview.approvedPeriods}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRequest(r)}
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Eye size={13} />
+                          <span>Details</span>
+                        </button>
+                        {r.status === 'PENDING' && (
+                          <button
+                            type="button"
+                            onClick={() => handleCancel(r._id)}
+                            disabled={cancellingId === r._id}
+                            className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors disabled:opacity-50"
+                          >
+                            <Ban size={13} className={cancellingId === r._id ? 'animate-spin' : ''} />
+                            <span>Cancel</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+
+                {/* Desktop Table View (>= md) */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Event & Category</TableHead>
+                        <TableHead>Dates</TableHead>
+                        <TableHead>Lectures</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {requests.map((r) => (
+                        <TableRow
+                          key={r._id}
+                          isSelected={selectedRequest?._id === r._id}
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-extrabold text-slate-900">{r.eventTitle}</span>
+                              {Boolean(r.isGroup || (r.groupMembers && r.groupMembers.length > 0)) && (
+                                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                  Group ({r.groupMembers?.length || 'Team'})
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-500 font-medium">
+                              {r.eventType ? r.eventType.replace(/_/g, ' ') : 'Activity'} • {r.organizer || 'Official'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-slate-600">
+                            {r.startDate} {r.endDate !== r.startDate ? `to ${r.endDate}` : ''}
+                          </TableCell>
+                          <TableCell className="font-bold text-slate-800">
+                            {r.requestedPeriods} {r.requestedPeriods === 1 ? 'Lecture' : 'Lectures'}
+                            {r.hodReview?.approvedPeriods && (
+                              <span className="text-emerald-700 block text-[11px]">
+                                Approved: {r.hodReview.approvedPeriods}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(r.status)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setSelectedRequest(r)}
+                                className="btn btn-outline btn-xs p-1 cursor-pointer"
+                                title="View Audit Stepper"
+                              >
+                                <Eye size={13} />
+                              </button>
+                              {r.status === 'PENDING' && (
+                                <button
+                                  onClick={() => handleCancel(r._id)}
+                                  disabled={cancellingId === r._id}
+                                  className="btn btn-danger btn-xs p-1 cursor-pointer disabled:opacity-50"
+                                  title="Cancel Request"
+                                >
+                                  <Ban size={13} className={cancellingId === r._id ? 'animate-spin' : ''} />
+                                </button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </Card>
         </div>

@@ -135,6 +135,8 @@ export const getDashboardSummary = async (user) => {
       onLeaveTodayCount,
       semesterAggregation,
       totalStudentsCount,
+      totalTeachersCount,
+      totalUsersCount,
     ] = await Promise.all([
       ConsiderationRequest.countDocuments({ status: { $in: ['RECOMMENDED_BY_TG', 'PENDING'] } }),
       ConsiderationRequest.countDocuments({ status: 'PENDING', escalated: true }),

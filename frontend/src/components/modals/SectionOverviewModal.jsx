@@ -23,26 +23,57 @@ export default function SectionOverviewModal({
     if (initialSection) setSelectedSection(getSectionLetter(initialSection) || initialSection || 'B');
   }, [initialSection]);
 
-  const fetchStudents = async () => {
+  const [dbSections, setDbSections] = useState([]);
+
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await masterDataApi.getStudents({ all: 'true' });
-      setStudents(res?.data || []);
+      const [studentsRes, sectionsRes] = await Promise.allSettled([
+        masterDataApi.getStudents({ all: 'true' }),
+        masterDataApi.getSections(),
+      ]);
+      if (studentsRes.status === 'fulfilled') setStudents(studentsRes.value?.data || []);
+      if (sectionsRes.status === 'fulfilled') setDbSections(sectionsRes.value?.data || []);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchStudents();
+    fetchData();
   }, []);
 
-  const sectionOptions = [
-    { id: 'A', code: 'CSE-A', label: 'CSE-A', bgColor: '#F0F6FE', borderColor: '#BFDBFE' },
-    { id: 'B', code: 'CSE-B', label: 'CSE-B', bgColor: '#FAF5FF', borderColor: '#E9D5FF' },
-    { id: 'C', code: 'CSE-C', label: 'CSE-C', bgColor: '#F0FDF4', borderColor: '#BBF7D0' },
-    { id: 'D', code: 'CSE-D', label: 'CSE-D', bgColor: '#FFF7ED', borderColor: '#FED7AA' },
+  const semesterDbSections = dbSections.filter(
+    (s) => Number(s.semester) === Number(currentSemester)
+  );
+
+  const dynamicLetters = semesterDbSections
+    .map((s) => getSectionLetter(s) || s.code?.replace('CSE-', '') || s.name?.replace('Section ', ''))
+    .filter(Boolean);
+  const baseLetters = ['A', 'B', 'C', 'D'];
+  const allLetters = [...new Set([...baseLetters, ...dynamicLetters])];
+
+  const palette = [
+    { bgColor: '#F0F6FE', borderColor: '#BFDBFE' },
+    { bgColor: '#FAF5FF', borderColor: '#E9D5FF' },
+    { bgColor: '#F0FDF4', borderColor: '#BBF7D0' },
+    { bgColor: '#FFF7ED', borderColor: '#FED7AA' },
+    { bgColor: '#FEF2F2', borderColor: '#FECACA' },
+    { bgColor: '#F5F3FF', borderColor: '#DDD6FE' },
   ];
+
+  const sectionOptions = allLetters.map((letCode, idx) => {
+    const pal = palette[idx % palette.length];
+    const secDoc = semesterDbSections.find((s) => getSectionLetter(s) === letCode);
+    return {
+      id: letCode,
+      code: `CSE-${letCode}`,
+      label: `CSE-${letCode}`,
+      capacity: secDoc?.capacity || 60,
+      bgColor: pal.bgColor,
+      borderColor: pal.borderColor,
+    };
+  });
 
   const semesterStudents = students.filter((s) => {
     const sem = s.semester || s.section?.semester;
@@ -57,6 +88,9 @@ export default function SectionOverviewModal({
   const currentSectionStudents = semesterStudents.filter((s) => {
     return getSectionLetter(s.section) === selectedSection;
   });
+
+  const activeSecDoc = semesterDbSections.find((s) => getSectionLetter(s) === selectedSection);
+  const activeCapacity = activeSecDoc?.capacity || 60;
 
   // Display enrolled students from database
   const displayStudents = currentSectionStudents;
@@ -180,7 +214,7 @@ export default function SectionOverviewModal({
                     marginTop: '2px',
                   }}
                 >
-                  {count} Students
+                  {count} / {opt.capacity} Students
                 </span>
                 {isSelected ? (
                   <span
@@ -227,7 +261,7 @@ export default function SectionOverviewModal({
               student details
             </span>
             <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-bold">
-              CSE-{selectedSection} - {displayStudents.length} Total
+              CSE-{selectedSection} - {displayStudents.length} / {activeCapacity} Enrolled (Capacity: {activeCapacity})
             </span>
           </div>
 

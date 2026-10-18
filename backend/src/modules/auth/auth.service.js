@@ -478,20 +478,33 @@ export const registerStudent = async ({
     }
   }
 
-  // Resolve Section (find by code or name or create)
-  const secName = (section || 'A').toUpperCase();
+  // Resolve Section (find by code or name or create, scoped by semester)
+  const semNum = semester ? parseInt(semester, 10) || 5 : 5;
+  const yrNum = year ? parseInt(year, 10) || Math.ceil(semNum / 2) || 3 : Math.ceil(semNum / 2) || 3;
+  const cleanSec = (section || 'A').replace(/^Section\s*/i, '').trim().toUpperCase();
   let sec = await Section.findOne({
     department: dept._id,
-    $or: [{ name: `Section ${secName}` }, { code: `CSE-${secName}` }, { name: secName }],
+    semester: semNum,
+    $or: [
+      { name: `Section ${cleanSec}` },
+      { code: `CSE-${cleanSec}-S${semNum}` },
+      { code: `CSE-${cleanSec}` },
+      { name: cleanSec },
+    ],
   });
 
   if (!sec) {
+    let codeToUse = `CSE-${cleanSec}`;
+    const codeConflict = await Section.findOne({ code: codeToUse });
+    if (codeConflict && codeConflict.semester !== semNum) {
+      codeToUse = `CSE-${cleanSec}-S${semNum}`;
+    }
     sec = await Section.create({
       department: dept._id,
-      year: year ? parseInt(year) || 3 : 3,
-      semester: semester ? parseInt(semester) || 5 : 5,
-      name: `Section ${secName}`,
-      code: `CSE-${secName}`,
+      year: yrNum,
+      semester: semNum,
+      name: `Section ${cleanSec}`,
+      code: codeToUse,
     });
   }
 
@@ -517,6 +530,7 @@ export const registerStudent = async ({
     department: dept._id,
     section: sec._id,
     rollNumber: roll,
+    semester: semNum,
     enrollmentYear: parsedEnrollYear,
   });
 
