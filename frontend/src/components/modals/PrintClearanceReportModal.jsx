@@ -11,7 +11,21 @@ export default function PrintClearanceReportModal({
   const [selectedSemester, setSelectedSemester] = useState(defaultSemester);
   const [selectedSection, setSelectedSection] = useState('ALL');
   const [reportType, setReportType] = useState('ALL'); // 'ALL' | 'CONSIDERATION' | 'LEAVE' | 'APPROVED_ONLY'
+  const [dateScope, setDateScope] = useState('TODAY'); // 'TODAY' | 'FUTURE' | 'ALL' | 'PREVIOUS'
   const [sections, setSections] = useState(initialSections);
+
+  const todayStr = (() => {
+    try {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date());
+    } catch {
+      return new Date().toISOString().slice(0, 10);
+    }
+  })();
 
   // Fetch sections from master data if not provided or empty
   useEffect(() => {
@@ -150,7 +164,19 @@ export default function PrintClearanceReportModal({
         matchesType = item.requestKind === 'LEAVE' || Boolean(item.leaveType);
       }
 
-      return matchesSem && matchesSec && matchesType;
+      let matchesDate = true;
+      const itemStart = (item.startDate || '').slice(0, 10);
+      const itemEnd = (item.endDate || item.startDate || '').slice(0, 10);
+
+      if (dateScope === 'TODAY') {
+        matchesDate = (itemStart && itemEnd && itemStart <= todayStr && itemEnd >= todayStr) || itemStart === todayStr;
+      } else if (dateScope === 'FUTURE') {
+        matchesDate = itemStart > todayStr;
+      } else if (dateScope === 'PREVIOUS') {
+        matchesDate = itemEnd < todayStr;
+      }
+
+      return matchesSem && matchesSec && matchesType && matchesDate;
     });
 
     const semLabel =
@@ -342,6 +368,15 @@ export default function PrintClearanceReportModal({
           <div class="meta-bar">
             <span><strong>Date Generated:</strong> ${formattedDate}</span>
             <span><strong>Academic Scope:</strong> ${targetScope}</span>
+            <span><strong>Date Scope:</strong> ${
+              dateScope === 'TODAY'
+                ? `Today (${todayStr})`
+                : dateScope === 'FUTURE'
+                ? 'Future / Upcoming Clearances'
+                : dateScope === 'PREVIOUS'
+                ? 'Previous Records'
+                : 'All Dates'
+            }</span>
             <span><strong>Authorized by:</strong> Head of Department (HOD CSE)</span>
             <span><strong>Total Records:</strong> ${filtered.length} Cleared</span>
           </div>
@@ -529,6 +564,37 @@ export default function PrintClearanceReportModal({
                   }
                   className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
                     reportType === tab.id ? 'shadow-2xs' : 'hover:bg-slate-100'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 4: Date Scope */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+              <Calendar size={13} className="text-blue-600" />
+              <span>4. Report Date Scope:</span>
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'TODAY', label: `Today` },
+                { id: 'FUTURE', label: 'Future / Upcoming' },
+                { id: 'ALL', label: 'All Dates' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setDateScope(tab.id)}
+                  style={
+                    dateScope === tab.id
+                      ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8' }
+                      : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
+                  }
+                  className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
+                    dateScope === tab.id ? 'shadow-2xs' : 'hover:bg-slate-100'
                   }`}
                 >
                   {tab.label}

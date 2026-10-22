@@ -237,6 +237,13 @@ export default function OfficialClearancesLedgerModal({
     setDateTo('');
   };
 
+  // Switch to Future view
+  const handleSwitchToFuture = () => {
+    setDateMode('future');
+    setDateFrom('');
+    setDateTo('');
+  };
+
   // Expand considerations into individual student clearance rows (Leader + non-excluded Group Members)
   const expandedConsiderationRows = useMemo(() => {
     const rows = [];
@@ -370,12 +377,15 @@ export default function OfficialClearancesLedgerModal({
       const itemEnd = row.endDate ? row.endDate.slice(0, 10) : itemStart;
 
       if (dateMode === 'today') {
+        // Strictly current day only: event must cover today or start today. Future dates strictly excluded.
         const isToday =
           (itemStart && itemEnd && itemStart <= todayStr && itemEnd >= todayStr) ||
-          itemStart === todayStr ||
-          itemEnd === todayStr ||
-          (row.createdAt && row.createdAt.slice(0, 10) === todayStr);
+          itemStart === todayStr;
         if (!isToday) return false;
+      } else if (dateMode === 'future') {
+        // Future considerations: event starts after today
+        const isFuture = itemStart > todayStr;
+        if (!isFuture) return false;
       } else if (dateMode === 'previous') {
         if (dateFrom && dateTo) {
           const overlaps = itemStart <= dateTo && itemEnd >= dateFrom;
@@ -384,6 +394,9 @@ export default function OfficialClearancesLedgerModal({
           if (itemEnd < dateFrom) return false;
         } else if (dateTo) {
           if (itemStart > dateTo) return false;
+        } else {
+          // Historical: ended before today
+          if (itemEnd >= todayStr) return false;
         }
       }
 
@@ -478,10 +491,13 @@ export default function OfficialClearancesLedgerModal({
         const itemEnd = row.endDate ? row.endDate.slice(0, 10) : itemStart;
         return (
           (itemStart && itemEnd && itemStart <= todayStr && itemEnd >= todayStr) ||
-          itemStart === todayStr ||
-          itemEnd === todayStr ||
-          (row.createdAt && row.createdAt.slice(0, 10) === todayStr)
+          itemStart === todayStr
         );
+      });
+    } else if (printDateScope === 'future') {
+      reportList = reportList.filter((row) => {
+        const itemStart = row.startDate ? row.startDate.slice(0, 10) : '';
+        return itemStart > todayStr;
       });
     } else if (printDateScope === 'previous') {
       if (printDateFrom && printDateTo) {
@@ -500,6 +516,11 @@ export default function OfficialClearancesLedgerModal({
           const itemStart = row.startDate ? row.startDate.slice(0, 10) : '';
           return itemStart <= printDateTo;
         });
+      } else {
+        reportList = reportList.filter((row) => {
+          const itemEnd = row.endDate ? row.endDate.slice(0, 10) : (row.startDate ? row.startDate.slice(0, 10) : '');
+          return itemEnd < todayStr;
+        });
       }
     }
 
@@ -508,6 +529,8 @@ export default function OfficialClearancesLedgerModal({
         `No approved sanction records found for the selected print scope (${
           printDateScope === 'today'
             ? `Today: ${formatDateSlash(todayStr)}`
+            : printDateScope === 'future'
+            ? 'Future / Upcoming Clearances'
             : `${formatDateSlash(printDateFrom)} to ${formatDateSlash(printDateTo)}`
         }).`
       );
@@ -523,6 +546,8 @@ export default function OfficialClearancesLedgerModal({
     const dateScopeDisplay =
       printDateScope === 'today'
         ? `Today (${formatDateSlash(todayStr)})`
+        : printDateScope === 'future'
+        ? `Future / Upcoming Clearances`
         : `${formatDateSlash(printDateFrom) || 'Initial'} to ${formatDateSlash(printDateTo) || 'Latest'}`;
 
     const reportTitle =
@@ -871,62 +896,81 @@ export default function OfficialClearancesLedgerModal({
             </button>
           </div>
 
-          {/* Date Scope Controls (Show Previous / Today) */}
-          <div className="flex items-center gap-2 shrink-0">
-            {dateMode === 'today' ? (
+          {/* Date Scope Controls: Today, Future, Previous */}
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {/* Today Button */}
+            <button
+              type="button"
+              onClick={handleSwitchToToday}
+              style={
+                dateMode === 'today'
+                  ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8', boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)' }
+                  : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
+              }
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
+                dateMode === 'today' ? '' : 'hover:bg-slate-100'
+              }`}
+              title="Show only considerations/leaves active on current day"
+            >
+              <Calendar size={13} style={{ color: dateMode === 'today' ? '#FFFFFF' : '#2563EB' }} />
+              <span>Today ({formatDateSlash(todayStr)})</span>
+            </button>
+
+            {/* Show Future Considerations Button */}
+            <button
+              type="button"
+              onClick={handleSwitchToFuture}
+              style={
+                dateMode === 'future'
+                  ? { backgroundColor: '#D97706', color: '#FFFFFF', borderColor: '#B45309', boxShadow: '0 2px 4px rgba(217, 119, 6, 0.25)' }
+                  : { backgroundColor: '#FFFBEB', color: '#92400E', borderColor: '#FCD34D' }
+              }
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
+                dateMode === 'future' ? '' : 'hover:bg-amber-100'
+              }`}
+              title="Show approved future considerations/leaves scheduled for upcoming dates"
+            >
+              <Sparkles size={13} style={{ color: dateMode === 'future' ? '#FFFFFF' : '#D97706' }} />
+              <span>
+                {activeTab === 'considerations'
+                  ? 'Show Future Considerations'
+                  : 'Show Future Leaves'}
+              </span>
+            </button>
+
+            {/* Show Previous Considerations Button */}
+            <button
+              type="button"
+              onClick={handleOpenPreviousModal}
+              style={
+                dateMode === 'previous'
+                  ? { backgroundColor: '#4F46E5', color: '#FFFFFF', borderColor: '#4338CA', boxShadow: '0 2px 4px rgba(79, 70, 229, 0.25)' }
+                  : { backgroundColor: '#EEF2FF', color: '#312E81', borderColor: '#C7D2FE' }
+              }
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
+                dateMode === 'previous' ? '' : 'hover:bg-indigo-100'
+              }`}
+              title="View historical clearances from previous dates"
+            >
+              <History size={13} style={{ color: dateMode === 'previous' ? '#FFFFFF' : '#4F46E5' }} />
+              <span>
+                {activeTab === 'considerations'
+                  ? 'Show Previous Considerations'
+                  : 'Show Previous Leaves'}
+              </span>
+            </button>
+
+            {/* If in previous mode, allow changing custom date range */}
+            {dateMode === 'previous' && (
               <button
                 type="button"
                 onClick={handleOpenPreviousModal}
-                style={{
-                  backgroundColor: '#EEF2FF',
-                  color: '#312E81',
-                  border: '1.5px solid #818CF8',
-                }}
-                className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs hover:bg-indigo-100 group"
-                title="Select date range to view previous historical data"
+                className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                title="Change custom date range"
               >
-                <History size={15} style={{ color: '#4F46E5' }} className="group-hover:-rotate-45 transition-transform" />
-                <span>
-                  {activeTab === 'considerations'
-                    ? 'Show Previous Considerations'
-                    : 'Show Previous Leaves'}
-                </span>
+                <Filter size={13} className="text-slate-500" />
+                <span>Change Dates</span>
               </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleSwitchToToday}
-                  style={{
-                    backgroundColor: '#EFF6FF',
-                    color: '#1E3A8A',
-                    border: '1.5px solid #60A5FA',
-                  }}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs hover:bg-blue-100"
-                  title="Return to today's active ledger"
-                >
-                  <Calendar size={14} style={{ color: '#2563EB' }} />
-                  <span>
-                    {activeTab === 'considerations'
-                      ? "Show Today's Considerations"
-                      : "Show Today's Leaves"}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOpenPreviousModal}
-                  style={{
-                    backgroundColor: '#FFFFFF',
-                    color: '#334155',
-                    border: '1.5px solid #CBD5E1',
-                  }}
-                  className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs hover:bg-slate-50"
-                  title="Change date range"
-                >
-                  <Filter size={14} style={{ color: '#64748B' }} />
-                  <span>Change Dates</span>
-                </button>
-              </div>
             )}
           </div>
         </div>
@@ -1029,11 +1073,15 @@ export default function OfficialClearancesLedgerModal({
                 : 'Official Approved Student Leave Applications'}
             </span>
             {dateMode === 'today' ? (
-              <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-extrabold text-[11px] flex items-center gap-1">
+              <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 font-extrabold text-[11px] flex items-center gap-1">
                 <Clock size={11} /> Today's Live Sanctions ({formatDateSlash(todayStr)})
               </span>
+            ) : dateMode === 'future' ? (
+              <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[11px] flex items-center gap-1">
+                <Sparkles size={11} className="text-amber-700" /> Future Clearances (Upcoming)
+              </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[11px] flex items-center gap-1">
+              <span className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[11px] flex items-center gap-1">
                 <History size={11} /> Previous Range: {formatDateSlash(dateFrom) || 'Start'} to {formatDateSlash(dateTo) || 'End'}
               </span>
             )}
@@ -1449,7 +1497,7 @@ export default function OfficialClearancesLedgerModal({
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">
                     Report Date Scope:
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => setPrintDateScope('today')}
@@ -1458,27 +1506,42 @@ export default function OfficialClearancesLedgerModal({
                           ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8' }
                           : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
                       }
-                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
                         printDateScope === 'today' ? 'shadow-xs' : 'hover:bg-slate-100'
                       }`}
                     >
                       <Calendar size={13} />
-                      <span>Today ({formatDateSlash(todayStr)})</span>
+                      <span>Today</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPrintDateScope('future')}
+                      style={
+                        printDateScope === 'future'
+                          ? { backgroundColor: '#D97706', color: '#FFFFFF', borderColor: '#B45309' }
+                          : { backgroundColor: '#FFFBEB', color: '#92400E', borderColor: '#FCD34D' }
+                      }
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                        printDateScope === 'future' ? 'shadow-xs' : 'hover:bg-amber-100'
+                      }`}
+                    >
+                      <Sparkles size={13} />
+                      <span>Future</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setPrintDateScope('previous')}
                       style={
                         printDateScope === 'previous'
-                          ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8' }
+                          ? { backgroundColor: '#4F46E5', color: '#FFFFFF', borderColor: '#4338CA' }
                           : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
                       }
-                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
                         printDateScope === 'previous' ? 'shadow-xs' : 'hover:bg-slate-100'
                       }`}
                     >
                       <History size={13} />
-                      <span>Date Range (From - To)</span>
+                      <span>Previous</span>
                     </button>
                   </div>
 
