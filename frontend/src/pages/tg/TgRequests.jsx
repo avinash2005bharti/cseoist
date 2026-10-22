@@ -14,7 +14,7 @@ import {
   TableCell,
   EmptyState,
 } from '../../components/common';
-import { CheckSquare, Calendar, FileText, Eye, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { CheckSquare, Calendar, FileText, Eye, CheckCircle2, AlertTriangle, UserCheck } from 'lucide-react';
 import WorkflowTimeline from '../../components/WorkflowTimeline.jsx';
 
 export default function TgRequests() {
@@ -28,16 +28,47 @@ export default function TgRequests() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
 
+  // Message-style pending counts over tabs
+  const [pendingConsCount, setPendingConsCount] = useState(0);
+  const [pendingLeavesCount, setPendingLeavesCount] = useState(0);
+
+  const fetchPendingCounts = async () => {
+    try {
+      const [consRes, leavesRes] = await Promise.allSettled([
+        considerationApi.getTGQueue({ status: 'PENDING' }),
+        leaveApi.getTGQueue({ status: 'PENDING' }),
+      ]);
+      if (consRes.status === 'fulfilled') {
+        const val = consRes.value?.data || consRes.value?.requests || consRes.value || [];
+        setPendingConsCount(Array.isArray(val) ? val.length : 0);
+      }
+      if (leavesRes.status === 'fulfilled') {
+        const val = leavesRes.value?.data || leavesRes.value?.leaves || leavesRes.value || [];
+        setPendingLeavesCount(Array.isArray(val) ? val.length : 0);
+      }
+    } catch (e) {
+      console.error('Error fetching pending counts:', e);
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
       const params = { status: statusFilter };
       if (activeTab === 'considerations') {
         const res = await considerationApi.getTGQueue(params);
-        setConsiderations(res?.data || []);
+        const data = res?.data || [];
+        setConsiderations(data);
+        if (statusFilter === 'PENDING') {
+          setPendingConsCount(data.length);
+        }
       } else {
         const res = await leaveApi.getTGQueue(params);
-        setLeaves(res?.data || []);
+        const data = res?.data || [];
+        setLeaves(data);
+        if (statusFilter === 'PENDING') {
+          setPendingLeavesCount(data.length);
+        }
       }
     } finally {
       setLoading(false);
@@ -46,8 +77,12 @@ export default function TgRequests() {
 
   useEffect(() => {
     fetchData();
+    fetchPendingCounts();
 
-    const handleQueueChange = () => fetchData();
+    const handleQueueChange = () => {
+      fetchData();
+      fetchPendingCounts();
+    };
     window.addEventListener('campusflow_queue_changed', handleQueueChange);
     return () => {
       window.removeEventListener('campusflow_queue_changed', handleQueueChange);
@@ -78,37 +113,59 @@ export default function TgRequests() {
 
       {/* Main Mode Tabs & Status Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3.5 flex-wrap">
+          {/* Attendance Consideration Tab with Notification Badge */}
           <button
+            type="button"
             onClick={() => {
               setActiveTab('considerations');
               setSelectedItem(null);
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`relative px-4 py-2.5 ${pendingConsCount > 0 ? 'pr-8' : ''} rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
               activeTab === 'considerations'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                ? 'bg-blue-600 text-white shadow-xs border border-blue-700'
+                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 shadow-2xs'
             }`}
           >
-            <FileText size={15} />
+            <FileText size={15} className="shrink-0" />
             <span>Attendance Consideration</span>
+            {pendingConsCount > 0 && (
+              <span
+                title={`${pendingConsCount} Pending Considerations`}
+                className="absolute top-1.5 right-2 min-w-[19px] h-[19px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center shadow-xs border border-white/80"
+              >
+                {pendingConsCount > 99 ? '99+' : pendingConsCount}
+              </span>
+            )}
           </button>
+
+          {/* Leave Applications Tab with Notification Badge */}
           <button
+            type="button"
             onClick={() => {
               setActiveTab('leaves');
               setSelectedItem(null);
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`relative px-4 py-2.5 ${pendingLeavesCount > 0 ? 'pr-8' : ''} rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
               activeTab === 'leaves'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                ? 'bg-blue-600 text-white shadow-xs border border-blue-700'
+                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 shadow-2xs'
             }`}
           >
-            <Calendar size={15} />
+            <Calendar size={15} className="shrink-0" />
             <span>Leave Applications</span>
+            {pendingLeavesCount > 0 && (
+              <span
+                title={`${pendingLeavesCount} Pending Leave Applications`}
+                className="absolute top-1.5 right-2 min-w-[19px] h-[19px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center shadow-xs border border-white/80"
+              >
+                {pendingLeavesCount > 99 ? '99+' : pendingLeavesCount}
+              </span>
+            )}
           </button>
         </div>
 
+        {/* Status Filters with High-Contrast Solid Active Styling */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
           {[
             { id: 'PENDING', label: 'Pending Review' },
@@ -117,11 +174,11 @@ export default function TgRequests() {
             { id: 'ALL', label: 'All Applications' },
           ].map((st) => {
             const isSelected = statusFilter === (st.id === 'ALL' ? '' : st.id);
-            let activeColor = 'bg-slate-900 text-white font-bold border-slate-900';
+            let activeColor = 'bg-slate-900 text-white font-bold border-slate-900 shadow-xs';
             if (isSelected) {
-              if (st.id === 'RECOMMENDED_BY_TG') activeColor = 'bg-amber-100 text-amber-950 border-amber-600 font-extrabold shadow-xs';
-              else if (st.id === 'REJECTED') activeColor = 'bg-rose-100 text-rose-950 border-rose-600 font-extrabold shadow-xs';
-              else if (st.id === 'PENDING') activeColor = 'bg-blue-100 text-blue-950 border-blue-600 font-extrabold shadow-xs';
+              if (st.id === 'RECOMMENDED_BY_TG') activeColor = 'bg-amber-600 text-white border-amber-600 font-extrabold shadow-xs';
+              else if (st.id === 'REJECTED') activeColor = 'bg-rose-600 text-white border-rose-600 font-extrabold shadow-xs';
+              else if (st.id === 'PENDING') activeColor = 'bg-blue-600 text-white border-blue-600 font-extrabold shadow-xs';
             }
             return (
               <button
@@ -148,8 +205,20 @@ export default function TgRequests() {
             {activeTab === 'considerations' ? (
               considerations.length === 0 ? (
                 <EmptyState
-                  title="No Pending Attendance Consideration Applications"
-                  description="All attendance consideration applications for this section have been reviewed."
+                  title={
+                    statusFilter === 'RECOMMENDED_BY_TG'
+                      ? 'No Recommended Applications'
+                      : statusFilter === 'REJECTED'
+                      ? 'No Rejected Applications'
+                      : statusFilter === 'PENDING'
+                      ? 'No Pending Applications'
+                      : 'No Applications Found'
+                  }
+                  description={
+                    statusFilter === 'PENDING'
+                      ? 'All attendance consideration applications for this section have been reviewed.'
+                      : 'There are no attendance consideration applications matching the current filter.'
+                  }
                 />
               ) : (
                 <>
@@ -205,6 +274,17 @@ export default function TgRequests() {
                             <Eye size={13} />
                             <span>Details</span>
                           </button>
+                          {r.isGroup && (
+                            <button
+                              type="button"
+                              onClick={() => openModal('AUDIT_GROUP_STUDENTS', { request: r, userRole: 'TG' })}
+                              className="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                              title="Audit Students"
+                            >
+                              <UserCheck size={13} />
+                              <span>Audit</span>
+                            </button>
+                          )}
                           {r.status === 'PENDING' && (
                             <button
                               type="button"
@@ -273,6 +353,16 @@ export default function TgRequests() {
                                 >
                                   <Eye size={13} />
                                 </button>
+                                {r.isGroup && (
+                                  <button
+                                    onClick={() => openModal('AUDIT_GROUP_STUDENTS', { request: r, userRole: 'TG' })}
+                                    className="btn btn-outline btn-xs px-2 text-indigo-700 hover:bg-indigo-50 cursor-pointer flex items-center gap-1 font-bold"
+                                    title="Audit Group Students"
+                                  >
+                                    <UserCheck size={12} />
+                                    <span>Audit</span>
+                                  </button>
+                                )}
                                 {r.status === 'PENDING' && (
                                   <Button
                                     size="xs"
@@ -299,8 +389,20 @@ export default function TgRequests() {
               )
             ) : leaves.length === 0 ? (
               <EmptyState
-                title="No Pending Leave Applications"
-                description="There are currently no leave applications awaiting review."
+                title={
+                  statusFilter === 'RECOMMENDED_BY_TG'
+                    ? 'No Recommended Leave Applications'
+                    : statusFilter === 'REJECTED'
+                    ? 'No Rejected Leave Applications'
+                    : statusFilter === 'PENDING'
+                    ? 'No Pending Leave Applications'
+                    : 'No Leave Applications Found'
+                }
+                description={
+                  statusFilter === 'PENDING'
+                    ? 'There are currently no leave applications awaiting review.'
+                    : 'There are no leave applications matching the current filter.'
+                }
               />
             ) : (
               <>
@@ -472,25 +574,50 @@ export default function TgRequests() {
                   {getStatusBadge(selectedItem.status)}
                 </div>
 
-                {Boolean(selectedItem.isGroup && selectedItem.sectionStudents && selectedItem.sectionStudents.length > 0) && (
-                  <div>
-                    <span className="text-slate-500 font-semibold block mb-1">
-                      Students from your Section ({selectedItem.sectionStudents.length}):
-                    </span>
-                    <div className="flex flex-col gap-1 p-2 rounded-xl bg-indigo-50/60 border border-indigo-200 text-[11px]">
-                      {selectedItem.sectionStudents.map((m, idx) => {
-                        const mName = m.user?.name || m.name || 'Student';
-                        const mRoll = m.enrollmentNumber || m.rollNumber || '';
-                        return (
-                          <div key={m._id || idx} className="flex items-center justify-between py-0.5 border-b border-indigo-100 last:border-0">
-                            <span className="font-bold text-slate-800">{mName}</span>
-                            <span className="text-slate-500 font-mono text-[10px]">{mRoll}</span>
-                          </div>
-                        );
-                      })}
+                {Boolean(selectedItem.isGroup && selectedItem.sectionStudents && selectedItem.sectionStudents.length > 0) && (() => {
+                  const activeSectionStudents = selectedItem.sectionStudents.filter((m) => {
+                    const isExcluded = (selectedItem.studentAudits || []).some(
+                      (a) => (a.student?._id || a.student)?.toString() === (m._id || m)?.toString() && a.status === 'EXCLUDED'
+                    );
+                    return !isExcluded;
+                  });
+
+                  if (activeSectionStudents.length === 0) return null;
+
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-slate-500 font-semibold">
+                          Students from your Section ({activeSectionStudents.length}):
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => openModal('AUDIT_GROUP_STUDENTS', { request: selectedItem, userRole: 'TG' })}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs transition-colors cursor-pointer"
+                          title="Audit Section Students"
+                        >
+                          <UserCheck size={11} />
+                          <span>Audit Students</span>
+                        </button>
+                      </div>
+                      <div className="flex flex-col gap-1 p-2 rounded-xl bg-indigo-50/60 border border-indigo-200 text-[11px]">
+                        {activeSectionStudents.map((m, idx) => {
+                          const mName = m.user?.name || m.name || 'Student';
+                          const mRoll = m.enrollmentNumber || m.rollNumber || '';
+                          return (
+                            <div
+                              key={m._id || idx}
+                              className="flex items-center justify-between py-1 px-1.5 rounded-lg border-b border-indigo-100 last:border-0"
+                            >
+                              <span className="font-bold text-slate-800 truncate">{mName}</span>
+                              <span className="text-slate-500 font-mono text-[10px]">{mRoll}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {selectedItem.description && (
                   <div>

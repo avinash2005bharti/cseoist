@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { reportApi } from '../../api';
+import { reportApi, mentorshipApi } from '../../api';
 import { useERP } from '../../context/ERPContext.jsx';
 import {
   X,
@@ -16,7 +16,43 @@ import {
 } from 'lucide-react';
 
 export default function AttendanceLeaveReportsModal({ onClose, modalData = {} }) {
-  const { addToast } = useERP();
+  const { currentUser, currentRole, addToast } = useERP();
+
+  // Detect whether current caller is a TG
+  const isTgUser = Boolean(
+    modalData?.isTgView ||
+    currentRole === 'tg' ||
+    (currentUser?.isTG && currentRole !== 'hod' && currentRole !== 'admin')
+  );
+
+  const [tgCohort, setTgCohort] = useState(null);
+
+  useEffect(() => {
+    if (isTgUser && (!modalData?.assignedSemester || !modalData?.assignedSection)) {
+      mentorshipApi
+        .getMyCohort()
+        .then((res) => setTgCohort(res?.data || res))
+        .catch(() => {});
+    }
+  }, [isTgUser]);
+
+  const assignedSemester =
+    modalData?.assignedSemester ||
+    tgCohort?.section?.semester ||
+    tgCohort?.semester ||
+    currentUser?.assignedSemester ||
+    5;
+
+  const rawAssignedSection =
+    modalData?.assignedSection ||
+    tgCohort?.section?.name ||
+    tgCohort?.section?.code ||
+    'B';
+
+  const assignedSection = String(rawAssignedSection)
+    .replace(/^Section\s*/i, '')
+    .replace(/^CSE-/i, '')
+    .trim() || 'B';
 
   const [reportType, setReportType] = useState(() => modalData?.initialType || 'considerations');
   const [semester, setSemester] = useState(() => (modalData?.initialSemester !== undefined ? modalData.initialSemester : 5));
@@ -70,24 +106,36 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
 
     try {
       const params = {};
-      if (semester && semester !== 'ALL') params.semester = semester;
+      if (isTgUser) {
+        // Enforce TG's assigned section and semester
+        params.semester = assignedSemester;
+        params.section = assignedSection;
+      } else {
+        if (semester && semester !== 'ALL') params.semester = semester;
+      }
       if (from) params.from = from;
       if (to) params.to = to;
       if (datePreset && datePreset !== 'custom') params.range = datePreset;
       if (status) params.status = status;
 
+      const scopeText = isTgUser
+        ? `Semester ${assignedSemester} (Section ${assignedSection})`
+        : semester === 'ALL'
+        ? 'All Semesters'
+        : `Semester ${semester}`;
+
       if (reportType === 'considerations') {
         await reportApi.downloadConsiderationsExcel(params);
         addToast(
           'Excel Generated',
-          `Downloaded attendance consideration records for ${semester === 'ALL' ? 'All Semesters' : `Semester ${semester}`}.`,
+          `Downloaded attendance consideration records for ${scopeText}.`,
           'success'
         );
       } else {
         await reportApi.downloadLeavesExcel(params);
         addToast(
           'Excel Generated',
-          `Downloaded section-wise leave records for ${semester === 'ALL' ? 'All Semesters' : `Semester ${semester}`}.`,
+          `Downloaded leave records for ${scopeText}.`,
           'success'
         );
       }
@@ -167,7 +215,7 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <span>Attendance Considerations (OD)</span>
+                <span>Attendance Considerations</span>
               </button>
 
               <button
@@ -184,37 +232,58 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
             </div>
           </div>
 
-          {/* 2. Select Semester (Step from Diagram: "select semester") */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-black text-slate-700">
-                2. Select Semester
-              </label>
-              <span className="text-[11px] font-bold text-blue-600">
-                Selected: {semester === 'ALL' ? 'All Semesters' : `Semester ${semester}`}
+          {/* 2. Select Semester (Shown for HOD / Admin; Replaced with assigned scope card for TG) */}
+          {!isTgUser ? (
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-black text-slate-700">
+                  2. Select Semester
+                </label>
+                <span className="text-[11px] font-bold text-blue-600">
+                  Selected: {semester === 'ALL' ? 'All Semesters' : `Semester ${semester}`}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 p-1 bg-slate-50 rounded-2xl border border-slate-200">
+                {semesterList.map((sem) => {
+                  const isSelected = semester === sem.value;
+                  return (
+                    <button
+                      key={sem.value}
+                      type="button"
+                      onClick={() => setSemester(sem.value)}
+                      className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-200/60'
+                      }`}
+                    >
+                      {sem.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                  TG
+                </div>
+                <div>
+                  <span className="block text-xs font-black text-slate-900">
+                    Assigned Cohort: Semester {assignedSemester} • Section {assignedSection}
+                  </span>
+                  <span className="block text-[11px] text-slate-600 font-medium mt-0.5">
+                    Download will only contain records of your assigned section & semester.
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white text-blue-700 border border-blue-200 shadow-2xs shrink-0">
+                Assigned Scope
               </span>
             </div>
-
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 p-1 bg-slate-50 rounded-2xl border border-slate-200">
-              {semesterList.map((sem) => {
-                const isSelected = semester === sem.value;
-                return (
-                  <button
-                    key={sem.value}
-                    type="button"
-                    onClick={() => setSemester(sem.value)}
-                    className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:bg-slate-200/60'
-                    }`}
-                  >
-                    {sem.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          )}
 
           {/* 3. Select Date Range (Step from Diagram: "select data range" - today, last 7 days, last month, from, to) */}
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
@@ -320,51 +389,68 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
             </div>
           </div>
 
-          {/* 4. Filter by Status (Optional refinement) */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+          {/* 4. Filter by Status (Properly separated to prevent overlapping with resulting architecture box) */}
+          <div className="pt-1">
+            <label className="block text-xs font-black text-slate-700 mb-1.5">
               Status Scope
             </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none cursor-pointer"
-            >
-              <option value="">All Statuses (Pending, Approved, Recommended, Rejected)</option>
-              <option value="APPROVED_BY_HOD,APPROVED">Approved Only</option>
-              <option value="PENDING">Pending Review Only</option>
-              <option value="RECOMMENDED_BY_TG">Recommended by TG</option>
-              <option value="REJECTED_BY_HOD,REJECTED_BY_TG,REJECTED">Rejected Only</option>
-            </select>
+            <div className="relative">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none cursor-pointer block transition-colors"
+              >
+                <option value="">All Statuses (Pending, Approved, Recommended, Rejected)</option>
+                <option value="APPROVED_BY_HOD,APPROVED">Approved Only</option>
+                <option value="PENDING">Pending Review Only</option>
+                <option value="RECOMMENDED_BY_TG">Recommended by TG</option>
+                <option value="REJECTED_BY_HOD,REJECTED_BY_TG,REJECTED">Rejected Only</option>
+              </select>
+            </div>
           </div>
 
-          {/* 5. Visual Representation of the Resulting Excel Sheet (Right side of diagram) */}
-          <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-2">
+          {/* 5. Visual Representation of the Resulting Excel Sheet (Explicit top margin mt-5 prevents any overlap) */}
+          <div className="mt-5 p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2.5 clear-both">
             <div className="flex items-center gap-2 text-xs font-black text-blue-900">
-              <FileSpreadsheet size={15} className="text-blue-600" />
+              <FileSpreadsheet size={16} className="text-blue-600 shrink-0" />
               <span>Resulting Excel Workbook Architecture (.xlsx)</span>
             </div>
-            <p className="text-[11px] text-blue-700 m-0">
-              Data will be packaged into a single workbook containing a consolidated master sheet, plus dedicated worksheets for each section:
+            <p className="text-[11px] text-blue-700 m-0 leading-relaxed">
+              {isTgUser
+                ? `Data will be packaged into a single workbook containing records for assigned Semester ${assignedSemester} Section ${assignedSection}:`
+                : 'Data will be packaged into a single workbook containing a consolidated master sheet, plus dedicated worksheets for each section:'}
             </p>
 
-            {/* Workbook Sheet Tabs (as drawn in diagram: sec A, sec B, sec C, sec D) */}
+            {/* Workbook Sheet Tabs */}
             <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5">
-              <span className="px-2.5 py-1 rounded-md bg-blue-800 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
-                All Sections
-              </span>
-              <span className="px-2.5 py-1 rounded-md bg-blue-600 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
-                sec A
-              </span>
-              <span className="px-2.5 py-1 rounded-md bg-purple-600 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
-                sec B
-              </span>
-              <span className="px-2.5 py-1 rounded-md bg-emerald-600 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
-                sec C
-              </span>
-              <span className="px-2.5 py-1 rounded-md bg-amber-600 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
-                sec D
-              </span>
+              {isTgUser ? (
+                <>
+                  <span className="px-2.5 py-1 rounded-md bg-blue-800 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
+                    Master Sheet (Sec {assignedSection})
+                  </span>
+                  <span className="px-2.5 py-1 rounded-md bg-blue-600 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
+                    sec {assignedSection} (Assigned)
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="px-2.5 py-1 rounded-md bg-blue-800 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
+                    All Sections
+                  </span>
+                  <span className="px-2.5 py-1 rounded-md bg-blue-600 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
+                    sec A
+                  </span>
+                  <span className="px-2.5 py-1 rounded-md bg-purple-600 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
+                    sec B
+                  </span>
+                  <span className="px-2.5 py-1 rounded-md bg-emerald-600 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
+                    sec C
+                  </span>
+                  <span className="px-2.5 py-1 rounded-md bg-amber-600 text-white text-[10px] font-mono font-extrabold shadow-2xs shrink-0">
+                    sec D
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>

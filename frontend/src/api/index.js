@@ -11,3 +11,4 @@ export {
   notificationApi,
   noticeApi,
 } from './modulesApi.js';
+export { settingsApi } from './settingsApi.js';

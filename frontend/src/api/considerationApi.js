@@ -36,6 +36,21 @@ export const considerationApi = {
       approvedPeriods,
     });
   },
+
+  auditStudent: async (id, { studentId, status, remarks }) => {
+    return apiClient.patch(`/considerations/${id}/audit-student`, {
+      studentId,
+      status,
+      remarks,
+    });
+  },
+
+  auditAllStudents: async (id, { status = 'VERIFIED', remarks } = {}) => {
+    return apiClient.patch(`/considerations/${id}/audit-all`, {
+      status,
+      remarks,
+    });
+  },
 };
 
 export default considerationApi;

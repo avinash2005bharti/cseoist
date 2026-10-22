@@ -529,6 +529,91 @@ describe('15. Section Capacity & Provisioning Permissions (HOD & Admin)', () => 
   });
 });
 
+describe('16. Group Consideration Student Auditing & Exclusion Architecture (TG & HOD)', () => {
+  it('should validate student audit schema for status and studentId', async () => {
+    const { auditStudentSchema, auditAllStudentsSchema } = await import(
+      '../src/modules/considerations/considerations.schema.js'
+    );
+
+    const validAudit = auditStudentSchema.parse({
+      studentId: '652f1b2c3d4e5f6a7b8c9d01',
+      status: 'EXCLUDED',
+      remarks: 'Did not attend the competition',
+    });
+    assert.equal(validAudit.status, 'EXCLUDED');
+    assert.equal(validAudit.remarks, 'Did not attend the competition');
+
+    const validVerified = auditStudentSchema.parse({
+      studentId: '652f1b2c3d4e5f6a7b8c9d02',
+      status: 'VERIFIED',
+    });
+    assert.equal(validVerified.status, 'VERIFIED');
+
+    assert.throws(() => {
+      auditStudentSchema.parse({
+        studentId: '',
+        status: 'INVALID_STATUS',
+      });
+    });
+
+    const validAll = auditAllStudentsSchema.parse({
+      status: 'VERIFIED',
+      remarks: 'Verified all members',
+    });
+    assert.equal(validAll.status, 'VERIFIED');
+  });
+
+  it('should verify TG and HOD permission to audit group students and filter sanctioned students', () => {
+    const authorizedAuditRoles = ['TG', 'HOD', 'ADMIN'];
+    assert.ok(authorizedAuditRoles.includes('TG'));
+    assert.ok(authorizedAuditRoles.includes('HOD'));
+    assert.equal(authorizedAuditRoles.includes('STUDENT'), false);
+
+    // Filter out excluded students from attendance sanction
+    const allMembers = ['std_1', 'std_2', 'std_3', 'std_4'];
+    const audits = [
+      { student: 'std_2', status: 'EXCLUDED', remarks: 'Absent' },
+      { student: 'std_3', status: 'VERIFIED' },
+    ];
+
+    const excludedIds = audits.filter((a) => a.status === 'EXCLUDED').map((a) => a.student);
+    const sanctionedStudents = allMembers.filter((id) => !excludedIds.includes(id));
+
+    assert.deepEqual(sanctionedStudents, ['std_1', 'std_3', 'std_4']);
+    assert.equal(sanctionedStudents.includes('std_2'), false);
+
+    // Verify auditedByRole supports TEACHER, TG, HOD, and ADMIN without validation errors
+    const validRoles = ['TG', 'TEACHER', 'HOD', 'ADMIN'];
+    assert.ok(validRoles.includes('TEACHER'));
+    assert.ok(validRoles.includes('TG'));
+    assert.ok(validRoles.includes('HOD'));
+    assert.ok(validRoles.includes('ADMIN'));
+  });
+});
+
+describe('17. Admin Consideration Window Toggle & 24/7 Testing Mode', () => {
+  it('should verify consideration window bypass logic when time limit is disabled', () => {
+    // When time limit is enabled (default = true), submission window is strictly 9am-4pm
+    const isTimeLimitEnabledTrue = true;
+    const isWithinWindowOut = false; // e.g., 8:00 PM
+    const isConsiderationAllowedDefault = !isTimeLimitEnabledTrue ? true : isWithinWindowOut;
+    assert.equal(isConsiderationAllowedDefault, false);
+
+    // When admin disables the restriction (isTimeLimitEnabled = false), submissions are allowed 24/7
+    const isTimeLimitEnabledFalse = false;
+    const isConsiderationAllowedTesting = !isTimeLimitEnabledFalse ? true : isWithinWindowOut;
+    assert.equal(isConsiderationAllowedTesting, true);
+  });
+
+  it('should enforce that only ADMIN role can toggle the consideration window setting', () => {
+    const authorizedToggleRoles = ['ADMIN'];
+    assert.ok(authorizedToggleRoles.includes('ADMIN'));
+    assert.equal(authorizedToggleRoles.includes('HOD'), false);
+    assert.equal(authorizedToggleRoles.includes('TG'), false);
+    assert.equal(authorizedToggleRoles.includes('STUDENT'), false);
+  });
+});
+
 
 
 

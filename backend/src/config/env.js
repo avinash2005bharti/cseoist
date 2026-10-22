@@ -41,6 +41,11 @@ const envSchema = z.object({
   LEAVE_BACKDATE_DAYS: z.coerce.number().default(7),
   ESCALATION_HOURS: z.coerce.number().default(48),
   TZ: z.string().default('Asia/Kolkata'),
+
+  // Google OAuth Configuration
+  GOOGLE_CLIENT_ID: z.string().default(process.env.GOOGLE_CLIENT_ID || ''),
+  GOOGLE_CLIENT_SECRET: z.string().default(process.env.GOOGLE_CLIENT_SECRET || ''),
+  GOOGLE_CALLBACK_URL: z.string().optional().default(process.env.GOOGLE_CALLBACK_URL || ''),
   
   EMAIL_ENABLED: z
     .string()

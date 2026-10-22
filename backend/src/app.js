@@ -13,6 +13,7 @@ import './models/index.js';
 
 // Route imports
 import authRoutes from './modules/auth/auth.routes.js';
+import authController from './modules/auth/auth.controller.js';
 import usersRoutes from './modules/users/users.routes.js';
 import sectionsRoutes from './modules/users/sections.routes.js';
 import studentsRoutes from './modules/students/students.routes.js';
@@ -26,6 +27,7 @@ import noticesRoutes from './modules/notices/notices.routes.js';
 import { dashboardRouter, reportsRouter } from './modules/reports/reports.routes.js';
 import importRoutes from './modules/import/import.routes.js';
 import auditRoutes from './modules/audit/audit.routes.js';
+import settingsRoutes from './modules/settings/settings.routes.js';
 
 const app = express();
 
@@ -63,6 +65,13 @@ app.get('/', (req, res) => {
   });
 });
 
+// Google OAuth endpoints registered in Google Cloud Console:
+// - http://localhost:5000/auth/google/callback
+// - https://cseoist.onrender.com//auth/google/callback (and https://cseoist.onrender.com/auth/google/callback)
+app.get('/auth/google', authController.initiateGoogleAuth);
+app.get('/auth/google/callback', authController.handleGoogleCallback);
+app.get('//auth/google/callback', authController.handleGoogleCallback);
+
 // API v1 Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', usersRoutes);
@@ -79,6 +88,7 @@ app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/reports', reportsRouter);
 app.use('/api/v1/import', importRoutes);
 app.use('/api/v1/audit', auditRoutes);
+app.use('/api/v1/settings', settingsRoutes);
 
 // Error Handling
 app.use(notFoundHandler);

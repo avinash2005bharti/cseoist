@@ -36,7 +36,7 @@ export const unsubscribePush = asyncHandler(async (req, res) => {
 });
 
 export const getConsiderationWindow = asyncHandler(async (req, res) => {
-  const status = notificationsService.getConsiderationWindowStatus();
+  const status = await notificationsService.getConsiderationWindowStatus();
   return sendSuccess(res, status);
 });
 

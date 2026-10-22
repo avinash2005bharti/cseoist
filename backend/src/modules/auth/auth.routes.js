@@ -15,6 +15,9 @@ import { authLimiter } from '../../middleware/rateLimit.js';
 
 const router = Router();
 
+router.get('/google', authController.initiateGoogleAuth);
+router.get('/google/callback', authController.handleGoogleCallback);
+
 router.post('/login', authLimiter, validateBody(loginSchema), authController.login);
 router.post('/register/student/send-otp', authLimiter, authController.sendStudentRegistrationOtp);
 router.post('/register/student/verify-otp', authLimiter, validateBody(verifyOtpSchema), authController.verifyRegistrationOtp);

@@ -11,6 +11,7 @@ import {
   Search,
   ExternalLink,
   CheckCircle2,
+  Check,
   Calendar,
   History,
   Filter,
@@ -74,6 +75,44 @@ export default function OfficialClearancesLedgerModal({
   const [modalFrom, setModalFrom] = useState('');
   const [modalTo, setModalTo] = useState('');
   const [dateError, setDateError] = useState('');
+  const [activePreset, setActivePreset] = useState('7days');
+
+  const getPresetDates = (presetKey) => {
+    if (presetKey === 'yesterday') {
+      const y = new Date();
+      y.setDate(y.getDate() - 1);
+      const yStr = y.toISOString().slice(0, 10);
+      return { from: yStr, to: yStr };
+    }
+    if (presetKey === '7days') {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      return { from: d.toISOString().slice(0, 10), to: todayStr };
+    }
+    if (presetKey === '30days') {
+      const d = new Date();
+      d.setDate(d.getDate() - 30);
+      return { from: d.toISOString().slice(0, 10), to: todayStr };
+    }
+    if (presetKey === 'thisMonth') {
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+        .toISOString()
+        .slice(0, 10);
+      return { from: firstDay, to: todayStr };
+    }
+    return null;
+  };
+
+  const handleSelectPreset = (presetKey) => {
+    const dates = getPresetDates(presetKey);
+    if (dates) {
+      setModalFrom(dates.from);
+      setModalTo(dates.to);
+      setActivePreset(presetKey);
+      setDateError('');
+    }
+  };
 
   const [considerations, setConsiderations] = useState([]);
   const [leaves, setLeaves] = useState([]);
@@ -198,62 +237,192 @@ export default function OfficialClearancesLedgerModal({
     setDateTo('');
   };
 
-  // Filter current list with strict Approved check, Date check, Semester, Section, and Search
-  const currentList = activeTab === 'considerations' ? considerations : leaves;
-  const filteredList = currentList.filter((item) => {
-    // 1. Strictly approved only: reject any non-approved items
-    const isApproved = item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD';
-    if (!isApproved) return false;
+  // Expand considerations into individual student clearance rows (Leader + non-excluded Group Members)
+  const expandedConsiderationRows = useMemo(() => {
+    const rows = [];
+    considerations.forEach((item) => {
+      const isApproved = item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD';
+      if (!isApproved) return;
 
-    // 2. Date filtering
-    const itemStart = item.startDate ? item.startDate.slice(0, 10) : '';
-    const itemEnd = item.endDate ? item.endDate.slice(0, 10) : itemStart;
+      const excludedIds = new Set(
+        (item.studentAudits || [])
+          .filter((a) => a.status === 'EXCLUDED')
+          .map((a) => (a.student?._id || a.student)?.toString())
+      );
 
-    if (dateMode === 'today') {
-      const isToday =
-        (itemStart && itemEnd && itemStart <= todayStr && itemEnd >= todayStr) ||
-        itemStart === todayStr ||
-        itemEnd === todayStr ||
-        (item.createdAt && item.createdAt.slice(0, 10) === todayStr);
-      if (!isToday) return false;
-    } else if (dateMode === 'previous') {
-      if (dateFrom && dateTo) {
-        const overlaps = itemStart <= dateTo && itemEnd >= dateFrom;
-        if (!overlaps) return false;
-      } else if (dateFrom) {
-        if (itemEnd < dateFrom) return false;
-      } else if (dateTo) {
-        if (itemStart > dateTo) return false;
+      const leader = item.student;
+      const leaderId = (leader?._id || leader)?.toString();
+      const isGroup = Boolean(item.isGroup || (item.groupMembers && item.groupMembers.length > 0));
+
+      // 1. Leader / Applicant
+      if (leader && !excludedIds.has(leaderId)) {
+        rows.push({
+          _id: `${item._id}_lead_${leaderId}`,
+          rawItem: item,
+          isGroup,
+          isLeader: isGroup,
+          student: leader,
+          studentName: leader.user?.name || item.applicant?.name || leader.designation || 'Student',
+          enrollmentNumber: leader.enrollmentNumber || leader.rollNumber || item.applicant?.rollNumber || 'Not provided',
+          section: leader.section,
+          sectionName: (leader.section?.name || leader.section?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
+          semester: leader.section?.semester || leader.semester || 5,
+          eventTitle: item.eventTitle,
+          category: item.eventType || 'Consideration',
+          description: item.description || item.reason || 'Approved attendance consideration',
+          selectedPeriods: item.selectedPeriods,
+          requestedPeriods: item.requestedPeriods,
+          periodsStr: item.selectedPeriods?.length
+            ? item.selectedPeriods.join(', ')
+            : item.requestedPeriods
+            ? `P1 - P${item.requestedPeriods}`
+            : 'P2, P3, P4',
+          timeFrom: item.timeFrom || '10:50 AM',
+          timeTo: item.timeTo || '01:20 PM',
+          startDate: item.startDate,
+          endDate: item.endDate || item.startDate,
+          totalDays: item.totalDays || 1,
+          status: item.status,
+          createdAt: item.createdAt,
+        });
       }
-    }
 
-    // 3. Search query
-    const student = item.student || {};
-    const name = (student.user?.name || item.applicant?.name || student.designation || 'Student').toLowerCase();
-    const roll = (student.enrollmentNumber || student.rollNumber || item.applicant?.rollNumber || '').toLowerCase();
-    const query = searchQuery.toLowerCase().trim();
+      // 2. Non-excluded Group Members
+      if (isGroup && Array.isArray(item.groupMembers)) {
+        item.groupMembers.forEach((member, mIdx) => {
+          if (!member) return;
+          const memberId = (member._id || member)?.toString();
+          if (!memberId || memberId === leaderId) return;
+          if (excludedIds.has(memberId)) return;
 
-    if (query && !name.includes(query) && !roll.includes(query)) {
-      return false;
-    }
+          const memberSec = member.section || leader?.section;
+          rows.push({
+            _id: `${item._id}_mbr_${memberId}_${mIdx}`,
+            rawItem: item,
+            isGroup: true,
+            isLeader: false,
+            student: member,
+            studentName: member.user?.name || member.name || member.rollNumber || 'Team Member',
+            enrollmentNumber: member.enrollmentNumber || member.rollNumber || 'Not provided',
+            section: memberSec,
+            sectionName: (memberSec?.name || memberSec?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
+            semester: memberSec?.semester || member.semester || leader?.section?.semester || 5,
+            eventTitle: item.eventTitle,
+            category: item.eventType || 'Consideration',
+            description: item.description || item.reason || 'Approved attendance consideration',
+            selectedPeriods: item.selectedPeriods,
+            requestedPeriods: item.requestedPeriods,
+            periodsStr: item.selectedPeriods?.length
+              ? item.selectedPeriods.join(', ')
+              : item.requestedPeriods
+              ? `P1 - P${item.requestedPeriods}`
+              : 'P2, P3, P4',
+            timeFrom: item.timeFrom || '10:50 AM',
+            timeTo: item.timeTo || '01:20 PM',
+            startDate: item.startDate,
+            endDate: item.endDate || item.startDate,
+            totalDays: item.totalDays || 1,
+            status: item.status,
+            createdAt: item.createdAt,
+          });
+        });
+      }
+    });
+    return rows;
+  }, [considerations]);
 
-    // 4. Section filter
-    if (sectionFilter && sectionFilter !== 'All') {
-      const rawSec = (student.section?.name || student.section?.code || '').toUpperCase();
-      const targetSec = sectionFilter.toString().toUpperCase().replace(/^SECTION\s*/i, '').replace(/^CSE-/i, '').trim();
-      const studentSecClean = rawSec.replace(/^SECTION\s*/i, '').replace(/^CSE-/i, '').trim();
-      if (studentSecClean !== targetSec && !rawSec.includes(targetSec)) return false;
-    }
+  // Expand leaves into individual clearance rows
+  const expandedLeaveRows = useMemo(() => {
+    return leaves
+      .filter((item) => item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD')
+      .map((item, idx) => {
+        const student = item.student || {};
+        return {
+          _id: `${item._id || idx}_leave`,
+          rawItem: item,
+          isGroup: false,
+          isLeader: false,
+          student,
+          studentName: item.applicant?.name || student.user?.name || student.designation || 'Student',
+          enrollmentNumber: student.enrollmentNumber || student.rollNumber || item.applicant?.rollNumber || 'N/A',
+          section: student.section,
+          sectionName: (student.section?.name || student.section?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
+          semester: student.section?.semester || student.semester || 5,
+          eventTitle: `${item.leaveType} Leave`,
+          category: item.leaveType,
+          description: item.reason || item.description || 'Approved student leave',
+          periodsStr: item.leaveType || 'Sanctioned Leave',
+          timeFrom: 'Full Day',
+          timeTo: 'Full Day',
+          startDate: item.startDate,
+          endDate: item.endDate || item.startDate,
+          totalDays: item.totalDays || 1,
+          status: item.status,
+          createdAt: item.createdAt,
+        };
+      });
+  }, [leaves]);
 
-    // 5. Semester filter
-    if (semesterFilter && semesterFilter !== 'All Semesters') {
-      const targetSem = parseInt(semesterFilter.toString().replace(/\D/g, ''), 10);
-      const studentSem = student.section?.semester || student.semester || 5;
-      if (Number(targetSem) !== Number(studentSem)) return false;
-    }
+  const filterRows = (rows) => {
+    return rows.filter((row) => {
+      // 1. Date filtering
+      const itemStart = row.startDate ? row.startDate.slice(0, 10) : '';
+      const itemEnd = row.endDate ? row.endDate.slice(0, 10) : itemStart;
 
-    return true;
-  });
+      if (dateMode === 'today') {
+        const isToday =
+          (itemStart && itemEnd && itemStart <= todayStr && itemEnd >= todayStr) ||
+          itemStart === todayStr ||
+          itemEnd === todayStr ||
+          (row.createdAt && row.createdAt.slice(0, 10) === todayStr);
+        if (!isToday) return false;
+      } else if (dateMode === 'previous') {
+        if (dateFrom && dateTo) {
+          const overlaps = itemStart <= dateTo && itemEnd >= dateFrom;
+          if (!overlaps) return false;
+        } else if (dateFrom) {
+          if (itemEnd < dateFrom) return false;
+        } else if (dateTo) {
+          if (itemStart > dateTo) return false;
+        }
+      }
+
+      // 2. Search query
+      const query = searchQuery.toLowerCase().trim();
+      if (query) {
+        const name = (row.studentName || '').toLowerCase();
+        const roll = (row.enrollmentNumber || '').toLowerCase();
+        if (!name.includes(query) && !roll.includes(query)) return false;
+      }
+
+      // 3. Section filter
+      if (sectionFilter && sectionFilter !== 'All') {
+        const targetSec = sectionFilter.toString().toUpperCase().replace(/^SECTION\s*/i, '').replace(/^CSE-/i, '').trim();
+        const rowSec = (row.sectionName || '').toUpperCase();
+        if (rowSec !== targetSec && !rowSec.includes(targetSec)) return false;
+      }
+
+      // 4. Semester filter
+      if (semesterFilter && semesterFilter !== 'All Semesters') {
+        const targetSem = parseInt(semesterFilter.toString().replace(/\D/g, ''), 10);
+        if (Number(targetSem) !== Number(row.semester)) return false;
+      }
+
+      return true;
+    });
+  };
+
+  const filteredConsiderations = useMemo(
+    () => filterRows(expandedConsiderationRows),
+    [expandedConsiderationRows, dateMode, dateFrom, dateTo, searchQuery, sectionFilter, semesterFilter, todayStr]
+  );
+
+  const filteredLeaves = useMemo(
+    () => filterRows(expandedLeaveRows),
+    [expandedLeaveRows, dateMode, dateFrom, dateTo, searchQuery, sectionFilter, semesterFilter, todayStr]
+  );
+
+  const filteredList = activeTab === 'considerations' ? filteredConsiderations : filteredLeaves;
 
   const handleExportExcel = () => {
     setShowExportModal(true);
@@ -263,21 +432,15 @@ export default function OfficialClearancesLedgerModal({
     const list = filteredList;
     let csv = '';
     if (activeTab === 'considerations') {
-      csv = 'Student Name,Enrollment,Section,Periods,Time From,Time To,Date From,Date To,Number of Days,Status\n';
-      list.forEach((item) => {
-        const name = item.student?.user?.name || item.student?.designation || 'Student';
-        const roll = item.student?.enrollmentNumber || item.student?.rollNumber || 'Not provided';
-        const sec = (item.student?.section?.name || 'B').replace(/Section\s*/i, '');
-        const periods = item.selectedPeriods?.join(', ') || `P${item.requestedPeriods || 1}`;
-        csv += `"${name}","${roll}","${sec}","${periods}","${item.timeFrom || '10:50 AM'}","${item.timeTo || '01:20 PM'}","${item.startDate}","${item.endDate}","${item.totalDays || 1} Day","APPROVED"\n`;
+      csv = 'Student Name,Enrollment,Section,Role,Periods,Time From,Time To,Date From,Date To,Number of Days,Status\n';
+      list.forEach((row) => {
+        const role = row.isLeader ? 'Group Leader' : row.isGroup ? 'Group Member' : 'Individual';
+        csv += `"${row.studentName}","${row.enrollmentNumber}","${row.sectionName}","${role}","${row.periodsStr}","${row.timeFrom}","${row.timeTo}","${row.startDate}","${row.endDate}","${row.totalDays} Day${row.totalDays !== 1 ? 's' : ''}","APPROVED"\n`;
       });
     } else {
       csv = 'Student Name,Enrollment,Section,Category,Date From,Date To,Number of Days,Status\n';
-      list.forEach((item) => {
-        const name = item.applicant?.name || item.student?.user?.name || 'Student';
-        const roll = item.student?.enrollmentNumber || item.student?.rollNumber || item.applicant?.rollNumber || 'N/A';
-        const sec = (item.student?.section?.name || 'B').replace(/Section\s*/i, '');
-        csv += `"${name}","${roll}","${sec}","${item.leaveType}","${item.startDate}","${item.endDate}","${item.totalDays} Days","APPROVED"\n`;
+      list.forEach((row) => {
+        csv += `"${row.studentName}","${row.enrollmentNumber}","${row.sectionName}","${row.category}","${row.startDate}","${row.endDate}","${row.totalDays} Days","APPROVED"\n`;
       });
     }
 
@@ -300,47 +463,41 @@ export default function OfficialClearancesLedgerModal({
   const executeGenerateReport = () => {
     setShowPrintModal(false);
 
-    // 1. Strictly approved items only
-    let reportList = currentList.filter(
-      (item) => item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD'
-    );
+    let reportList = activeTab === 'considerations' ? expandedConsiderationRows : expandedLeaveRows;
 
-    // 2. Filter by Semester
+    // Filter by Semester
     if (targetPrintSemester !== 'All Semesters (Comprehensive Ledger)') {
       const targetSemNum = parseInt(targetPrintSemester.replace(/\D/g, ''), 10);
-      reportList = reportList.filter((item) => {
-        const studentSem = item.student?.section?.semester || item.student?.semester || 5;
-        return Number(studentSem) === Number(targetSemNum);
-      });
+      reportList = reportList.filter((row) => Number(row.semester) === Number(targetSemNum));
     }
 
-    // 3. Filter by Print Date Scope
+    // Filter by Print Date Scope
     if (printDateScope === 'today') {
-      reportList = reportList.filter((item) => {
-        const itemStart = item.startDate ? item.startDate.slice(0, 10) : '';
-        const itemEnd = item.endDate ? item.endDate.slice(0, 10) : itemStart;
+      reportList = reportList.filter((row) => {
+        const itemStart = row.startDate ? row.startDate.slice(0, 10) : '';
+        const itemEnd = row.endDate ? row.endDate.slice(0, 10) : itemStart;
         return (
           (itemStart && itemEnd && itemStart <= todayStr && itemEnd >= todayStr) ||
           itemStart === todayStr ||
           itemEnd === todayStr ||
-          (item.createdAt && item.createdAt.slice(0, 10) === todayStr)
+          (row.createdAt && row.createdAt.slice(0, 10) === todayStr)
         );
       });
     } else if (printDateScope === 'previous') {
       if (printDateFrom && printDateTo) {
-        reportList = reportList.filter((item) => {
-          const itemStart = item.startDate ? item.startDate.slice(0, 10) : '';
-          const itemEnd = item.endDate ? item.endDate.slice(0, 10) : itemStart;
+        reportList = reportList.filter((row) => {
+          const itemStart = row.startDate ? row.startDate.slice(0, 10) : '';
+          const itemEnd = row.endDate ? row.endDate.slice(0, 10) : itemStart;
           return itemStart <= printDateTo && itemEnd >= printDateFrom;
         });
       } else if (printDateFrom) {
-        reportList = reportList.filter((item) => {
-          const itemEnd = item.endDate ? item.endDate.slice(0, 10) : (item.startDate ? item.startDate.slice(0, 10) : '');
+        reportList = reportList.filter((row) => {
+          const itemEnd = row.endDate ? row.endDate.slice(0, 10) : (row.startDate ? row.startDate.slice(0, 10) : '');
           return itemEnd >= printDateFrom;
         });
       } else if (printDateTo) {
-        reportList = reportList.filter((item) => {
-          const itemStart = item.startDate ? item.startDate.slice(0, 10) : '';
+        reportList = reportList.filter((row) => {
+          const itemStart = row.startDate ? row.startDate.slice(0, 10) : '';
           return itemStart <= printDateTo;
         });
       }
@@ -374,26 +531,24 @@ export default function OfficialClearancesLedgerModal({
         : 'Official Approved Clearances (Student Leaves)';
 
     const rowsHtml = reportList
-      .map((item, idx) => {
-        const student = item.student || {};
-        const studentName = student.user?.name || item.applicant?.name || student.designation || 'Student';
-        const enrollNo = student.enrollmentNumber || student.rollNumber || item.applicant?.rollNumber || 'N/A';
-        const sec = (student.section?.name || '—').replace(/Section\s*/i, '');
-        const periods = Array.isArray(item.selectedPeriods) && item.selectedPeriods.length > 0
-          ? item.selectedPeriods.join(', ')
-          : activeTab === 'leaves'
-          ? item.leaveType || 'Sanctioned Leave'
-          : item.requestedPeriods
-          ? `P1 - P${item.requestedPeriods}`
-          : 'P2, P3, P4';
-        const timeStr = activeTab === 'leaves' ? 'Full Day' : `${item.timeFrom || '10:50 AM'} - ${item.timeTo || '01:20 PM'}`;
-        const dateStr = `${formatDateSlash(item.startDate)} - ${formatDateSlash(item.endDate || item.startDate)}`;
-        const days = item.totalDays || 1;
+      .map((row, idx) => {
+        const studentName = row.studentName;
+        const enrollNo = row.enrollmentNumber;
+        const sec = row.sectionName;
+        const periods = row.periodsStr;
+        const timeStr = `${row.timeFrom} - ${row.timeTo}`;
+        const dateStr = `${formatDateSlash(row.startDate)} - ${formatDateSlash(row.endDate)}`;
+        const days = row.totalDays || 1;
+        const roleTag = row.isLeader
+          ? ' <span style="font-size:9px;color:#D97706;font-weight:900;">(LEAD)</span>'
+          : row.isGroup
+          ? ' <span style="font-size:9px;color:#4F46E5;font-weight:700;">(TEAM)</span>'
+          : '';
 
         return `
           <tr style="border-bottom: 1px solid #E2E8F0; font-size: 11px;">
             <td style="padding: 7px 6px; text-align: center; font-weight: 700; color: #64748B;">${idx + 1}</td>
-            <td style="padding: 7px 8px; font-weight: 800; color: #0F172A;">${studentName}</td>
+            <td style="padding: 7px 8px; font-weight: 800; color: #0F172A;">${studentName}${roleTag}</td>
             <td style="padding: 7px 8px; font-family: monospace; color: #334155;">${enrollNo}</td>
             <td style="padding: 7px 6px; text-align: center; font-weight: 700; color: #1E3A8A;">${sec}</td>
             <td style="padding: 7px 8px; font-weight: 700; color: #334155;">${periods}</td>
@@ -568,10 +723,28 @@ export default function OfficialClearancesLedgerModal({
     printWindow.document.close();
   };
 
+  // Keyboard Escape listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (showPreviousModal) {
+          setShowPreviousModal(false);
+        } else if (showPrintModal) {
+          setShowPrintModal(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showPreviousModal, showPrintModal, onClose]);
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop py-4 sm:py-6" onClick={onClose}>
       <div
-        className="modal-container max-w-7xl w-[98vw] max-h-[94vh] overflow-y-auto bg-white p-6 sm:p-8 text-slate-900 rounded-3xl shadow-2xl relative"
+        className="modal-container clearances-ledger-modal max-w-7xl w-[96vw] max-h-[86vh] overflow-y-auto bg-white px-5 sm:px-8 py-4 sm:py-6 text-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl relative block my-auto"
+        style={{ display: 'block', maxHeight: '86vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Close Button - Placed at Top-Right Corner */}
@@ -603,7 +776,7 @@ export default function OfficialClearancesLedgerModal({
         </button>
 
         {/* Header Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 pr-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1 pb-3.5 border-b border-slate-200 pr-12">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200 shadow-2xs">
               <FileText size={22} />
@@ -680,7 +853,7 @@ export default function OfficialClearancesLedgerModal({
                 activeTab === 'considerations' ? '' : 'hover:bg-slate-200'
               }`}
             >
-              <span>Attendance Consideration Records ({activeTab === 'considerations' ? filteredList.length : considerations.length})</span>
+              <span>Attendance Consideration Records ({filteredConsiderations.length})</span>
             </button>
             <button
               type="button"
@@ -694,7 +867,7 @@ export default function OfficialClearancesLedgerModal({
                 activeTab === 'leaves' ? '' : 'hover:bg-slate-200'
               }`}
             >
-              <span>Leave Application Records ({activeTab === 'leaves' ? filteredList.length : leaves.length})</span>
+              <span>Leave Application Records ({filteredLeaves.length})</span>
             </button>
           </div>
 
@@ -871,31 +1044,31 @@ export default function OfficialClearancesLedgerModal({
         </div>
 
         {/* Ledger Table (Approved Students Only, No Clipped Columns) */}
-        <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-2xs">
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white shadow-2xs overflow-visible">
           <table className="w-full text-left border-collapse text-xs min-w-[980px]">
-            <thead>
-              <tr className="bg-slate-100/90 text-slate-700 font-black border-b border-slate-200">
-                <th className="p-3.5 border-r border-slate-200 w-[280px]">Student Name</th>
-                <th className="p-3.5 border-r border-slate-200 w-[140px]">Enrollment No.</th>
-                <th className="p-3.5 border-r border-slate-200 text-center w-[75px]">Section</th>
-                <th className="p-3.5 border-r border-slate-200 w-[120px]">
+            <thead className="sticky top-0 z-10 bg-slate-100 shadow-xs">
+              <tr className="bg-slate-100 text-slate-700 font-black border-b border-slate-200">
+                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 w-[280px]">Student Name</th>
+                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 w-[140px]">Enrollment No.</th>
+                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 text-center w-[75px]">Section</th>
+                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 w-[120px]">
                   {activeTab === 'leaves' ? 'Category' : 'Lectures / Periods'}
                 </th>
-                <th className="p-3.5 border-r border-slate-200 text-center w-[160px]" colSpan={2}>
+                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 text-center w-[160px]" colSpan={2}>
                   Time
                   <div className="grid grid-cols-2 text-[10px] font-bold text-slate-500 border-t border-slate-200 mt-1 pt-1">
                     <span>From</span>
                     <span>To</span>
                   </div>
                 </th>
-                <th className="p-3.5 border-r border-slate-200 text-center w-[190px]" colSpan={2}>
+                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 text-center w-[190px]" colSpan={2}>
                   Date
                   <div className="grid grid-cols-2 text-[10px] font-bold text-slate-500 border-t border-slate-200 mt-1 pt-1">
                     <span>From</span>
                     <span>To</span>
                   </div>
                 </th>
-                <th className="p-3.5 text-center w-[130px]">Number of Days</th>
+                <th className="sticky top-0 z-10 p-3.5 bg-slate-100 text-center w-[130px]">Number of Days</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
@@ -940,35 +1113,41 @@ export default function OfficialClearancesLedgerModal({
                   </td>
                 </tr>
               ) : (
-                filteredList.map((item, idx) => {
-                  const student = item.student || {};
-                  const studentName = student.user?.name || item.applicant?.name || student.designation || 'Student';
-                  const rollNo = student.enrollmentNumber || student.rollNumber || item.applicant?.rollNumber || 'Not provided';
-                  const secName = (student.section?.name || 'B').replace(/Section\s*/i, '');
-                  const periodsStr = activeTab === 'leaves'
-                    ? item.leaveType || 'Leave'
-                    : item.selectedPeriods?.length
-                    ? item.selectedPeriods.join(', ')
-                    : item.requestedPeriods
-                    ? `P1 - P${item.requestedPeriods}`
-                    : 'P2, P3, P4';
-
-                  const timeFrom = activeTab === 'leaves' ? 'Full Day' : (item.timeFrom || '10:50 AM');
-                  const timeTo = activeTab === 'leaves' ? 'Full Day' : (item.timeTo || '01:20 PM');
-                  const dateFromStr = formatDateSlash(item.startDate);
-                  const dateToStr = formatDateSlash(item.endDate || item.startDate);
+                filteredList.map((row, idx) => {
+                  const studentName = row.studentName;
+                  const rollNo = row.enrollmentNumber;
+                  const secName = row.sectionName;
+                  const periodsStr = row.periodsStr;
+                  const timeFrom = row.timeFrom;
+                  const timeTo = row.timeTo;
+                  const dateFromStr = formatDateSlash(row.startDate);
+                  const dateToStr = formatDateSlash(row.endDate || row.startDate);
+                  const isLead = row.isLeader;
+                  const isTeam = row.isGroup && !row.isLeader;
 
                   return (
-                    <tr key={item._id || idx} className="hover:bg-slate-50/70 transition-colors">
+                    <tr key={row._id || idx} className="hover:bg-slate-50/70 transition-colors">
                       <td className="p-3.5 border-r border-slate-100">
-                        <span className="font-black text-slate-900 block text-xs">{studentName}</span>
-                        {(item.eventTitle || item.leaveType) && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-black text-slate-900 text-xs">{studentName}</span>
+                          {isLead && (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300">
+                              ★ Lead
+                            </span>
+                          )}
+                          {isTeam && (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              Team Member
+                            </span>
+                          )}
+                        </div>
+                        {row.eventTitle && (
                           <span className="text-[11px] text-slate-600 block font-bold mt-0.5">
-                            [{item.eventTitle || `${item.leaveType} Leave`}]
+                            [{row.eventTitle}]
                           </span>
                         )}
                         <span className="text-[10px] text-slate-400 block truncate max-w-xs mt-0.5">
-                          {item.description || item.reason || 'Approved attendance consideration'}
+                          {row.description || 'Approved attendance consideration'}
                         </span>
                       </td>
                       <td className="p-3.5 border-r border-slate-100 font-mono text-slate-700 text-xs">
@@ -996,7 +1175,7 @@ export default function OfficialClearancesLedgerModal({
                       </td>
                       <td className="p-3.5 text-center">
                         <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black shadow-2xs">
-                          {item.totalDays ? `${item.totalDays} Day${item.totalDays !== 1 ? 's' : ''}` : '1 Day'}
+                          {row.totalDays ? `${row.totalDays} Day${row.totalDays !== 1 ? 's' : ''}` : '1 Day'}
                         </span>
                       </td>
                     </tr>
@@ -1069,78 +1248,48 @@ export default function OfficialClearancesLedgerModal({
                   <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                     Quick Date Presets:
                   </label>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const y = new Date();
-                        y.setDate(y.getDate() - 1);
-                        const yStr = y.toISOString().slice(0, 10);
-                        setModalFrom(yStr);
-                        setModalTo(yStr);
-                      }}
-                      style={{
-                        backgroundColor: '#F1F5F9',
-                        color: '#334155',
-                        border: '1px solid #CBD5E1',
-                      }}
-                      className="px-2.5 py-1 rounded-lg text-xs font-semibold hover:bg-slate-200 cursor-pointer transition-colors"
-                    >
-                      Yesterday
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const d = new Date();
-                        d.setDate(d.getDate() - 7);
-                        setModalFrom(d.toISOString().slice(0, 10));
-                        setModalTo(todayStr);
-                      }}
-                      style={{
-                        backgroundColor: '#F1F5F9',
-                        color: '#334155',
-                        border: '1px solid #CBD5E1',
-                      }}
-                      className="px-2.5 py-1 rounded-lg text-xs font-semibold hover:bg-slate-200 cursor-pointer transition-colors"
-                    >
-                      Last 7 Days
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const d = new Date();
-                        d.setDate(d.getDate() - 30);
-                        setModalFrom(d.toISOString().slice(0, 10));
-                        setModalTo(todayStr);
-                      }}
-                      style={{
-                        backgroundColor: '#F1F5F9',
-                        color: '#334155',
-                        border: '1px solid #CBD5E1',
-                      }}
-                      className="px-2.5 py-1 rounded-lg text-xs font-semibold hover:bg-slate-200 cursor-pointer transition-colors"
-                    >
-                      Last 30 Days
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const now = new Date();
-                        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-                          .toISOString()
-                          .slice(0, 10);
-                        setModalFrom(firstDay);
-                        setModalTo(todayStr);
-                      }}
-                      style={{
-                        backgroundColor: '#F1F5F9',
-                        color: '#334155',
-                        border: '1px solid #CBD5E1',
-                      }}
-                      className="px-2.5 py-1 rounded-lg text-xs font-semibold hover:bg-slate-200 cursor-pointer transition-colors"
-                    >
-                      This Month
-                    </button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {[
+                      { key: 'yesterday', label: 'Yesterday' },
+                      { key: '7days', label: 'Last 7 Days' },
+                      { key: '30days', label: 'Last 30 Days' },
+                      { key: 'thisMonth', label: 'This Month' },
+                    ].map((p) => {
+                      const pDates = getPresetDates(p.key);
+                      const isSelected =
+                        activePreset === p.key ||
+                        (pDates && pDates.from === modalFrom && pDates.to === modalTo);
+
+                      return (
+                        <button
+                          key={p.key}
+                          type="button"
+                          onClick={() => handleSelectPreset(p.key)}
+                          style={
+                            isSelected
+                              ? {
+                                  backgroundColor: '#2563EB',
+                                  color: '#FFFFFF',
+                                  border: '1.5px solid #1D4ED8',
+                                  boxShadow: '0 2px 8px rgba(37, 99, 235, 0.35)',
+                                }
+                              : {
+                                  backgroundColor: '#F1F5F9',
+                                  color: '#334155',
+                                  border: '1px solid #CBD5E1',
+                                }
+                          }
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-blue-600 text-white border-blue-700 shadow-xs ring-2 ring-blue-400/30'
+                              : 'hover:bg-slate-200 text-slate-700'
+                          }`}
+                        >
+                          {isSelected && <Check size={13} className="text-white shrink-0 stroke-[2.5]" />}
+                          <span>{p.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1153,7 +1302,10 @@ export default function OfficialClearancesLedgerModal({
                     <input
                       type="date"
                       value={modalFrom}
-                      onChange={(e) => setModalFrom(e.target.value)}
+                      onChange={(e) => {
+                        setModalFrom(e.target.value);
+                        setActivePreset(null);
+                      }}
                       style={{ backgroundColor: '#F8FAFC', color: '#0F172A', border: '1.5px solid #CBD5E1' }}
                       className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold focus:bg-white focus:outline-none transition-all cursor-pointer"
                     />
@@ -1165,7 +1317,10 @@ export default function OfficialClearancesLedgerModal({
                     <input
                       type="date"
                       value={modalTo}
-                      onChange={(e) => setModalTo(e.target.value)}
+                      onChange={(e) => {
+                        setModalTo(e.target.value);
+                        setActivePreset(null);
+                      }}
                       style={{ backgroundColor: '#F8FAFC', color: '#0F172A', border: '1.5px solid #CBD5E1' }}
                       className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold focus:bg-white focus:outline-none transition-all cursor-pointer"
                     />
@@ -1419,10 +1574,17 @@ export default function OfficialClearancesLedgerModal({
           <AttendanceLeaveReportsModal
             modalData={{
               initialType: activeTab,
+              isTgView: isTgView,
+              assignedSemester: assignedSemester,
+              assignedSection: assignedSection,
               initialSemester:
-                semesterFilter && semesterFilter !== 'All Semesters'
-                  ? parseInt(semesterFilter.replace(/\D/g, ''), 10)
-                  : (isTgView && assignedSemester ? assignedSemester : 'ALL'),
+                isTgView && assignedSemester
+                  ? assignedSemester
+                  : (
+                    semesterFilter && semesterFilter !== 'All Semesters'
+                      ? parseInt(semesterFilter.replace(/\D/g, ''), 10)
+                      : 'ALL'
+                  ),
               initialFrom: dateMode === 'previous' ? dateFrom : (dateMode === 'today' ? todayStr : ''),
               initialTo: dateMode === 'previous' ? dateTo : (dateMode === 'today' ? todayStr : ''),
             }}

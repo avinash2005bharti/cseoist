@@ -5,15 +5,33 @@ import { uploadApi } from '../../api';
 export default function DocumentUploader({
   label = 'Supporting Document / Certificate',
   hint = 'Upload official proof or certificate (PDF, JPG, PNG up to 5 MB)',
+  placeholder = null,
   selectedFile = null,
-  onFileVerified = () => {},
-  onFileRemove = () => {},
+  value = null,
+  onFileVerified = null,
+  onChange = null,
+  onFileRemove = null,
   required = false,
   error = null,
 }) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
+
+  const activeFile = selectedFile || value || null;
+  const effectiveHint = placeholder || hint;
+
+  const notifyVerified = (fileData) => {
+    if (typeof onFileVerified === 'function') onFileVerified(fileData);
+    if (typeof onChange === 'function') onChange(fileData);
+  };
+
+  const handleClear = () => {
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (typeof onFileRemove === 'function') onFileRemove();
+    if (typeof onChange === 'function') onChange(null);
+    if (typeof onFileVerified === 'function') onFileVerified(null);
+  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
@@ -41,7 +59,7 @@ export default function DocumentUploader({
       const res = await uploadApi.uploadFile(file);
       const data = res?.data || res;
       if (data?.fileId) {
-        onFileVerified({
+        notifyVerified({
           fileId: data.fileId,
           filePath: data.filePath || `/campusflow/${file.name}`,
           url: data.url || '',
@@ -57,7 +75,7 @@ export default function DocumentUploader({
       // Fallback attachment with base64 data URL so preview always works
       const reader = new FileReader();
       reader.onload = (loadEvent) => {
-        onFileVerified({
+        notifyVerified({
           fileId: `local-${Date.now()}`,
           filePath: `/campusflow/dev/${file.name}`,
           url: loadEvent.target?.result || '',
@@ -72,11 +90,6 @@ export default function DocumentUploader({
     }
   };
 
-  const handleClear = () => {
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    onFileRemove();
-  };
-
   return (
     <div className="form-group mb-0">
       {label && (
@@ -88,7 +101,7 @@ export default function DocumentUploader({
         </label>
       )}
 
-      {selectedFile ? (
+      {activeFile ? (
         <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50/60 shadow-xs">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
@@ -96,17 +109,17 @@ export default function DocumentUploader({
             </div>
             <div className="min-w-0">
               <div className="text-xs font-bold text-slate-800 truncate">
-                {selectedFile.name}
+                {activeFile.name}
               </div>
               <div className="text-[11px] text-emerald-700 font-medium">
-                {(selectedFile.size / 1024).toFixed(1)} KB • Attached & Verified
+                {(activeFile.size / 1024).toFixed(1)} KB • Attached & Verified
               </div>
             </div>
           </div>
           <button
             type="button"
             onClick={handleClear}
-            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-white transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-white transition-colors cursor-pointer"
             title="Remove attachment"
           >
             <X size={16} />
@@ -153,8 +166,8 @@ export default function DocumentUploader({
         </div>
       )}
 
-      {hint && !uploadError && !error && (
-        <small className="text-[11px] text-slate-400 mt-1 block">{hint}</small>
+      {effectiveHint && !uploadError && !error && (
+        <small className="text-[11px] text-slate-400 mt-1 block">{effectiveHint}</small>
       )}
       {(uploadError || error) && (
         <div className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1">

@@ -13,6 +13,7 @@ import RefreshToken from './RefreshToken.js';
 import Otp from './Otp.js';
 import Notice from './Notice.js';
 import PushSubscription from './PushSubscription.js';
+import SystemSetting from './SystemSetting.js';
 
 export {
   User,
@@ -30,6 +31,7 @@ export {
   Otp,
   Notice,
   PushSubscription,
+  SystemSetting,
 };
 
 export default {
@@ -48,5 +50,6 @@ export default {
   Otp,
   Notice,
   PushSubscription,
+  SystemSetting,
 };
 

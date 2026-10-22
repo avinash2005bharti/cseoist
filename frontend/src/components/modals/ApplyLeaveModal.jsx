@@ -46,6 +46,7 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
         `Your ${category.toLowerCase()} application has been submitted and routed to your Tutor Guardian.`,
         'success'
       );
+      window.dispatchEvent(new CustomEvent('campusflow_refresh_leaves'));
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
@@ -176,12 +177,16 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
           {/* Supporting Document */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Supporting Document (Optional)
+              Supporting Document {category === 'Medical' ? '(Required for > 2 days)' : '(Optional)'}
             </label>
             <DocumentUploader
+              label=""
+              selectedFile={attachment}
               value={attachment}
+              onFileVerified={setAttachment}
               onChange={setAttachment}
-              placeholder="Attach medical prescription, certificate, or official duty slip (PDF/PNG/JPG)"
+              onFileRemove={() => setAttachment(null)}
+              hint="Attach medical prescription, certificate, or official duty slip (PDF, JPG, PNG up to 5 MB)"
             />
           </div>
 

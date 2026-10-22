@@ -11,6 +11,7 @@ const RequestConsiderationModal = lazy(() => import('../components/modals/Reques
 const ApplyLeaveModal = lazy(() => import('../components/modals/ApplyLeaveModal.jsx'));
 const AttendanceLeaveReportsModal = lazy(() => import('../components/modals/AttendanceLeaveReportsModal.jsx'));
 const ReviewModal = lazy(() => import('../components/modals/ReviewModal.jsx'));
+const GroupStudentAuditModal = lazy(() => import('../components/modals/GroupStudentAuditModal.jsx'));
 
 export default function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
@@ -85,6 +86,17 @@ export default function DashboardLayout() {
             onClose={closeModal}
             onSuccess={() => {
               closeModal();
+              window.dispatchEvent(new CustomEvent('campusflow_queue_changed'));
+            }}
+          />
+        )}
+
+        {activeModal === 'AUDIT_GROUP_STUDENTS' && (
+          <GroupStudentAuditModal
+            request={modalData.request || modalData.item}
+            userRole={modalData.userRole || modalData.role || 'HOD'}
+            onClose={closeModal}
+            onSuccess={() => {
               window.dispatchEvent(new CustomEvent('campusflow_queue_changed'));
             }}
           />

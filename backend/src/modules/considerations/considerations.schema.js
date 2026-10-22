@@ -3,11 +3,12 @@ import { z } from 'zod';
 const attachmentSchema = z.object({
   fileId: z.string().min(1),
   filePath: z.string().min(1),
+  url: z.string().optional().default(''),
   name: z.string().min(1),
   mimeType: z.string().min(1),
   size: z.number().positive(),
   uploadedAt: z.coerce.date().optional(),
-});
+}).passthrough();
 
 export const createConsiderationSchema = z.object({
   eventTitle: z.string().min(3, 'Event title must be at least 3 characters long').trim(),
@@ -69,8 +70,21 @@ export const hodReviewSchema = z.object({
   { message: 'Approved periods must be specified when approving', path: ['approvedPeriods'] }
 );
 
+export const auditStudentSchema = z.object({
+  studentId: z.string().min(1, 'Student ID is required'),
+  status: z.enum(['VERIFIED', 'EXCLUDED']),
+  remarks: z.string().optional().default(''),
+});
+
+export const auditAllStudentsSchema = z.object({
+  status: z.enum(['VERIFIED', 'EXCLUDED']).optional().default('VERIFIED'),
+  remarks: z.string().optional().default(''),
+});
+
 export default {
   createConsiderationSchema,
   tgReviewSchema,
   hodReviewSchema,
+  auditStudentSchema,
+  auditAllStudentsSchema,
 };

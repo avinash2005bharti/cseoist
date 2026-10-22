@@ -4,6 +4,8 @@ import {
   createConsiderationSchema,
   tgReviewSchema,
   hodReviewSchema,
+  auditStudentSchema,
+  auditAllStudentsSchema,
 } from './considerations.schema.js';
 import auth from '../../middleware/auth.js';
 import authorize from '../../middleware/authorize.js';
@@ -69,6 +71,22 @@ router.patch(
   authorize('HOD', 'ADMIN'),
   validateBody(hodReviewSchema),
   considerationsController.hodReview
+);
+
+// Audit individual student in group consideration (TG, HOD, Admin)
+router.patch(
+  '/:id/audit-student',
+  authorize('TG', 'HOD', 'ADMIN'),
+  validateBody(auditStudentSchema),
+  considerationsController.auditGroupStudent
+);
+
+// Batch audit all students in group consideration (TG, HOD, Admin)
+router.patch(
+  '/:id/audit-all',
+  authorize('TG', 'HOD', 'ADMIN'),
+  validateBody(auditAllStudentsSchema),
+  considerationsController.auditAllGroupStudents
 );
 
 export default router;

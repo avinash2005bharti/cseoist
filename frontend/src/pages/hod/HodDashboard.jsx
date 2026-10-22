@@ -32,6 +32,7 @@ const AddStudentModal = lazyWithRetry(() => import('../../components/modals/AddS
 const PendingApprovalsModal = lazyWithRetry(() => import('../../components/modals/PendingApprovalsModal.jsx'));
 const SendNoticeModal = lazyWithRetry(() => import('../../components/modals/SendNoticeModal.jsx'));
 const MoveSemesterModal = lazyWithRetry(() => import('../../components/modals/MoveSemesterModal.jsx'));
+const TgRecommendationsModal = lazyWithRetry(() => import('../../components/modals/TgRecommendationsModal.jsx'));
 
 const HOD_REJECTED_KEY = 'campusflow_hod_rejected_ids';
 const getStoredRejectedIds = () => {
@@ -65,6 +66,7 @@ export default function HodDashboard() {
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [moveModalData, setMoveModalData] = useState(null);
   const [showSendNoticeModal, setShowSendNoticeModal] = useState(false);
+  const [showTgModal, setShowTgModal] = useState(false);
 
   // Selected Section Overview Semester (e.g. 5)
   const [selectedSemNumber, setSelectedSemNumber] = useState(null);
@@ -303,6 +305,19 @@ export default function HodDashboard() {
 
   const pendingConsCount = pendingConsiderations.length;
   const pendingLeavesCount = pendingLeaves.length;
+  const totalPendingApprovals = pendingConsCount + pendingLeavesCount;
+
+  // TG Recommendations awaiting HOD sign-off
+  const isTgRecommended = (item) => {
+    if (!item) return false;
+    const status = (item.status || '').toUpperCase();
+    const decision = (item.tgReview?.decision || '').toUpperCase();
+    return status === 'RECOMMENDED_BY_TG' || decision === 'RECOMMEND';
+  };
+
+  const tgRecommendedConsiderations = pendingConsiderations.filter(isTgRecommended);
+  const tgRecommendedLeaves = pendingLeaves.filter(isTgRecommended);
+  const totalTgRecommendations = tgRecommendedConsiderations.length + tgRecommendedLeaves.length;
 
   return (
     <div className="flex flex-col gap-6 w-full min-w-0 font-sans">
@@ -405,16 +420,16 @@ export default function HodDashboard() {
           </div>
 
           <div className="my-2">
-            <span className={`text-3xl font-black block leading-tight ${pendingConsCount > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
-              {pendingConsCount}
+            <span className={`text-3xl font-black block leading-tight ${totalPendingApprovals > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+              {totalPendingApprovals}
             </span>
           </div>
 
           <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
-            <span className={pendingConsCount > 0 ? "text-rose-700 font-semibold" : "text-emerald-700 font-semibold"}>
-              {pendingConsCount > 0 ? "Requires attention" : "All caught up"}
+            <span className={totalPendingApprovals > 0 ? "text-rose-700 font-semibold" : "text-emerald-700 font-semibold"}>
+              {totalPendingApprovals > 0 ? `${totalPendingApprovals} requires attention` : "All caught up"}
             </span>
-            {pendingConsCount > 0 ? (
+            {totalPendingApprovals > 0 ? (
               <svg
                 aria-hidden="true"
                 className="w-12 h-3 text-rose-500 overflow-visible"
@@ -435,30 +450,32 @@ export default function HodDashboard() {
           </div>
         </div>
 
-        {/* 2. Leave Requests */}
+        {/* 2. TG Recommendations */}
         <div
           role="button"
           tabIndex={0}
-          onClick={() => navigate('/hod/leaves')}
-          onKeyDown={(e) => e.key === 'Enter' && navigate('/hod/leaves')}
-          className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-emerald-300 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between min-h-[140px] group focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          onClick={() => setShowTgModal(true)}
+          onKeyDown={(e) => e.key === 'Enter' && setShowTgModal(true)}
+          className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-indigo-300 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between min-h-[140px] group focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-800">Leave Applications</span>
-            <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200">
-              <Clock size={15} />
+            <span className="text-sm font-bold text-slate-800">Tg Recommendation</span>
+            <div className="w-7 h-7 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-200">
+              <ShieldCheck size={15} />
             </div>
           </div>
 
           <div className="my-2">
-            <span className="text-3xl font-black text-slate-900 block leading-tight">
-              {pendingLeavesCount}
+            <span className={`text-3xl font-black block leading-tight ${totalTgRecommendations > 0 ? 'text-indigo-600' : 'text-slate-900'}`}>
+              {totalTgRecommendations}
             </span>
           </div>
 
           <div className="text-xs text-slate-600 font-medium">
-            <span className={pendingLeavesCount > 0 ? "text-amber-700 font-semibold" : "text-emerald-700 font-semibold"}>
-              {pendingLeavesCount > 0 ? `${pendingLeavesCount} pending` : 'All clear'}
+            <span className={totalTgRecommendations > 0 ? "text-indigo-700 font-semibold" : "text-emerald-700 font-semibold"}>
+              {totalTgRecommendations > 0
+                ? `${tgRecommendedConsiderations.length} Cons • ${tgRecommendedLeaves.length} Leaves`
+                : 'All clear'}
             </span>
           </div>
         </div>
@@ -1035,6 +1052,15 @@ export default function HodDashboard() {
               setShowPendingModal(false);
               navigate('/hod/considerations', { state: { targetRequestId: item?._id } });
             }}
+          />
+        )}
+
+        {/* TG Recommendations Queue Modal (Consideration & Leave Categories) */}
+        {showTgModal && (
+          <TgRecommendationsModal
+            considerations={pendingConsiderations}
+            leaves={pendingLeaves}
+            onClose={() => setShowTgModal(false)}
           />
         )}
 

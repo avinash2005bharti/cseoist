@@ -18,11 +18,11 @@ export const getLeavesReport = asyncHandler(async (req, res) => {
 });
 
 export const exportConsiderations = asyncHandler(async (req, res) => {
-  return reportsService.exportConsiderationsToExcel(req.query, res);
+  return reportsService.exportConsiderationsToExcel(req.query, res, req.user);
 });
 
 export const exportLeaves = asyncHandler(async (req, res) => {
-  return reportsService.exportLeavesToExcel(req.query, res);
+  return reportsService.exportLeavesToExcel(req.query, res, req.user);
 });
 
 export const exportFaculty = asyncHandler(async (req, res) => {

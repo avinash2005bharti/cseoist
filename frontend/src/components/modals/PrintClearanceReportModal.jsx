@@ -190,7 +190,7 @@ export default function PrintClearanceReportModal({
               item.eventType ||
               item.leaveType ||
               item.type ||
-              (item.requestKind === 'LEAVE' ? 'Student Leave' : 'OD Consideration');
+              (item.requestKind === 'LEAVE' ? 'Student Leave' : 'Consideration');
             const periods =
               Array.isArray(item.selectedPeriods) && item.selectedPeriods.length > 0
                 ? item.selectedPeriods.join(', ')
@@ -514,7 +514,7 @@ export default function PrintClearanceReportModal({
             <div className="grid grid-cols-2 gap-2">
               {[
                 { id: 'ALL', label: 'All Clearances' },
-                { id: 'CONSIDERATION', label: 'OD Considerations' },
+                { id: 'CONSIDERATION', label: 'Considerations' },
                 { id: 'LEAVE', label: 'Student Leaves' },
                 { id: 'APPROVED_ONLY', label: 'Approved Only' },
               ].map((tab) => (

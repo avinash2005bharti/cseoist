@@ -28,6 +28,7 @@ import {
   Layers,
   CheckCheck,
   FileSpreadsheet,
+  UserCheck,
 } from 'lucide-react';
 
 const GoogleSheetsLogo = () => (
@@ -159,7 +160,11 @@ export default function HodConsiderations() {
         requestKind: 'LEAVE',
       }));
 
-      const combined = [...taggedCons, ...taggedLeaves];
+      const combined = [...taggedCons, ...taggedLeaves].sort((a, b) => {
+        const timeA = new Date(a.createdAt || a.appliedAt || a.startDate || 0).getTime();
+        const timeB = new Date(b.createdAt || b.appliedAt || b.startDate || 0).getTime();
+        return timeB - timeA;
+      });
       const rejectedList = getStoredRejectedIds();
       const normalizedCombined = combined.map((item) => {
         if (rejectedList.includes(item._id)) {
@@ -273,6 +278,20 @@ export default function HodConsiderations() {
     return matchesSemester && matchesSection && matchesTab;
   });
 
+  const sortedFilteredItems = [...filteredItems].sort((a, b) => {
+    if (location.state?.targetRequestId) {
+      if (a._id === location.state.targetRequestId) return -1;
+      if (b._id === location.state.targetRequestId) return 1;
+    }
+    const aPending = isActionNeeded(a);
+    const bPending = isActionNeeded(b);
+    if (aPending && !bPending) return -1;
+    if (!aPending && bPending) return 1;
+    const timeA = new Date(a.createdAt || a.appliedAt || a.startDate || 0).getTime();
+    const timeB = new Date(b.createdAt || b.appliedAt || b.startDate || 0).getTime();
+    return timeB - timeA;
+  });
+
   const uniqueSections = (() => {
     let secList = sections;
     let itemList = items;
@@ -332,13 +351,13 @@ export default function HodConsiderations() {
       if (item.requestKind === 'LEAVE') {
         await leaveApi.finalReview(item._id, {
           decision: 'APPROVE',
-          remarks: 'Bypass approved by HOD',
+          remarks: 'Approved by HOD',
         });
       } else {
         await considerationApi.hodReview(item._id, {
           decision: 'APPROVE',
           approvedPeriods: Number(sanctioned),
-          remarks: 'Bypass approved by HOD',
+          remarks: 'Approved by HOD',
         });
       }
 
@@ -637,7 +656,7 @@ export default function HodConsiderations() {
       </div>
 
       {/* Request Cards Ledger matching screenshot */}
-      {filteredItems.length === 0 ? (
+      {sortedFilteredItems.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center flex flex-col items-center justify-center my-3 shadow-2xs">
           <FileText size={36} className="text-slate-300 mb-3" />
           <h3 className="text-sm sm:text-base font-extrabold text-slate-800 m-0">No Requests Found</h3>
@@ -647,7 +666,7 @@ export default function HodConsiderations() {
         </div>
       ) : (
         <div className="flex flex-col gap-5 pt-1">
-          {filteredItems.map((item) => {
+          {sortedFilteredItems.map((item) => {
             const approved = isApproved(item);
             const rejected = isRejected(item);
             const pending = !approved && !rejected;
@@ -684,7 +703,7 @@ export default function HodConsiderations() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-base font-extrabold text-slate-900 m-0 leading-tight">
-                        {item.requestKind === 'LEAVE' ? 'Leave Application: ' : 'OD Consideration: '}
+                        {item.requestKind === 'LEAVE' ? 'Leave Application: ' : 'Consideration: '}
                         {categoryName}
                       </h3>
                       {Boolean(item.isGroup || (item.groupMembers && item.groupMembers.length > 0)) && (
@@ -723,54 +742,78 @@ export default function HodConsiderations() {
                       </span>
                     </div>
 
-                    {Boolean(item.isGroup && item.groupMembers && item.groupMembers.length > 0) && (
-                      <div className="flex flex-wrap items-center gap-2 mt-2.5">
-                        <span className="text-[10px] font-black text-indigo-900 uppercase tracking-wider bg-indigo-50 px-2 py-1 rounded-md border border-indigo-200 shadow-2xs">
-                          Group Members ({item.groupMembers.length}):
-                        </span>
-                        {item.groupMembers.map((m, idx) => {
-                          const mName = m.user?.name || m.name || 'Student';
-                          const mRoll = m.enrollmentNumber || m.rollNumber || '';
-                          const mSec = m.section?.name || m.section?.code || '';
-                          const isLead =
-                            (m._id && item.groupLeader && String(m._id) === String(item.groupLeader._id || item.groupLeader)) ||
-                            (idx === 0 && !item.groupLeader);
-                          return (
-                            <span
-                              key={m._id || idx}
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs shadow-2xs border transition-all ${
-                                isLead
-                                  ? 'bg-indigo-50 border-indigo-300 text-indigo-950 ring-1 ring-indigo-200'
-                                  : 'bg-amber-50/70 border-amber-300 text-amber-950'
-                              }`}
-                            >
-                              {isLead ? (
-                                <span className="text-amber-600 font-black text-xs">★ Lead:</span>
-                              ) : (
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                              )}
-                              {/* Highlighted Student Name */}
-                              <span
-                                className={`font-black px-1.5 py-0.5 rounded text-xs tracking-tight shadow-2xs ${
-                                  isLead
-                                    ? 'bg-indigo-200/90 text-indigo-950 border border-indigo-300'
-                                    : 'bg-amber-200/90 text-amber-950 border border-amber-300/80'
-                                }`}
-                              >
-                                {mName}
-                              </span>
-                              <span
-                                className={`font-mono text-[10px] font-semibold ${
-                                  isLead ? 'text-indigo-700' : 'text-slate-600'
-                                }`}
-                              >
-                                ({mRoll || mSec})
-                              </span>
+                    {Boolean(item.isGroup && item.groupMembers && item.groupMembers.length > 0) && (() => {
+                      const activeMembers = item.groupMembers.filter((m) => {
+                        const isExcluded = (item.studentAudits || []).some(
+                          (a) => (a.student?._id || a.student)?.toString() === (m._id || m)?.toString() && a.status === 'EXCLUDED'
+                        );
+                        return !isExcluded;
+                      });
+
+                      if (activeMembers.length === 0) return null;
+
+                      return (
+                        <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-2.5 mt-2.5">
+                          <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+                            <span className="text-[10px] font-black text-indigo-900 uppercase tracking-wider bg-indigo-50 px-2 py-1 rounded-md border border-indigo-200 shadow-2xs">
+                              Group Members ({activeMembers.length}):
                             </span>
-                          );
-                        })}
-                      </div>
-                    )}
+                            <button
+                              type="button"
+                              onClick={() => openModal('AUDIT_GROUP_STUDENTS', { request: item, userRole: 'HOD' })}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs transition-colors cursor-pointer"
+                              title="Audit and manage participating group members"
+                            >
+                              <UserCheck size={12} />
+                              <span>Audit Students</span>
+                            </button>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+                            {activeMembers.map((m, idx) => {
+                              const mName = m.user?.name || m.name || 'Student';
+                              const mRoll = m.enrollmentNumber || m.rollNumber || '';
+                              const mSec = m.section?.name || m.section?.code || '';
+                              const isLead =
+                                (m._id && item.groupLeader && String(m._id) === String(item.groupLeader._id || item.groupLeader)) ||
+                                (idx === 0 && !item.groupLeader);
+                              return (
+                                <span
+                                  key={m._id || idx}
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs shadow-2xs border transition-all ${
+                                    isLead
+                                      ? 'bg-indigo-50 border-indigo-300 text-indigo-950 ring-1 ring-indigo-200'
+                                      : 'bg-amber-50/70 border-amber-300 text-amber-950'
+                                  }`}
+                                >
+                                  {isLead ? (
+                                    <span className="text-amber-600 font-black text-xs">★ Lead:</span>
+                                  ) : (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                                  )}
+                                  {/* Highlighted Student Name */}
+                                  <span
+                                    className={`font-black px-1.5 py-0.5 rounded text-xs tracking-tight shadow-2xs ${
+                                      isLead
+                                        ? 'bg-indigo-200/90 text-indigo-950 border border-indigo-300'
+                                        : 'bg-amber-200/90 text-amber-950 border border-amber-300/80'
+                                    }`}
+                                  >
+                                    {mName}
+                                  </span>
+                                  <span
+                                    className={`font-mono text-[10px] font-semibold ${
+                                      isLead ? 'text-indigo-700' : 'text-slate-600'
+                                    }`}
+                                  >
+                                    ({mRoll || mSec})
+                                  </span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -920,8 +963,8 @@ export default function HodConsiderations() {
                         onClick={() => handleBypassApprove(item)}
                         className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer border border-emerald-600"
                       >
-                        <Zap size={14} className="text-white fill-white" />
-                        <span>Direct Approve</span>
+                        <CheckCircle2 size={16} className="text-white shrink-0" />
+                        <span>Approve</span>
                       </button>
 
                       <button

@@ -149,6 +149,12 @@ export default function FormalApplicationModal({ item, onClose }) {
       const sec = m.section?.name || m.section?.code || secVal;
       const sem = m.semester || m.section?.semester || semVal;
 
+      const auditRec = (item.studentAudits || []).find(
+        (a) => (a.student?._id || a.student)?.toString() === mId.toString()
+      );
+      const isExcluded = auditRec?.status === 'EXCLUDED';
+      const exclusionRemarks = auditRec?.remarks || '';
+
       result.push({
         _id: mId,
         name,
@@ -156,6 +162,8 @@ export default function FormalApplicationModal({ item, onClose }) {
         section: sec,
         semester: sem,
         isLeader,
+        isExcluded,
+        exclusionRemarks,
       });
     }
 
@@ -337,15 +345,16 @@ export default function FormalApplicationModal({ item, onClose }) {
                       <th className="py-2 px-2.5 text-center">Role</th>
                       <th className="py-2 px-3">Enrollment / Roll No.</th>
                       <th className="py-2 px-3">Semester & Section</th>
+                      <th className="py-2 px-2.5 text-center">Audit Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {groupRoster.map((st, idx) => (
-                      <tr key={st._id || idx} className="hover:bg-indigo-50/30 transition-colors">
+                      <tr key={st._id || idx} className={`transition-colors ${st.isExcluded ? 'bg-rose-50/30' : 'hover:bg-indigo-50/30'}`}>
                         <td className="py-2 px-2.5 text-center font-bold text-slate-400 text-[11px]">
                           #{idx + 1}
                         </td>
-                        <td className="py-2 px-3 font-bold text-slate-900">
+                        <td className={`py-2 px-3 font-bold ${st.isExcluded ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
                           {st.name}
                         </td>
                         <td className="py-2 px-2.5 text-center">
@@ -364,6 +373,20 @@ export default function FormalApplicationModal({ item, onClose }) {
                         </td>
                         <td className="py-2 px-3 text-slate-600 font-medium text-[11px]">
                           Sem {st.semester} • {st.section}
+                        </td>
+                        <td className="py-2 px-2.5 text-center">
+                          {st.isExcluded ? (
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-100 text-rose-700 border border-rose-200"
+                              title={st.exclusionRemarks || 'Excluded during audit'}
+                            >
+                              Excluded
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                              Sanctioned
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}

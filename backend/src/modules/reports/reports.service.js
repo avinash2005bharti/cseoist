@@ -38,6 +38,7 @@ export const getDashboardSummary = async (user) => {
       approvedConsiderationDocs,
       pendingConsiderationDocs,
       approvedLeaveDocs,
+      pendingLeaveDocs,
     ] = await Promise.all([
       ConsiderationRequest.countDocuments(studentConsiderationFilter),
       ConsiderationRequest.countDocuments({
@@ -69,6 +70,10 @@ export const getDashboardSummary = async (user) => {
         applicant: user._id,
         status: { $in: ['APPROVED_BY_HOD', 'APPROVED'] },
       }).select('totalDays'),
+      LeaveApplication.find({
+        applicant: user._id,
+        status: { $in: ['PENDING', 'RECOMMENDED_BY_TG'] },
+      }).select('totalDays'),
     ]);
 
     const approvedLectures = approvedConsiderationDocs.reduce(
@@ -82,6 +87,11 @@ export const getDashboardSummary = async (user) => {
     );
 
     const approvedDays = approvedLeaveDocs.reduce(
+      (sum, l) => sum + (l.totalDays || 0),
+      0
+    );
+
+    const pendingDays = (pendingLeaveDocs || []).reduce(
       (sum, l) => sum + (l.totalDays || 0),
       0
     );
@@ -100,6 +110,7 @@ export const getDashboardSummary = async (user) => {
         pending: pendingLeaves,
         approved: approvedLeaves,
         approvedDays,
+        pendingDays,
       },
     };
   }
@@ -310,7 +321,10 @@ export const getConsiderationsReport = async (query = {}, user = null) => {
     const myStudentIds = myStudents.map((s) => s._id);
 
     if (myStudentIds.length > 0) {
-      filter.student = { $in: myStudentIds };
+      filter.$or = [
+        { student: { $in: myStudentIds } },
+        { groupMembers: { $in: myStudentIds } },
+      ];
     } else {
       filter.student = null;
     }
@@ -330,6 +344,15 @@ export const getConsiderationsReport = async (query = {}, user = null) => {
           { path: 'department', select: 'name code' },
         ],
       })
+      .populate({
+        path: 'groupMembers',
+        populate: [
+          { path: 'user', select: 'name email phone' },
+          { path: 'section', select: 'name code year semester' },
+          { path: 'department', select: 'name code' },
+        ],
+      })
+      .populate('studentAudits.student', 'name rollNumber enrollmentNumber')
       .populate({ path: 'tg', populate: { path: 'user', select: 'name email phone' } })
       .populate('hodReview.reviewedBy', 'name email')
       .skip(skip)
@@ -506,21 +529,60 @@ const styleTable = (worksheet, headerRowIndex, dataStartIndex, totalRows) => {
   }
 };
 
-export const exportConsiderationsToExcel = async (query, res) => {
+export const exportConsiderationsToExcel = async (query, res, user) => {
   const filter = {};
   applyStatusFilter(filter, query, false);
   if (query.type && query.type !== 'ALL') filter.eventType = query.type.toUpperCase();
   applyDateFilter(filter, query);
 
-  // Filter by semester if specified
+  // Check if TG or constrained section
   let targetSemester = null;
-  if (query.semester && query.semester !== 'ALL') {
+  let targetSection = query.section
+    ? String(query.section).replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim().toUpperCase()
+    : null;
+
+  if (user?.isTG && user?.teacherId) {
+    const tgGroup = await MentorGroup.findOne({ tg: user.teacherId, isActive: true }).populate('section');
+    if (tgGroup?.section) {
+      if (!targetSemester) targetSemester = tgGroup.section.semester;
+      if (!targetSection) targetSection = extractSectionLetter(tgGroup.section);
+    }
+  }
+
+  // Filter by semester if specified (e.g. from HOD)
+  if (!targetSemester && query.semester && query.semester !== 'ALL') {
     const semNum = parseInt(String(query.semester).replace(/\D/g, ''), 10);
     if (!isNaN(semNum)) {
       targetSemester = semNum;
-      const studentsInSem = await Student.find({ semester: semNum }).select('_id');
-      filter.student = { $in: studentsInSem.map((s) => s._id) };
     }
+  }
+
+  // Build student scope filter for semester and section
+  const studentScope = {};
+  if (targetSemester) {
+    studentScope.semester = targetSemester;
+  }
+  if (targetSection && targetSection !== 'ALL') {
+    const matchingSections = await Section.find({
+      $or: [
+        { name: new RegExp(targetSection, 'i') },
+        { code: new RegExp(targetSection, 'i') },
+      ],
+      ...(targetSemester ? { semester: targetSemester } : {}),
+    }).select('_id');
+    const secIds = matchingSections.map((s) => s._id);
+    if (secIds.length > 0) {
+      studentScope.section = { $in: secIds };
+    }
+  }
+
+  if (Object.keys(studentScope).length > 0) {
+    const matchingStudents = await Student.find(studentScope).select('_id');
+    const mIds = matchingStudents.map((s) => s._id);
+    filter.$or = [
+      { student: { $in: mIds } },
+      { groupMembers: { $in: mIds } },
+    ];
   }
 
   const requests = await ConsiderationRequest.find(filter)
@@ -531,28 +593,90 @@ export const exportConsiderationsToExcel = async (query, res) => {
         { path: 'section', select: 'name code year semester' },
       ],
     })
+    .populate({
+      path: 'groupMembers',
+      populate: [
+        { path: 'user', select: 'name email phone' },
+        { path: 'section', select: 'name code year semester' },
+      ],
+    })
+    .populate('studentAudits.student', 'name rollNumber enrollmentNumber')
     .populate({ path: 'tg', populate: { path: 'user', select: 'name email' } })
     .populate('hodReview.reviewedBy', 'name email')
     .sort({ createdAt: -1 });
 
   // Fetch active sections for the target semester to build section tabs
-  const sectionFilter = targetSemester ? { semester: targetSemester } : {};
-  const dbSections = await Section.find(sectionFilter);
-  const sectionLetters = new Set(['A', 'B', 'C', 'D']);
-  dbSections.forEach((s) => {
-    const letCode = extractSectionLetter(s);
-    if (letCode && letCode !== 'Unassigned') sectionLetters.add(letCode);
-  });
-  const sortedSections = Array.from(sectionLetters).sort();
+  let sortedSections = [];
+  if (targetSection && targetSection !== 'ALL') {
+    sortedSections = [targetSection];
+  } else {
+    const sectionFilter = targetSemester ? { semester: targetSemester } : {};
+    const dbSections = await Section.find(sectionFilter);
+    const sectionLetters = new Set(['A', 'B', 'C', 'D']);
+    dbSections.forEach((s) => {
+      const letCode = extractSectionLetter(s);
+      if (letCode && letCode !== 'Unassigned') sectionLetters.add(letCode);
+    });
+    sortedSections = Array.from(sectionLetters).sort();
+  }
 
-  // Group requests by section letter
+  // Extract all individual sanctioned student records (leader + non-excluded group members)
+  const allSanctionedRows = [];
+  requests.forEach((req) => {
+    const excludedStudentIds = new Set(
+      (req.studentAudits || [])
+        .filter((a) => a.status === 'EXCLUDED')
+        .map((a) => (a.student?._id || a.student)?.toString())
+    );
+
+    const leader = req.student;
+    const leaderId = (leader?._id || leader)?.toString();
+    const isGroup = Boolean(req.isGroup || (req.groupMembers && req.groupMembers.length > 0));
+
+    // 1. Leader / Applicant
+    if (leader && !excludedStudentIds.has(leaderId)) {
+      const secLetter = extractSectionLetter(leader.section);
+      allSanctionedRows.push({
+        req,
+        student: leader,
+        isLeader: isGroup,
+        secLetter,
+        studentName: leader.user?.name || leader.rollNumber || 'Student',
+        rollNumber: leader.rollNumber || leader.enrollmentNumber || 'Not provided',
+        sectionStr: leader.section?.code || leader.section?.name || `Section ${secLetter}`,
+      });
+    }
+
+    // 2. Group members (excluding leader if already added, and excluding excluded students)
+    if (isGroup && Array.isArray(req.groupMembers)) {
+      req.groupMembers.forEach((m) => {
+        if (!m) return;
+        const mId = (m._id || m)?.toString();
+        if (!mId || mId === leaderId) return;
+        if (excludedStudentIds.has(mId)) return;
+
+        const secLetter = extractSectionLetter(m.section) || extractSectionLetter(leader?.section);
+        allSanctionedRows.push({
+          req,
+          student: m,
+          isLeader: false,
+          secLetter,
+          studentName: m.user?.name || m.rollNumber || 'Team Member',
+          rollNumber: m.rollNumber || m.enrollmentNumber || 'Not provided',
+          sectionStr: m.section?.code || m.section?.name || `Section ${secLetter}`,
+        });
+      });
+    }
+  });
+
+  // Group student rows by section letter
   const sectionMap = new Map();
   sortedSections.forEach((sec) => sectionMap.set(sec, []));
 
-  requests.forEach((req) => {
-    const secLetter = extractSectionLetter(req.student?.section);
+  allSanctionedRows.forEach((row) => {
+    const secLetter = row.secLetter;
     if (!sectionMap.has(secLetter)) sectionMap.set(secLetter, []);
-    sectionMap.get(secLetter).push(req);
+    sectionMap.get(secLetter).push(row);
   });
 
   const workbook = new ExcelJS.Workbook();
@@ -580,24 +704,28 @@ export const exportConsiderationsToExcel = async (query, res) => {
   const semLabel = targetSemester ? `Semester ${targetSemester}` : 'All Semesters';
   const dateRangeLabel = getDateRangeLabel(query);
 
-  // 1. SHEET 1: Consolidated "All Sections" Sheet
-  const masterSheet = workbook.addWorksheet('All Sections');
+  // 1. SHEET 1: Consolidated Master Sheet (named specifically when scoped to a section)
+  const masterSheetTitle = targetSection && targetSection !== 'ALL'
+    ? `Master (Sec ${targetSection})`
+    : 'All Sections';
+  const masterSheet = workbook.addWorksheet(masterSheetTitle);
   masterSheet.properties.tabColor = TAB_COLORS.ALL;
   masterSheet.columns = columns;
 
-  // Sort requests section-wise (A, B, C, D...)
-  const sortedRequests = [...requests].sort((a, b) => {
-    const secA = extractSectionLetter(a.student?.section);
-    const secB = extractSectionLetter(b.student?.section);
-    return secA.localeCompare(secB);
+  // Sort rows section-wise (A, B, C, D...)
+  const sortedRows = [...allSanctionedRows].sort((a, b) => {
+    const secDiff = (a.secLetter || '').localeCompare(b.secLetter || '');
+    if (secDiff !== 0) return secDiff;
+    return (a.studentName || '').localeCompare(b.studentName || '');
   });
 
-  sortedRequests.forEach((req, idx) => {
+  sortedRows.forEach((row, idx) => {
+    const req = row.req;
     masterSheet.addRow({
       sno: idx + 1,
-      studentName: req.student?.user?.name || req.student?.rollNumber || 'Student',
-      rollNumber: req.student?.rollNumber || 'Not provided',
-      section: req.student?.section?.code || req.student?.section?.name || 'Not provided',
+      studentName: row.studentName,
+      rollNumber: row.rollNumber,
+      section: row.sectionStr,
       eventTitle: req.eventTitle,
       eventType: req.eventType,
       startDate: req.startDate,
@@ -612,7 +740,7 @@ export const exportConsiderationsToExcel = async (query, res) => {
     });
   });
 
-  styleTable(masterSheet, 1, 2, sortedRequests.length);
+  styleTable(masterSheet, 1, 2, sortedRows.length);
   autoFitColumns(masterSheet);
 
   // 2. SHEETS 2+: Individual Section Worksheets (sec A, sec B, sec C, sec D...)
@@ -643,12 +771,13 @@ export const exportConsiderationsToExcel = async (query, res) => {
       });
       styleTable(secSheet, 1, 2, 1);
     } else {
-      secRecords.forEach((req, idx) => {
+      secRecords.forEach((row, idx) => {
+        const req = row.req;
         secSheet.addRow({
           sno: idx + 1,
-          studentName: req.student?.user?.name || req.student?.rollNumber || 'Student',
-          rollNumber: req.student?.rollNumber || 'Not provided',
-          section: req.student?.section?.code || req.student?.section?.name || `Section ${secLetter}`,
+          studentName: row.studentName,
+          rollNumber: row.rollNumber,
+          section: row.sectionStr,
           eventTitle: req.eventTitle,
           eventType: req.eventType,
           startDate: req.startDate,
@@ -681,21 +810,64 @@ export const exportConsiderationsToExcel = async (query, res) => {
   res.end();
 };
 
-export const exportLeavesToExcel = async (query, res) => {
+export const exportLeavesToExcel = async (query, res, user) => {
   const filter = {};
   applyStatusFilter(filter, query, false);
   if (query.role) filter.applicantRole = query.role.toUpperCase();
   if (query.type && query.type !== 'ALL') filter.leaveType = query.type.toUpperCase();
   applyDateFilter(filter, query);
 
-  // Filter by semester if specified
   let targetSemester = null;
-  if (query.semester && query.semester !== 'ALL') {
+  let targetSection = query.section
+    ? String(query.section).replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim().toUpperCase()
+    : null;
+
+  // If user is a TG and no explicit semester/section provided or TG scope should be strictly enforced
+  if (user?.isTG && user?.teacherId) {
+    const tgGroup = await MentorGroup.findOne({ tg: user.teacherId, isActive: true }).populate('section');
+    if (tgGroup?.section) {
+      if (!targetSemester) targetSemester = tgGroup.section.semester;
+      if (!targetSection) targetSection = extractSectionLetter(tgGroup.section);
+    }
+    // TG reports exclusively contain student leaves
+    filter.applicantRole = 'STUDENT';
+  }
+
+  if (!targetSemester && query.semester && query.semester !== 'ALL') {
     const semNum = parseInt(String(query.semester).replace(/\D/g, ''), 10);
     if (!isNaN(semNum)) {
       targetSemester = semNum;
-      const studentsInSem = await Student.find({ semester: semNum }).select('_id');
-      filter.student = { $in: studentsInSem.map((s) => s._id) };
+    }
+  }
+
+  const studentScope = {};
+  if (targetSemester) {
+    studentScope.semester = targetSemester;
+  }
+  if (targetSection && targetSection !== 'ALL') {
+    const matchingSections = await Section.find({
+      $or: [
+        { name: new RegExp(targetSection, 'i') },
+        { code: new RegExp(targetSection, 'i') },
+      ],
+      ...(targetSemester ? { semester: targetSemester } : {}),
+    }).select('_id');
+    const secIds = matchingSections.map((s) => s._id);
+    if (secIds.length > 0) {
+      studentScope.section = { $in: secIds };
+    }
+  }
+
+  if (Object.keys(studentScope).length > 0) {
+    const matchingStudents = await Student.find(studentScope).select('_id');
+    const studentIds = matchingStudents.map((s) => s._id);
+    if (user?.isTG) {
+      filter.student = { $in: studentIds };
+    } else {
+      filter.$or = [
+        { student: { $in: studentIds } },
+        { applicantRole: 'TEACHER' },
+      ];
     }
   }
 
@@ -711,14 +883,19 @@ export const exportLeavesToExcel = async (query, res) => {
     .sort({ createdAt: -1 });
 
   // Fetch active sections for section tabs
-  const sectionFilter = targetSemester ? { semester: targetSemester } : {};
-  const dbSections = await Section.find(sectionFilter);
-  const sectionLetters = new Set(['A', 'B', 'C', 'D']);
-  dbSections.forEach((s) => {
-    const letCode = extractSectionLetter(s);
-    if (letCode && letCode !== 'Unassigned') sectionLetters.add(letCode);
-  });
-  const sortedSections = Array.from(sectionLetters).sort();
+  let sortedSections = [];
+  if (targetSection && targetSection !== 'ALL') {
+    sortedSections = [targetSection];
+  } else {
+    const sectionFilter = targetSemester ? { semester: targetSemester } : {};
+    const dbSections = await Section.find(sectionFilter);
+    const sectionLetters = new Set(['A', 'B', 'C', 'D']);
+    dbSections.forEach((s) => {
+      const letCode = extractSectionLetter(s);
+      if (letCode && letCode !== 'Unassigned') sectionLetters.add(letCode);
+    });
+    sortedSections = Array.from(sectionLetters).sort();
+  }
 
   // Group leaves by section letter + faculty
   const sectionMap = new Map();
@@ -756,8 +933,11 @@ export const exportLeavesToExcel = async (query, res) => {
     { header: 'Decision Date', key: 'decisionDate', width: 16 },
   ];
 
-  // 1. SHEET 1: Consolidated "All Sections" Sheet
-  const masterSheet = workbook.addWorksheet('All Sections');
+  // 1. SHEET 1: Consolidated Master Sheet (named specifically when scoped to a section)
+  const masterSheetTitle = targetSection && targetSection !== 'ALL'
+    ? `Master (Sec ${targetSection})`
+    : 'All Sections';
+  const masterSheet = workbook.addWorksheet(masterSheetTitle);
   masterSheet.properties.tabColor = TAB_COLORS.ALL;
   masterSheet.columns = columns;
 

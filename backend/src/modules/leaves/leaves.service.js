@@ -287,12 +287,7 @@ export const getHODLeaveQueue = async (query = {}, user = null) => {
     // Return all student and faculty department leaves
   } else if (query.status === 'ACTION_NEEDED' || (!query.all && !query.status)) {
     conditions.push({
-      $or: [
-        { applicantRole: 'STUDENT', status: 'RECOMMENDED_BY_TG' },
-        { applicantRole: 'STUDENT', status: 'PENDING', escalated: true },
-        { applicantRole: 'STUDENT', status: 'PENDING', tg: null },
-        { applicantRole: 'TEACHER', status: 'PENDING' },
-      ],
+      status: { $in: ['PENDING', 'RECOMMENDED_BY_TG', 'APPLIED'] },
     });
   } else if (query.status === 'APPROVED' || query.status === 'APPROVED_BY_HOD') {
     conditions.push({ status: { $in: ['APPROVED', 'APPROVED_BY_HOD'] } });

@@ -148,10 +148,10 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
         <div className="flex items-center gap-2">
 
           {/* Notification Bell with Dropdown */}
-          <div className="relative" ref={notifRef}>
+          <div className="relative" ref={notifRef} style={{ zIndex: 50 }}>
             <button
               type="button"
-              onClick={() => setShowNotifications(!showNotifications)}
+              onClick={() => setShowNotifications((prev) => !prev)}
               className="relative p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer"
               title="Notifications"
               aria-label="View notifications"
@@ -166,18 +166,13 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
 
             {showNotifications && (
               <>
-                {/* Mobile Backdrop to dim background and dismiss on tap outside */}
+                {/* Mobile Backdrop to dim background and dismiss on tap outside (Mobile Only) */}
                 <div
-                  className="fixed inset-0 bg-slate-900/25 backdrop-blur-2xs z-40 sm:hidden"
+                  className="notif-mobile-backdrop"
                   onClick={() => setShowNotifications(false)}
                 />
 
-                <div
-                  className="notification-dropdown-panel fixed inset-x-3 top-[68px] sm:absolute sm:inset-x-auto sm:top-[calc(100%+8px)] sm:right-0 sm:left-auto sm:w-[380px] z-50 shadow-2xl"
-                  style={{
-                    maxWidth: 'calc(100vw - 24px)',
-                  }}
-                >
+                <div className="notification-dropdown-panel shadow-2xl">
                   <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-extrabold text-slate-900">Notifications</span>

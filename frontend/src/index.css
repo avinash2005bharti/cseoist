@@ -202,7 +202,7 @@
 
   /* Dimensions */
   --header-height: 64px;
-  --sidebar-width: 260px;
+  --sidebar-width: 285px;
   --touch-target: 44px;
 }
 
@@ -923,6 +923,18 @@ textarea {
 
 .text-white {
   color: #FFFFFF !important;
+}
+
+.text-black {
+  color: #000000 !important;
+}
+
+.text-amber-800 {
+  color: var(--warning-800) !important;
+}
+
+.text-amber-900 {
+  color: var(--warning-900) !important;
 }
 
 .bg-white {
@@ -2228,6 +2240,28 @@ textarea.input-field {
     width: 96% !important;
     padding: 1rem !important;
     margin: auto !important;
+  }
+}
+
+/* Official Clearances / Consideration Ledger Modal (Full Natural Scroll Experience) */
+.clearances-ledger-modal {
+  display: block !important;
+  max-width: 90rem !important;
+  width: 96vw !important;
+  max-height: 86vh !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  gap: 0 !important;
+  padding: 1.25rem 1.75rem !important;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 768px) {
+  .clearances-ledger-modal {
+    width: 98vw !important;
+    max-height: 88vh !important;
+    padding: 1rem !important;
   }
 }
 
@@ -7660,25 +7694,44 @@ button:disabled:active,
 }
 
 /* ==========================================================================
-   Header Notification Dropdown
+   Header Notification Dropdown & Mobile Backdrop
    ========================================================================== */
+.notif-mobile-backdrop {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .notif-mobile-backdrop {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    background: rgba(15, 23, 42, 0.28) !important;
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
+    z-index: 998 !important;
+  }
+}
+
 .notification-dropdown-panel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 400px;
-  max-width: calc(100vw - 24px);
-  max-height: min(540px, calc(100vh - 84px));
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  right: 0 !important;
+  width: 380px !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: min(540px, calc(100vh - 84px)) !important;
   display: flex !important;
   flex-direction: column !important;
-  background-color: #ffffff;
-  border-radius: 1.25rem;
-  border: 1px solid var(--slate-200);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  z-index: 1000;
-  transform-origin: top right;
-  animation: notifDropdownIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: #ffffff !important;
+  border-radius: 1.25rem !important;
+  border: 1px solid var(--slate-200) !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden !important;
+  z-index: 1000 !important;
+  transform-origin: top right !important;
+  animation: notifDropdownIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 @media (max-width: 639px) {
@@ -7692,6 +7745,22 @@ button:disabled:active,
     max-height: calc(100dvh - 80px) !important;
     border-radius: 1.25rem !important;
     transform-origin: top center !important;
+    z-index: 999 !important;
+  }
+}
+
+@media (min-width: 640px) {
+  .sm\:hidden {
+    display: none !important;
+  }
+  .sm\:flex {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:flex {
+    display: flex !important;
   }
 }
 

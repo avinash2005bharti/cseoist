@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext.jsx';
-import { dashboardApi, leaveApi, masterDataApi } from '../../api';
+import { dashboardApi, leaveApi, masterDataApi, settingsApi } from '../../api';
 import {
   StatCard,
   Card,
@@ -35,6 +35,10 @@ import {
   Phone,
   RefreshCw,
   UserPlus,
+  Clock,
+  Zap,
+  Power,
+  PowerOff,
 } from 'lucide-react';
 import CreateUserModal from '../../components/modals/CreateUserModal.jsx';
 
@@ -61,6 +65,14 @@ export default function AdminDashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createModalRole, setCreateModalRole] = useState('STUDENT');
 
+  // Consideration Time Limit Setting State (On/Off for Testing)
+  const [timeWindowSetting, setTimeWindowSetting] = useState({
+    isTimeLimitEnabled: true,
+    isCurrentlyOpen: true,
+    mode: 'RESTRICTED_WINDOW',
+  });
+  const [togglingWindow, setTogglingWindow] = useState(false);
+
   const handleOpenCreateModal = (role = 'STUDENT') => {
     setCreateModalRole(role);
     setShowCreateModal(true);
@@ -76,12 +88,22 @@ export default function AdminDashboard() {
         masterDataApi.getStudents({ limit: 10, page: 1 }).catch(() => ({ data: [] })),
         masterDataApi.getTeachers({ limit: 10, page: 1 }).catch(() => ({ data: [] })),
         masterDataApi.getSections().catch(() => ({ data: [] })),
+        settingsApi.getConsiderationWindow().catch(() => ({ data: {} })),
       ]);
 
       const sumData = sumRes?.data || {};
       setSummary(sumData);
       setHodLeaves(leavesRes?.data || []);
       setSections(Array.isArray(sectionsRes?.data) ? sectionsRes.data : []);
+
+      const windowData = arguments?.[0] || arguments;
+      // settings check
+      try {
+        const winRes = await settingsApi.getConsiderationWindow();
+        if (winRes?.data && typeof winRes.data.isTimeLimitEnabled === 'boolean') {
+          setTimeWindowSetting(winRes.data);
+        }
+      } catch {}
 
       // Unpack users
       const userList = Array.isArray(usersRes?.data)
@@ -123,6 +145,27 @@ export default function AdminDashboard() {
       console.error('Error fetching admin dashboard data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleTimeLimit = async () => {
+    setTogglingWindow(true);
+    const newStatus = !timeWindowSetting.isTimeLimitEnabled;
+    try {
+      const res = await settingsApi.setConsiderationWindow(newStatus);
+      const data = res?.data || res;
+      setTimeWindowSetting(data);
+      addToast(
+        newStatus ? 'Time Limit Restriction ON' : 'Time Limit Restriction OFF',
+        newStatus
+          ? 'Standard 9:00 AM – 4:00 PM IST restriction is now active.'
+          : 'Testing Mode: 24/7 consideration submissions are now permitted for all students.',
+        newStatus ? 'success' : 'warning'
+      );
+    } catch (err) {
+      addToast('Update Failed', err.message || 'Could not update consideration window setting', 'danger');
+    } finally {
+      setTogglingWindow(false);
     }
   };
 
@@ -258,6 +301,77 @@ export default function AdminDashboard() {
             <Database size={14} />
             Bulk Import
           </Button>
+        </div>
+      </div>
+
+      {/* Admin Feature Testing Control: Consideration Time Limit On/Off */}
+      <div className="rounded-2xl border p-4 bg-white shadow-2xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start gap-3.5 min-w-0">
+          <div
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs ${
+              timeWindowSetting.isTimeLimitEnabled
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border-amber-300'
+            }`}
+          >
+            {timeWindowSetting.isTimeLimitEnabled ? <Clock size={20} /> : <Zap size={20} />}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 m-0">
+                Student Consideration Submission Time Limit
+              </h3>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-2xs flex items-center gap-1.5 ${
+                  timeWindowSetting.isTimeLimitEnabled
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                    : 'bg-amber-100 text-amber-900 border-amber-300'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    timeWindowSetting.isTimeLimitEnabled ? 'bg-emerald-600' : 'bg-amber-600 animate-ping'
+                  }`}
+                />
+                {timeWindowSetting.isTimeLimitEnabled
+                  ? 'RESTRICTION ON (9:00 AM – 4:00 PM IST)'
+                  : 'RESTRICTION OFF (24x7 TESTING MODE)'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium m-0 mt-1 max-w-2xl">
+              {timeWindowSetting.isTimeLimitEnabled
+                ? 'Standard college policy is active: students can only apply between 9:00 AM and 4:00 PM IST. Submissions outside this window are blocked.'
+                : '24/7 Testing Mode Active: The 9:00 AM - 4:00 PM IST restriction is bypassed. Students and admins can submit consideration applications at any time for feature testing.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
+          <button
+            type="button"
+            disabled={togglingWindow}
+            onClick={handleToggleTimeLimit}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50 ${
+              timeWindowSetting.isTimeLimitEnabled
+                ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+            }`}
+          >
+            {togglingWindow ? (
+              <RefreshCw size={14} className="animate-spin" />
+            ) : timeWindowSetting.isTimeLimitEnabled ? (
+              <PowerOff size={14} className="text-amber-700" />
+            ) : (
+              <Power size={14} className="text-white" />
+            )}
+            <span>
+              {togglingWindow
+                ? 'Updating...'
+                : timeWindowSetting.isTimeLimitEnabled
+                ? 'Turn OFF Time Limit (Allow 24/7)'
+                : 'Turn ON Time Limit (Enforce 9am-4pm)'}
+            </span>
+          </button>
         </div>
       </div>
 

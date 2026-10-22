@@ -481,6 +481,26 @@ export function ERPProvider({ children }) {
     return user;
   };
 
+  const loginWithToken = async (accessToken) => {
+    setAuthToken(accessToken);
+    setToken(accessToken);
+    const res = await authApi.getMe();
+    const user = res?.data || res;
+    const role = (user.role || '').toLowerCase();
+    const isFaculty = user.role === 'TEACHER' || user.role === 'HOD';
+    const effectiveRole = isFaculty && user.isTG ? 'tg' : role;
+
+    setCurrentUser(user);
+    setCurrentRole(effectiveRole);
+    setIsAuthenticated(true);
+
+    localStorage.setItem('campusflow_user', JSON.stringify(user));
+    localStorage.setItem('campusflow_role', effectiveRole);
+
+    addToast('Welcome Back', `Logged in via Google as ${user.name}`, 'success');
+    return user;
+  };
+
   const logout = async () => {
     try {
       await authApi.logout();
@@ -540,6 +560,7 @@ export function ERPProvider({ children }) {
         viewAttachment,
         closeFilePreview,
         login,
+        loginWithToken,
         logout,
         switchRole,
         pwaPushEnabled,

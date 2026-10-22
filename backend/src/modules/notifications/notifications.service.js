@@ -1,4 +1,5 @@
 import Notification from '../../models/Notification.js';
+import SystemSetting from '../../models/SystemSetting.js';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.js';
 import ApiError from '../../utils/ApiError.js';
 import { getISTTime, isWithinConsiderationWindow } from '../../utils/dates.js';
@@ -82,21 +83,27 @@ export const removePushSubscription = async (userId, endpoint) => {
   return { success: true };
 };
 
-export const getConsiderationWindowStatus = () => {
+export const getConsiderationWindowStatus = async () => {
   const now = new Date();
   const time = getISTTime(now);
-  const isOpen = isWithinConsiderationWindow(now);
+  const setting = await SystemSetting.findOne({ key: 'CONSIDERATION_TIME_LIMIT_ENABLED' });
+  const isTimeLimitEnabled = setting !== null ? Boolean(setting.value) : true;
+  const isWithinWindow = isWithinConsiderationWindow(now);
+  const isOpen = !isTimeLimitEnabled ? true : isWithinWindow;
 
   const pad = (n) => String(n).padStart(2, '0');
   const currentTimeIST = `${pad(time.hour)}:${pad(time.minute)}:${pad(time.second)}`;
 
   return {
     isOpen,
+    isTimeLimitEnabled,
     windowStart: '09:00',
     windowEnd: '16:00',
     currentTimeIST,
     timezone: 'Asia/Kolkata',
-    message: isOpen
+    message: !isTimeLimitEnabled
+      ? '24x7 Submissions Enabled (Testing Mode: Time Restriction Bypassed).'
+      : isOpen
       ? 'Consideration application window is OPEN (9:00 AM - 4:00 PM IST).'
       : 'Consideration application window is CLOSED. Submissions are only accepted between 9:00 AM and 4:00 PM IST.',
   };

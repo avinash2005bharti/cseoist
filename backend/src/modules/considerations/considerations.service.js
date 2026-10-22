@@ -7,6 +7,7 @@ import Department from '../../models/Department.js';
 import User from '../../models/User.js';
 import Notification from '../../models/Notification.js';
 import AuditLog from '../../models/AuditLog.js';
+import SystemSetting from '../../models/SystemSetting.js';
 import ApiError from '../../utils/ApiError.js';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.js';
 import { isEndDateGteStartDate, rangesOverlap, isWithinConsiderationWindow } from '../../utils/dates.js';
@@ -57,9 +58,15 @@ export const createConsideration = async (user, data, options = {}) => {
     throw ApiError.forbidden('Only students can submit consideration requests');
   }
 
-  // Enforce Consideration Submission Window: 9:00 AM to 4:00 PM IST
+  // Enforce Consideration Submission Window (default: 9:00 AM to 4:00 PM IST unless toggled OFF by Admin)
   const clock = options?.clock || new Date();
-  const bypass = Boolean(options?.bypassWindowCheck || process.env.BYPASS_CONSIDERATION_WINDOW === 'true');
+  const setting = await SystemSetting.findOne({ key: 'CONSIDERATION_TIME_LIMIT_ENABLED' });
+  const isTimeLimitEnabled = setting !== null ? Boolean(setting.value) : true;
+  const bypass = Boolean(
+    options?.bypassWindowCheck ||
+    !isTimeLimitEnabled ||
+    process.env.BYPASS_CONSIDERATION_WINDOW === 'true'
+  );
   if (!bypass && !isWithinConsiderationWindow(clock)) {
     throw ApiError.badRequest(
       'Consideration requests can only be submitted between 9:00 AM and 4:00 PM IST. The submission window is currently closed.'
@@ -395,6 +402,14 @@ export const getStudentConsiderations = async (userId, query) => {
         path: 'groupLeader',
         populate: [{ path: 'user', select: 'name email' }],
       })
+      .populate({
+        path: 'studentAudits.student',
+        populate: [
+          { path: 'user', select: 'name email phone' },
+          { path: 'section', select: 'name code year semester' },
+        ],
+      })
+      .populate('studentAudits.auditedBy', 'name role')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 }),
@@ -480,6 +495,14 @@ export const getTGQueue = async (user, query) => {
         path: 'groupLeader',
         populate: [{ path: 'user', select: 'name email' }],
       })
+      .populate({
+        path: 'studentAudits.student',
+        populate: [
+          { path: 'user', select: 'name email phone' },
+          { path: 'section', select: 'name code year semester' },
+        ],
+      })
+      .populate('studentAudits.auditedBy', 'name role')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: 1 }),
@@ -575,6 +598,14 @@ export const getHODQueue = async (query = {}, user = null) => {
         path: 'tg',
         populate: { path: 'user', select: 'name email phone' },
       })
+      .populate({
+        path: 'studentAudits.student',
+        populate: [
+          { path: 'user', select: 'name email phone' },
+          { path: 'section', select: 'name code year semester' },
+        ],
+      })
+      .populate('studentAudits.auditedBy', 'name role')
       .populate('hodReview.reviewedBy', 'name email')
       .skip(skip)
       .limit(limit)
@@ -625,6 +656,14 @@ export const getConsiderationById = async (id, user) => {
       populate: { path: 'user', select: 'name email phone' },
     })
     .populate('history.actor', 'name role')
+    .populate({
+      path: 'studentAudits.student',
+      populate: [
+        { path: 'user', select: 'name email phone' },
+        { path: 'section', select: 'name code year semester' },
+      ],
+    })
+    .populate('studentAudits.auditedBy', 'name role')
     .populate('tgReview.reviewedBy', 'name role')
     .populate('hodReview.reviewedBy', 'name role');
 
@@ -999,6 +1038,263 @@ export const hodReview = async (id, user, { decision, remarks, approvedPeriods }
   return request;
 };
 
+export const auditGroupStudent = async (id, user, { studentId, status, remarks }) => {
+  const request = await ConsiderationRequest.findById(id)
+    .populate('student')
+    .populate({
+      path: 'groupMembers',
+      populate: { path: 'user', select: 'name email' },
+    })
+    .populate({
+      path: 'sectionStudents',
+      populate: { path: 'user', select: 'name email' },
+    });
+
+  if (!request) {
+    throw ApiError.notFound('Consideration request not found');
+  }
+
+  if (!request.isGroup) {
+    throw ApiError.badRequest('Audit is only available for group consideration applications');
+  }
+
+  // Authorization check
+  const isTG = Boolean(user.isTG && user.teacherId && request.tg?.toString() === user.teacherId.toString());
+  const isHOD = user.role === 'HOD';
+  const isAdmin = user.role === 'ADMIN';
+
+  if (!isTG && !isHOD && !isAdmin) {
+    throw ApiError.forbidden('You are not authorized to audit students for this application');
+  }
+
+  // Valid members check
+  const validMemberIds = [
+    ...(request.groupMembers || []).map((m) => (m._id || m).toString()),
+    ...(request.sectionStudents || []).map((s) => (s._id || s).toString()),
+    (request.student?._id || request.student).toString(),
+  ];
+
+  if (!validMemberIds.includes(studentId.toString())) {
+    throw ApiError.badRequest('The specified student is not part of this group application');
+  }
+
+  // Fetch student info for remarks & history
+  const studentDoc = await Student.findById(studentId).populate('user', 'name');
+  const studentName = studentDoc?.user?.name || studentDoc?.rollNumber || 'Student';
+
+  const now = new Date();
+  const auditStatus = status === 'EXCLUDED' ? 'EXCLUDED' : 'VERIFIED';
+  const auditRemarks = remarks || (auditStatus === 'EXCLUDED' ? 'Excluded during audit' : 'Verified during audit');
+
+  if (!Array.isArray(request.studentAudits)) {
+    request.studentAudits = [];
+  }
+
+  const existingIdx = request.studentAudits.findIndex(
+    (a) => (a.student?._id || a.student).toString() === studentId.toString()
+  );
+
+  const auditRole = user.isTG ? 'TG' : (user.role || 'TEACHER');
+  const auditEntry = {
+    student: studentId,
+    status: auditStatus,
+    auditedBy: user._id,
+    auditedByRole: auditRole,
+    auditedAt: now,
+    remarks: auditRemarks,
+  };
+
+  if (existingIdx >= 0) {
+    request.studentAudits[existingIdx] = auditEntry;
+  } else {
+    request.studentAudits.push(auditEntry);
+  }
+
+  // Remove from or restore to groupMembers and sectionStudents
+  if (auditStatus === 'EXCLUDED') {
+    request.groupMembers = (request.groupMembers || []).filter(
+      (m) => (m._id || m).toString() !== studentId.toString()
+    );
+    if (Array.isArray(request.sectionStudents)) {
+      request.sectionStudents = request.sectionStudents.filter(
+        (s) => (s._id || s).toString() !== studentId.toString()
+      );
+    }
+  } else if (auditStatus === 'VERIFIED') {
+    const sIdStr = studentId.toString();
+    const isPresent = (request.groupMembers || []).some(
+      (m) => (m._id || m).toString() === sIdStr
+    );
+    if (!isPresent && (request.student?._id || request.student)?.toString() !== sIdStr) {
+      request.groupMembers.push(studentId);
+    }
+    if (Array.isArray(request.sectionStudents)) {
+      const isSecPresent = request.sectionStudents.some(
+        (s) => (s._id || s).toString() === sIdStr
+      );
+      if (!isSecPresent) {
+        request.sectionStudents.push(studentId);
+      }
+    }
+  }
+
+  request.history.push({
+    status: request.status,
+    actor: user._id,
+    actorRole: user.role,
+    remarks: `Group Audit: ${studentName} was ${auditStatus === 'EXCLUDED' ? 'EXCLUDED from' : 'VERIFIED for'} consideration by ${user.role} (${auditRemarks})`,
+    at: now,
+    via: 'MANUAL',
+  });
+
+  await request.save();
+
+  // If this group application has linked requests across sections (same groupId), synchronize the student audit and membership!
+  if (request.groupId) {
+    await ConsiderationRequest.updateMany(
+      { groupId: request.groupId, _id: { $ne: request._id } },
+      {
+        $pull: { studentAudits: { student: studentId } },
+      }
+    );
+    if (auditStatus === 'EXCLUDED') {
+      await ConsiderationRequest.updateMany(
+        { groupId: request.groupId },
+        {
+          $pull: {
+            groupMembers: studentId,
+            sectionStudents: studentId,
+          },
+        }
+      );
+    } else if (auditStatus === 'VERIFIED') {
+      await ConsiderationRequest.updateMany(
+        { groupId: request.groupId, isGroupMaster: true },
+        {
+          $addToSet: {
+            groupMembers: studentId,
+          },
+        }
+      );
+    }
+    await ConsiderationRequest.updateMany(
+      { groupId: request.groupId, _id: { $ne: request._id } },
+      {
+        $push: {
+          studentAudits: auditEntry,
+          history: {
+            status: request.status,
+            actor: user._id,
+            actorRole: user.role,
+            remarks: `Group Audit: ${studentName} was ${auditStatus === 'EXCLUDED' ? 'EXCLUDED from' : 'VERIFIED for'} consideration by ${user.role} (${auditRemarks})`,
+            at: now,
+            via: 'MANUAL',
+          },
+        },
+      }
+    );
+  }
+
+  await AuditLog.create({
+    actor: user._id,
+    action: `AUDIT_GROUP_STUDENT_${auditStatus}`,
+    entityType: 'ConsiderationRequest',
+    entityId: request._id,
+    after: { studentId, status: auditStatus, remarks: auditRemarks },
+  });
+
+  emitQueueChanged('TG', 'CONSIDERATION');
+  emitQueueChanged('HOD', 'CONSIDERATION');
+  if (studentDoc?.user?._id) {
+    emitRequestUpdated([`user_${studentDoc.user._id}`, 'role_HOD'], {
+      kind: 'CONSIDERATION',
+      id: request._id,
+      studentAudits: request.studentAudits,
+    });
+  }
+
+  return getConsiderationById(request._id, user);
+};
+
+export const auditAllGroupStudents = async (id, user, { status = 'VERIFIED', remarks }) => {
+  const request = await ConsiderationRequest.findById(id).populate('student');
+  if (!request) {
+    throw ApiError.notFound('Consideration request not found');
+  }
+  if (!request.isGroup) {
+    throw ApiError.badRequest('Audit is only available for group consideration applications');
+  }
+
+  const isTG = Boolean(user.isTG && user.teacherId && request.tg?.toString() === user.teacherId.toString());
+  const isHOD = user.role === 'HOD';
+  const isAdmin = user.role === 'ADMIN';
+
+  if (!isTG && !isHOD && !isAdmin) {
+    throw ApiError.forbidden('You are not authorized to audit students for this application');
+  }
+
+  const targetStudentIds = (isTG && request.sectionStudents?.length > 0)
+    ? request.sectionStudents
+    : [
+        request.student?._id || request.student,
+        ...(request.groupMembers || []),
+      ];
+
+  const uniqueTargetIds = [...new Set(targetStudentIds.map((s) => (s._id || s).toString()))];
+  const now = new Date();
+  const auditStatus = status === 'EXCLUDED' ? 'EXCLUDED' : 'VERIFIED';
+  const auditRemarks = remarks || (auditStatus === 'EXCLUDED' ? 'All excluded during audit' : 'All verified during audit');
+
+  if (!Array.isArray(request.studentAudits)) {
+    request.studentAudits = [];
+  }
+
+  for (const sId of uniqueTargetIds) {
+    const existingIdx = request.studentAudits.findIndex(
+      (a) => (a.student?._id || a.student).toString() === sId
+    );
+    const auditRole = user.isTG ? 'TG' : (user.role || 'TEACHER');
+    const auditEntry = {
+      student: sId,
+      status: auditStatus,
+      auditedBy: user._id,
+      auditedByRole: auditRole,
+      auditedAt: now,
+      remarks: auditRemarks,
+    };
+    if (existingIdx >= 0) {
+      request.studentAudits[existingIdx] = auditEntry;
+    } else {
+      request.studentAudits.push(auditEntry);
+    }
+  }
+
+  request.history.push({
+    status: request.status,
+    actor: user._id,
+    actorRole: user.role,
+    remarks: `Group Audit: All ${uniqueTargetIds.length} student(s) marked as ${auditStatus} by ${user.role}`,
+    at: now,
+    via: 'MANUAL',
+  });
+
+  await request.save();
+
+  if (request.groupId) {
+    await ConsiderationRequest.updateMany(
+      { groupId: request.groupId, _id: { $ne: request._id } },
+      {
+        $set: { studentAudits: request.studentAudits },
+      }
+    );
+  }
+
+  emitQueueChanged('TG', 'CONSIDERATION');
+  emitQueueChanged('HOD', 'CONSIDERATION');
+
+  return getConsiderationById(request._id, user);
+};
+
 export default {
   createConsideration,
   getStudentConsiderations,
@@ -1008,4 +1304,6 @@ export default {
   cancelConsideration,
   tgReview,
   hodReview,
+  auditGroupStudent,
+  auditAllGroupStudents,
 };

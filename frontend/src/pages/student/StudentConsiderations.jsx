@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext.jsx';
-import { considerationApi } from '../../api';
+import { considerationApi, notificationApi } from '../../api';
 import {
   PageHeader,
   Button,
@@ -15,7 +15,7 @@ import {
   TableCell,
   EmptyState,
 } from '../../components/common';
-import { FileText, Plus, Eye, Ban, Calendar, Clock, AlertCircle, Users, CheckCircle2 } from 'lucide-react';
+import { FileText, Plus, Eye, Ban, Calendar, Clock, AlertCircle, Users, CheckCircle2, Sparkles } from 'lucide-react';
 import WorkflowTimeline from '../../components/WorkflowTimeline.jsx';
 import FormalApplicationModal from '../../components/modals/FormalApplicationModal.jsx';
 
@@ -36,6 +36,17 @@ export default function StudentConsiderations() {
   const [statusFilter, setStatusFilter] = useState(() => normalizeStatus(urlStatus));
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [formalModalItem, setFormalModalItem] = useState(null);
+  const [windowStatus, setWindowStatus] = useState(null);
+
+  useEffect(() => {
+    notificationApi
+      .getConsiderationWindow()
+      .then((res) => {
+        const data = res?.data || res;
+        setWindowStatus(data);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (urlStatus !== null) {
@@ -108,9 +119,23 @@ export default function StudentConsiderations() {
         description="Submit and track attendance consideration applications for hackathons, sports, and official college activities."
         actions={
           <div className="flex items-center gap-2.5">
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-[11px] font-bold">
-              <Clock size={13} className="text-blue-600" />
-              <span>Window: 9:00 AM – 4:00 PM IST</span>
+            <span
+              className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold ${
+                windowStatus?.isTimeLimitEnabled === false
+                  ? 'bg-purple-50 border-purple-200 text-purple-800'
+                  : 'bg-blue-50 border-blue-200 text-blue-800'
+              }`}
+            >
+              {windowStatus?.isTimeLimitEnabled === false ? (
+                <Sparkles size={13} className="text-purple-600 animate-pulse" />
+              ) : (
+                <Clock size={13} className="text-blue-600" />
+              )}
+              <span>
+                {windowStatus?.isTimeLimitEnabled === false
+                  ? '24/7 Open (Testing Mode)'
+                  : 'Window: 9:00 AM – 4:00 PM IST'}
+              </span>
             </span>
             <Button
               size="sm"

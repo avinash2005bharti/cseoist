@@ -128,24 +128,27 @@ export default function Sidebar({ isOpen, onClose }) {
                 if (window.innerWidth < 1024) onClose();
               }}
               className={({ isActive }) =>
-                `nav-link flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                `nav-link flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all ${
                   isActive
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                 }`
               }
             >
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <span className="shrink-0">{link.icon}</span>
-                <span className="truncate">{link.label}</span>
+                <span className="whitespace-nowrap overflow-hidden text-ellipsis flex-1">{link.label}</span>
               </div>
               {link.badge && (
                 <span
-                  className={`text-xs font-black uppercase px-2 py-0.5 rounded-full ${
+                  className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 border ${
                     link.badge === 'Action'
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-blue-100 text-blue-800'
+                      ? 'bg-[#FEF3C7] text-black border-[#FDE68A] shadow-2xs'
+                      : 'bg-blue-100 text-blue-900 border-blue-200'
                   }`}
+                  style={{
+                    color: link.badge === 'Action' ? '#000000' : undefined,
+                  }}
                 >
                   {link.badge}
                 </span>

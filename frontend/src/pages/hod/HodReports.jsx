@@ -109,7 +109,7 @@ export default function HodReports() {
           }`}
         >
           <FileText size={15} />
-          Attendance Considerations (OD)
+          Attendance Considerations
         </button>
 
         <button

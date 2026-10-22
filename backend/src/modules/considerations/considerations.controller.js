@@ -42,6 +42,16 @@ export const hodReview = asyncHandler(async (req, res) => {
   return sendSuccess(res, request);
 });
 
+export const auditGroupStudent = asyncHandler(async (req, res) => {
+  const request = await considerationsService.auditGroupStudent(req.params.id, req.user, req.body);
+  return sendSuccess(res, request);
+});
+
+export const auditAllGroupStudents = asyncHandler(async (req, res) => {
+  const request = await considerationsService.auditAllGroupStudents(req.params.id, req.user, req.body);
+  return sendSuccess(res, request);
+});
+
 export default {
   createConsideration,
   getMine,
@@ -51,4 +61,6 @@ export default {
   cancel,
   tgReview,
   hodReview,
+  auditGroupStudent,
+  auditAllGroupStudents,
 };

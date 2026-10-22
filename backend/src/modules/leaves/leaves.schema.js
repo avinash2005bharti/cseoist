@@ -3,11 +3,12 @@ import { z } from 'zod';
 const attachmentSchema = z.object({
   fileId: z.string().min(1),
   filePath: z.string().min(1),
+  url: z.string().optional().default(''),
   name: z.string().min(1),
   mimeType: z.string().min(1),
   size: z.number().positive(),
   uploadedAt: z.coerce.date().optional(),
-});
+}).passthrough();
 
 export const createLeaveSchema = z.object({
   leaveType: z.enum(['CASUAL', 'MEDICAL', 'EMERGENCY', 'DUTY', 'OTHER']),

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useERP } from '../../context/ERPContext.jsx';
 import { considerationApi, leaveApi } from '../../api';
-import { X, CheckCircle2, AlertTriangle, AlertCircle, ShieldCheck, FileText, Eye, Users } from 'lucide-react';
+import { X, CheckCircle2, AlertTriangle, AlertCircle, ShieldCheck, FileText, Eye, Users, UserCheck } from 'lucide-react';
 import { Button, FormField, Input, Textarea } from '../common';
 
 export default function ReviewModal({
@@ -11,7 +11,7 @@ export default function ReviewModal({
   onClose,
   onSuccess,
 }) {
-  const { addToast, viewAttachment } = useERP();
+  const { addToast, viewAttachment, openModal } = useERP();
 
   const [decision, setDecision] = useState(role === 'TG' ? 'RECOMMEND' : 'APPROVE');
   const [remarks, setRemarks] = useState('');
@@ -137,30 +137,49 @@ export default function ReviewModal({
               ? item.sectionStudents
               : (item.groupMembers?.length > 0 ? item.groupMembers : [item.student]);
 
+            const activeRoster = roster.filter((m) => {
+              const mId = (m?._id || m)?.toString();
+              return !(item.studentAudits || []).some(
+                (a) => (a.student?._id || a.student)?.toString() === mId && a.status === 'EXCLUDED'
+              );
+            });
+
             return (
               <div className="p-3 rounded-xl bg-indigo-50/80 border border-indigo-200 flex flex-col gap-1.5 text-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 font-bold text-indigo-900">
                     <Users size={14} className="text-indigo-600 shrink-0" />
                     <span>
-                      {role === 'TG' ? `Section Group Members (${roster.length})` : `All Group Members (${roster.length})`}
+                      {role === 'TG' ? `Section Group Members (${activeRoster.length})` : `All Group Members (${activeRoster.length})`}
                     </span>
                   </div>
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                    Group Application
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => openModal('AUDIT_GROUP_STUDENTS', { request: item, userRole: role })}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[10px] shadow-2xs transition-colors cursor-pointer"
+                      title="Audit and exclude/verify group members"
+                    >
+                      <UserCheck size={11} />
+                      <span>Audit Students</span>
+                    </button>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+                      Group
+                    </span>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-0.5 max-h-32 overflow-y-auto">
-                  {roster.map((m, i) => {
+                  {activeRoster.map((m, i) => {
                     const name = m?.user?.name || m?.name || 'Student';
                     const roll = m?.enrollmentNumber || m?.rollNumber || '';
                     const sec = m?.section?.name || m?.section?.code || '';
+                    const mId = (m?._id || m)?.toString();
                     return (
                       <span
-                        key={m?._id || i}
-                        className="px-2 py-1 rounded-lg bg-white border border-indigo-100 text-[11px] font-semibold text-slate-700 shadow-2xs"
+                        key={mId || i}
+                        className="px-2 py-1 rounded-lg border text-[11px] font-semibold shadow-2xs flex items-center gap-1 bg-white border-indigo-100 text-slate-700"
                       >
-                        {name} {roll ? `(${roll})` : ''} {sec ? `• ${sec}` : ''}
+                        <span>{name} {roll ? `(${roll})` : ''} {sec ? `• ${sec}` : ''}</span>
                       </span>
                     );
                   })}

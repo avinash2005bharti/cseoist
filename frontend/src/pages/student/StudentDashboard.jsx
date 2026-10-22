@@ -1,7 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext.jsx';
-import { dashboardApi, considerationApi, leaveApi } from '../../api';
+import { dashboardApi, considerationApi, leaveApi, notificationApi } from '../../api';
 import {
   Sparkles,
   PlusCircle,
@@ -27,21 +27,24 @@ export default function StudentDashboard() {
   const [recentConsiderations, setRecentConsiderations] = useState([]);
   const [recentLeaves, setRecentLeaves] = useState([]);
   const [showAccountSettingsModal, setShowAccountSettingsModal] = useState(false);
+  const [windowStatus, setWindowStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
     try {
       setRefreshing(true);
-      const [sumRes, conRes, leaveRes] = await Promise.allSettled([
+      const [sumRes, conRes, leaveRes, winRes] = await Promise.allSettled([
         dashboardApi.getSummary(),
         considerationApi.getMine({ limit: 5 }),
         leaveApi.getMine({ limit: 5 }),
+        notificationApi.getConsiderationWindow(),
       ]);
 
       if (sumRes.status === 'fulfilled') setSummary(sumRes.value?.data || sumRes.value);
       if (conRes.status === 'fulfilled') setRecentConsiderations(conRes.value?.data || []);
       if (leaveRes.status === 'fulfilled') setRecentLeaves(leaveRes.value?.data || []);
+      if (winRes.status === 'fulfilled') setWindowStatus(winRes.value?.data || winRes.value);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -66,14 +69,29 @@ export default function StudentDashboard() {
   const tgMentor = studentProfile.mentorGroup?.tg?.user;
   const tgTeacher = studentProfile.mentorGroup?.tg;
 
-  const approvedLeavesCount = summary?.leaves?.approved ?? 0;
-  const pendingLeavesCount = summary?.leaves?.pending ?? 0;
-  const approvedConsiderationsCount = summary?.considerations?.approved ?? 0;
-  const pendingConsiderationsCount = summary?.considerations?.pending ?? 0;
+  const approvedLeavesCount = summary?.leaves?.approved ?? recentLeaves
+    .filter((l) => l.status === 'APPROVED_BY_HOD' || l.status === 'APPROVED')
+    .length;
+
+  const pendingLeavesCount = summary?.leaves?.pending ?? recentLeaves
+    .filter((l) => l.status === 'PENDING' || l.status === 'RECOMMENDED_BY_TG')
+    .length;
+
+  const approvedConsiderationsCount = summary?.considerations?.approved ?? recentConsiderations
+    .filter((c) => c.status === 'APPROVED_BY_HOD' || c.status === 'APPROVED')
+    .length;
+
+  const pendingConsiderationsCount = summary?.considerations?.pending ?? recentConsiderations
+    .filter((c) => c.status === 'PENDING' || c.status === 'RECOMMENDED_BY_TG')
+    .length;
 
   // Real data calculations from backend summary or fallback to records
   const approvedLeaveDays = summary?.leaves?.approvedDays ?? recentLeaves
     .filter((l) => l.status === 'APPROVED_BY_HOD' || l.status === 'APPROVED')
+    .reduce((sum, l) => sum + (l.totalDays || 1), 0);
+
+  const pendingLeaveDays = summary?.leaves?.pendingDays ?? recentLeaves
+    .filter((l) => l.status === 'PENDING' || l.status === 'RECOMMENDED_BY_TG')
     .reduce((sum, l) => sum + (l.totalDays || 1), 0);
 
   const approvedLecturesCount = summary?.considerations?.approvedLectures ?? recentConsiderations
@@ -198,8 +216,16 @@ export default function StudentDashboard() {
             <span className="text-sm sm:text-base font-extrabold text-[#1E40AF] group-hover:text-blue-900 transition-colors block leading-tight">
               Apply for Consideration
             </span>
-            <span className="text-[10px] text-blue-600 font-bold block mt-0.5">
-              9:00 AM – 4:00 PM IST
+            <span
+              className={`text-[10px] font-bold block mt-0.5 ${
+                windowStatus?.isTimeLimitEnabled === false
+                  ? 'text-purple-600 font-extrabold'
+                  : 'text-blue-600'
+              }`}
+            >
+              {windowStatus?.isTimeLimitEnabled === false
+                ? '24/7 Open (Testing Mode)'
+                : '9:00 AM – 4:00 PM IST'}
             </span>
           </div>
         </button>
@@ -236,7 +262,7 @@ export default function StudentDashboard() {
       {/* =======================================================================
           METRICS: DISPLAY ONLY LECTURES AND LEAVES (NO ON-DUTY CREDITS)
           ======================================================================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
         {/* Metric 1: APPROVED LEAVES -> opens approved leave history */}
         <div
           role="button"
@@ -269,7 +295,39 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Metric 2: APPROVED LECTURES -> opens approved consideration history */}
+        {/* Metric 2: PENDING LEAVES -> opens active/pending leave requests */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/student/requests?tab=active')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate('/student/requests?tab=active');
+            }
+          }}
+          className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between cursor-pointer hover:border-amber-300 hover:shadow-md transition-all group active:scale-[0.99]"
+          title="Click to view pending leave applications"
+        >
+          <div>
+            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-amber-700 transition-colors">
+              PENDING LEAVES
+            </span>
+            <span className="block text-2xl font-black text-amber-700 mt-0.5">
+              {pendingLeavesCount}
+            </span>
+            <span className="block text-xs text-amber-600 font-medium mt-0.5">
+              {pendingLeavesCount > 0
+                ? `${pendingLeaveDays} Day${pendingLeaveDays !== 1 ? 's' : ''} Under Review`
+                : 'No Pending Leaves'}
+            </span>
+          </div>
+          <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0 group-hover:bg-amber-100 group-hover:border-amber-300 transition-colors">
+            <Calendar size={18} />
+          </div>
+        </div>
+
+        {/* Metric 3: APPROVED LECTURES -> opens approved consideration history */}
         <div
           role="button"
           tabIndex={0}
@@ -301,7 +359,7 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Metric 3: PENDING LECTURES -> shows the pending request list */}
+        {/* Metric 4: PENDING LECTURES -> shows the pending request list */}
         <div
           role="button"
           tabIndex={0}

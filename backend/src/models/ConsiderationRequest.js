@@ -25,6 +25,38 @@ export const historyEntrySchema = new mongoose.Schema(
   { _id: false }
 );
 
+export const studentAuditSchema = new mongoose.Schema(
+  {
+    student: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Student',
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ['VERIFIED', 'EXCLUDED'],
+      default: 'VERIFIED',
+    },
+    auditedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    auditedByRole: {
+      type: String,
+      enum: ['TG', 'TEACHER', 'HOD', 'ADMIN'],
+    },
+    auditedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    remarks: {
+      type: String,
+      default: '',
+    },
+  },
+  { _id: true }
+);
+
 const considerationRequestSchema = new mongoose.Schema(
   {
     student: {
@@ -119,6 +151,10 @@ const considerationRequestSchema = new mongoose.Schema(
         ref: 'Student',
       },
     ],
+    studentAudits: {
+      type: [studentAuditSchema],
+      default: [],
+    },
     description: {
       type: String,
       trim: true,

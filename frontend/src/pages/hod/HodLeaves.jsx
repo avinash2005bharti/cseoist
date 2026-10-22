@@ -122,14 +122,13 @@ export default function HodLeaves() {
 
   const isActionNeeded = (item) => {
     if (isApproved(item) || isRejected(item)) return false;
-    if (item.applicantRole === 'STUDENT') {
-      return (
-        item.status === 'RECOMMENDED_BY_TG' ||
-        (item.status === 'PENDING' && (item.escalated || !item.tg)) ||
-        item.tier2Reviewer?.status === 'PENDING'
-      );
-    }
-    return item.status === 'PENDING' || item.tier2Reviewer?.status === 'PENDING';
+    return (
+      item.status === 'PENDING' ||
+      item.status === 'RECOMMENDED_BY_TG' ||
+      item.status === 'APPLIED' ||
+      item.escalated === true ||
+      item.tier2Reviewer?.status === 'PENDING'
+    );
   };
 
   const filteredItems = items.filter((item) => {
@@ -168,6 +167,16 @@ export default function HodLeaves() {
     }
 
     return matchesSearch && matchesRole && matchesStatus && matchesSemester && matchesSection;
+  });
+
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    const aPending = isActionNeeded(a);
+    const bPending = isActionNeeded(b);
+    if (aPending && !bPending) return -1;
+    if (!aPending && bPending) return 1;
+    const timeA = new Date(a.createdAt || a.appliedAt || a.startDate || 0).getTime();
+    const timeB = new Date(b.createdAt || b.appliedAt || b.startDate || 0).getTime();
+    return timeB - timeA;
   });
 
   const uniqueSections = [
@@ -344,7 +353,7 @@ export default function HodLeaves() {
               <>
                 {/* Mobile Card View (< 768px) */}
                 <div className="block md:hidden divide-y divide-slate-100">
-                  {filteredItems.map((item) => {
+                  {sortedItems.map((item) => {
                     const actionNeeded = isActionNeeded(item);
                     const applicantDisplayName =
                       item.applicant?.name ||
@@ -468,7 +477,7 @@ export default function HodLeaves() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredItems.map((item) => {
+                      {sortedItems.map((item) => {
                         const actionNeeded = isActionNeeded(item);
                         const applicantDisplayName =
                           item.applicant?.name ||
