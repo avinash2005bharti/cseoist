@@ -229,6 +229,9 @@ const applyDateFilter = (filter, query) => {
     if (query.range === 'today') {
       query.from = todayStr;
       query.to = todayStr;
+    } else if (query.range === 'future') {
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      query.from = formatYMD(tomorrow);
     } else if (query.range === 'last7days') {
       const d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       query.from = formatYMD(d);

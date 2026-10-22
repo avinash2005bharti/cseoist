@@ -54,15 +54,6 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
     .replace(/^CSE-/i, '')
     .trim() || 'B';
 
-  const [reportType, setReportType] = useState(() => modalData?.initialType || 'considerations');
-  const [semester, setSemester] = useState(() => (modalData?.initialSemester !== undefined ? modalData.initialSemester : 5));
-  const [datePreset, setDatePreset] = useState('all'); // 'today' | 'last7days' | 'lastmonth' | 'all' | 'custom'
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  const [status, setStatus] = useState('');
-  const [downloading, setDownloading] = useState(false);
-  const [error, setError] = useState(null);
-
   // Helper to get formatted YYYY-MM-DD
   const formatYMD = (d) => {
     const year = d.getFullYear();
@@ -70,6 +61,31 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  const initialPreset = modalData?.initialDatePreset || 'today';
+  const todayYMD = formatYMD(new Date());
+
+  const [reportType, setReportType] = useState(() => modalData?.initialType || 'considerations');
+  const [semester, setSemester] = useState(() => (modalData?.initialSemester !== undefined ? modalData.initialSemester : 5));
+  const [datePreset, setDatePreset] = useState(initialPreset); // 'today' | 'future' | 'last7days' | 'lastmonth' | 'all' | 'custom'
+  const [from, setFrom] = useState(() => {
+    if (modalData?.initialFrom) return modalData.initialFrom;
+    if (initialPreset === 'today') return todayYMD;
+    if (initialPreset === 'future') {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      return formatYMD(d);
+    }
+    return '';
+  });
+  const [to, setTo] = useState(() => {
+    if (modalData?.initialTo) return modalData.initialTo;
+    if (initialPreset === 'today') return todayYMD;
+    return '';
+  });
+  const [status, setStatus] = useState('');
+  const [downloading, setDownloading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Handle Preset Clicks (as requested in the excalidraw diagram)
   const handlePresetChange = (preset) => {
@@ -80,6 +96,10 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
     if (preset === 'today') {
       setFrom(todayStr);
       setTo(todayStr);
+    } else if (preset === 'future') {
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      setFrom(formatYMD(tomorrow));
+      setTo('');
     } else if (preset === 'last7days') {
       const past7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       setFrom(formatYMD(past7));
@@ -296,6 +316,8 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
                   ? 'All Dates'
                   : datePreset === 'today'
                   ? 'Today Only'
+                  : datePreset === 'future'
+                  ? 'Future / Upcoming'
                   : datePreset === 'last7days'
                   ? 'Past 7 Days'
                   : datePreset === 'lastmonth'
@@ -305,11 +327,11 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
             </div>
 
             {/* Quick Preset Buttons (exact as in user drawing) */}
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-5 gap-1.5">
               <button
                 type="button"
                 onClick={() => handlePresetChange('today')}
-                className={`py-1.5 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border text-center ${
+                className={`py-1.5 px-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border text-center ${
                   datePreset === 'today'
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -320,32 +342,44 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
 
               <button
                 type="button"
+                onClick={() => handlePresetChange('future')}
+                className={`py-1.5 px-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border text-center ${
+                  datePreset === 'future'
+                    ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
+                    : 'bg-white text-amber-800 border-amber-200 hover:bg-amber-50'
+                }`}
+              >
+                future
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handlePresetChange('last7days')}
-                className={`py-1.5 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border text-center ${
+                className={`py-1.5 px-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border text-center ${
                   datePreset === 'last7days'
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                last 7 days
+                last 7d
               </button>
 
               <button
                 type="button"
                 onClick={() => handlePresetChange('lastmonth')}
-                className={`py-1.5 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border text-center ${
+                className={`py-1.5 px-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border text-center ${
                   datePreset === 'lastmonth'
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                last month
+                last 30d
               </button>
 
               <button
                 type="button"
                 onClick={() => handlePresetChange('all')}
-                className={`py-1.5 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border text-center ${
+                className={`py-1.5 px-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border text-center ${
                   datePreset === 'all'
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'

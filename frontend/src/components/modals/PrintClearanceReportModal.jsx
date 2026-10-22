@@ -11,7 +11,9 @@ export default function PrintClearanceReportModal({
   const [selectedSemester, setSelectedSemester] = useState(defaultSemester);
   const [selectedSection, setSelectedSection] = useState('ALL');
   const [reportType, setReportType] = useState('ALL'); // 'ALL' | 'CONSIDERATION' | 'LEAVE' | 'APPROVED_ONLY'
-  const [dateScope, setDateScope] = useState('TODAY'); // 'TODAY' | 'FUTURE' | 'ALL' | 'PREVIOUS'
+  const [dateScope, setDateScope] = useState('TODAY'); // 'TODAY' | 'FUTURE' | 'PREVIOUS' | 'ALL'
+  const [printFrom, setPrintFrom] = useState('');
+  const [printTo, setPrintTo] = useState('');
   const [sections, setSections] = useState(initialSections);
 
   const todayStr = (() => {
@@ -173,7 +175,15 @@ export default function PrintClearanceReportModal({
       } else if (dateScope === 'FUTURE') {
         matchesDate = itemStart > todayStr;
       } else if (dateScope === 'PREVIOUS') {
-        matchesDate = itemEnd < todayStr;
+        if (printFrom && printTo) {
+          matchesDate = itemStart <= printTo && itemEnd >= printFrom;
+        } else if (printFrom) {
+          matchesDate = itemEnd >= printFrom;
+        } else if (printTo) {
+          matchesDate = itemStart <= printTo;
+        } else {
+          matchesDate = itemEnd < todayStr;
+        }
       }
 
       return matchesSem && matchesSec && matchesType && matchesDate;
@@ -578,10 +588,11 @@ export default function PrintClearanceReportModal({
               <Calendar size={13} className="text-blue-600" />
               <span>4. Report Date Scope:</span>
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {[
                 { id: 'TODAY', label: `Today` },
-                { id: 'FUTURE', label: 'Future / Upcoming' },
+                { id: 'FUTURE', label: 'Future' },
+                { id: 'PREVIOUS', label: 'Previous' },
                 { id: 'ALL', label: 'All Dates' },
               ].map((tab) => (
                 <button
@@ -593,7 +604,7 @@ export default function PrintClearanceReportModal({
                       ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8' }
                       : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
                   }
-                  className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
+                  className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
                     dateScope === tab.id ? 'shadow-2xs' : 'hover:bg-slate-100'
                   }`}
                 >
@@ -601,6 +612,33 @@ export default function PrintClearanceReportModal({
                 </button>
               ))}
             </div>
+
+            {dateScope === 'PREVIOUS' && (
+              <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100 animate-in fade-in duration-100">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    From Date:
+                  </label>
+                  <input
+                    type="date"
+                    value={printFrom}
+                    onChange={(e) => setPrintFrom(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    To Date:
+                  </label>
+                  <input
+                    type="date"
+                    value={printTo}
+                    onChange={(e) => setPrintTo(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Preview Note */}

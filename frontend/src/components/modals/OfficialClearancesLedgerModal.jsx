@@ -484,6 +484,18 @@ export default function OfficialClearancesLedgerModal({
       reportList = reportList.filter((row) => Number(row.semester) === Number(targetSemNum));
     }
 
+    // Filter by Section
+    if (isTgView && assignedSection) {
+      const tgSec = String(assignedSection).replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim().toUpperCase();
+      reportList = reportList.filter((row) => (row.sectionName || '').toUpperCase() === tgSec);
+    } else if (sectionFilter && sectionFilter !== 'All') {
+      const targetSec = sectionFilter.toString().toUpperCase().replace(/^SECTION\s*/i, '').replace(/^CSE-/i, '').trim();
+      reportList = reportList.filter((row) => {
+        const rowSec = (row.sectionName || '').toUpperCase();
+        return rowSec === targetSec || rowSec.includes(targetSec);
+      });
+    }
+
     // Filter by Print Date Scope
     if (printDateScope === 'today') {
       reportList = reportList.filter((row) => {
@@ -1137,26 +1149,55 @@ export default function OfficialClearancesLedgerModal({
                       <p className="text-sm font-bold text-slate-700 m-0">
                         {dateMode === 'today'
                           ? `No approved ${activeTab === 'considerations' ? 'attendance considerations' : 'leave applications'} sanctioned for today (${formatDateSlash(todayStr)}).`
+                          : dateMode === 'future'
+                          ? `No approved upcoming ${activeTab === 'considerations' ? 'attendance considerations' : 'leave applications'} found for future dates.`
                           : `No approved ${activeTab === 'considerations' ? 'attendance considerations' : 'leave applications'} found between ${formatDateSlash(dateFrom)} and ${formatDateSlash(dateTo)}.`}
                       </p>
                       <p className="text-xs text-slate-400 m-0 text-center">
                         {dateMode === 'today'
-                          ? 'You can view historical records by clicking below to specify a previous date range.'
-                          : 'Try adjusting the date range or semester/section filters above.'}
+                          ? 'You can view upcoming future clearances or historical records from previous dates below.'
+                          : dateMode === 'future'
+                          ? 'You can switch back to today’s view or inspect previous historical records.'
+                          : 'Try switching to today, upcoming future dates, or adjusting the date range.'}
                       </p>
-                      {dateMode === 'today' && (
-                        <button
-                          type="button"
-                          onClick={handleOpenPreviousModal}
-                          className="mt-2 px-4 py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
-                        >
-                          <History size={14} />
-                          <span>
-                            Show Previous{' '}
-                            {activeTab === 'considerations' ? 'Considerations' : 'Leaves'}
-                          </span>
-                        </button>
-                      )}
+                      <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+                        {dateMode !== 'today' && (
+                          <button
+                            type="button"
+                            onClick={handleSwitchToToday}
+                            className="px-3.5 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                          >
+                            <Calendar size={14} />
+                            <span>View Today ({formatDateSlash(todayStr)})</span>
+                          </button>
+                        )}
+                        {dateMode !== 'future' && (
+                          <button
+                            type="button"
+                            onClick={handleSwitchToFuture}
+                            className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                          >
+                            <Sparkles size={14} className="text-amber-600" />
+                            <span>
+                              Show Future{' '}
+                              {activeTab === 'considerations' ? 'Considerations' : 'Leaves'}
+                            </span>
+                          </button>
+                        )}
+                        {dateMode !== 'previous' && (
+                          <button
+                            type="button"
+                            onClick={handleOpenPreviousModal}
+                            className="px-3.5 py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                          >
+                            <History size={14} />
+                            <span>
+                              Show Previous{' '}
+                              {activeTab === 'considerations' ? 'Considerations' : 'Leaves'}
+                            </span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>
