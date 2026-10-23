@@ -105,6 +105,7 @@ export const createConsideration = async (user, data, options = {}) => {
   if (!isGroup) {
     // Derive TG from student's active MentorGroup or auto-resolve
     const tgTeacherId = await resolveStudentTG(student);
+    const initialStatus = tgTeacherId ? 'PENDING' : 'RECOMMENDED_BY_TG';
 
     const now = new Date();
     const request = await ConsiderationRequest.create({
@@ -124,13 +125,15 @@ export const createConsideration = async (user, data, options = {}) => {
       periodTiming,
       description: data.description,
       attachments: data.attachments || [],
-      status: 'PENDING',
+      status: initialStatus,
       history: [
         {
-          status: 'PENDING',
+          status: initialStatus,
           actor: user._id,
           actorRole: 'STUDENT',
-          remarks: 'Application submitted',
+          remarks: tgTeacherId
+            ? 'Application submitted'
+            : 'Application submitted (No TG assigned to section; auto-routed to HOD review)',
           at: now,
           via: 'MANUAL',
         },
@@ -167,12 +170,13 @@ export const createConsideration = async (user, data, options = {}) => {
         const notif = await Notification.create({
           user: hod._id,
           title: 'New Attendance Consideration Application (Direct Review)',
-          message: `${user.name} submitted an attendance consideration application requiring direct HOD review.`,
+          message: `${user.name} submitted an attendance consideration application (No TG assigned; routed directly for HOD review).`,
           type: 'CONSIDERATION',
           link: `/hod/considerations/${request._id}`,
         });
         emitNotification(hod._id.toString(), notif);
       }
+      emitQueueChanged('HOD', 'CONSIDERATION');
     }
 
     // Always notify HOD queue so HOD Dashboard counter updates in real time
@@ -254,6 +258,11 @@ export const createConsideration = async (user, data, options = {}) => {
     const sectionMemberIds = bucket.students.map((s) => s._id);
     const sectionStudentNames = bucket.students.map((s) => s.user?.name || s.rollNumber).join(', ');
 
+    const secStatus = bucket.tgTeacherId ? 'PENDING' : 'RECOMMENDED_BY_TG';
+    const secRemarks = bucket.tgTeacherId
+      ? `Group consideration (${bucket.students.length} student(s) from ${bucket.sectionName}) submitted by team lead ${user.name}`
+      : `Group consideration (${bucket.students.length} student(s) from ${bucket.sectionName}) submitted by team lead ${user.name} (No TG assigned to section; auto-routed to HOD review)`;
+
     const secRequest = await ConsiderationRequest.create({
       student: sectionRepresentative._id,
       tg: bucket.tgTeacherId,
@@ -276,13 +285,13 @@ export const createConsideration = async (user, data, options = {}) => {
       periodTiming,
       description: data.description,
       attachments: data.attachments || [],
-      status: 'PENDING',
+      status: secStatus,
       history: [
         {
-          status: 'PENDING',
+          status: secStatus,
           actor: user._id,
           actorRole: 'STUDENT',
-          remarks: `Group consideration (${bucket.students.length} student(s) from ${bucket.sectionName}) submitted by team lead ${user.name}`,
+          remarks: secRemarks,
           at: now,
           via: 'MANUAL',
         },

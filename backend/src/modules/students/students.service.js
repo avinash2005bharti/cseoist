@@ -60,7 +60,7 @@ export const listStudents = async (query) => {
 
   const filter = andConditions.length > 0 ? { $and: andConditions } : {};
   const fetchAll = query.all === 'true' || query.limit === 'all';
-  const queryLimit = fetchAll ? 0 : limit;
+  const queryLimit = fetchAll ? Math.min(limit || 1000, 1000) : limit;
   const querySkip = fetchAll ? 0 : skip;
 
   const [students, total] = await Promise.all([

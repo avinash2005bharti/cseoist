@@ -92,6 +92,11 @@ export const createLeave = async (user, data) => {
     teacherId = teacher._id;
   }
 
+  const initialStatus = (applicantRole === 'STUDENT' && !tgTeacherId) ? 'RECOMMENDED_BY_TG' : 'PENDING';
+  const initialRemarks = (applicantRole === 'STUDENT' && !tgTeacherId)
+    ? 'Leave application submitted (No TG assigned to section; auto-routed to HOD review)'
+    : 'Leave application submitted';
+
   const now = new Date();
   const leave = await LeaveApplication.create({
     applicant: user._id,
@@ -105,13 +110,13 @@ export const createLeave = async (user, data) => {
     totalDays,
     reason: data.reason,
     attachments,
-    status: 'PENDING',
+    status: initialStatus,
     history: [
       {
-        status: 'PENDING',
+        status: initialStatus,
         actor: user._id,
         actorRole: applicantRole,
-        remarks: 'Leave application submitted',
+        remarks: initialRemarks,
         at: now,
         via: 'MANUAL',
       },

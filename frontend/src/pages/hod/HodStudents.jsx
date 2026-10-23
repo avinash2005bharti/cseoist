@@ -294,6 +294,19 @@ export default function HodStudents() {
             <p className="text-xs text-slate-400 mt-1">
               No enrolled student records match your active search filters.
             </p>
+            {(semesterFilter !== 'ALL' || sectionFilter !== 'ALL' || search) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSemesterFilter('ALL');
+                  setSectionFilter('ALL');
+                  setSearch('');
+                }}
+                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
+              >
+                Clear All Filters
+              </button>
+            )}
           </div>
         ) : (
           filteredStudents.map((st) => {

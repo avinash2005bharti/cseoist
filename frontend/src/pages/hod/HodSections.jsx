@@ -347,9 +347,12 @@ export default function HodSections() {
           section={moveModalData.section}
           direction={moveModalData.direction}
           onClose={() => setMoveModalData(null)}
-          onSuccess={() => {
+          onSuccess={(result) => {
             setMoveModalData(null);
             fetchSections();
+            if (result?.newSemester && semesterFilter !== 'ALL') {
+              setSemesterFilter(String(result.newSemester));
+            }
           }}
         />
       )}

@@ -54,9 +54,10 @@ export const sendPushToUser = async (userId, payload) => {
         );
         delivered += 1;
       } catch (err) {
-        // If subscription is expired or unsubscribed, remove it
+        // If subscription is expired or unsubscribed (404/410), prune it
         if (err.statusCode === 404 || err.statusCode === 410) {
-          await PushSubscription.deleteOne({ _id: sub._id });
+          console.log(`[WebPush] Pruning expired subscription (HTTP ${err.statusCode}) for user ${userId}: ${sub.endpoint}`);
+          await PushSubscription.deleteMany({ endpoint: sub.endpoint });
         } else {
           console.warn(`[WebPush] Push error for user ${userId}:`, err.message);
         }

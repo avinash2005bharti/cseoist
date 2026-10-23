@@ -136,6 +136,50 @@ export const getDashboardSummary = async (user) => {
   }
 
   if (role === 'HOD' || role === 'ADMIN') {
+    const isHod = role === 'HOD';
+    const deptId = isHod ? user.departmentId : null;
+
+    let studentIds = null;
+    let teacherIds = null;
+    if (deptId) {
+      const [deptStudents, deptTeachers] = await Promise.all([
+        Student.find({ department: deptId }).select('_id'),
+        Teacher.find({ department: deptId }).select('_id'),
+      ]);
+      studentIds = deptStudents.map((s) => s._id);
+      teacherIds = deptTeachers.map((t) => t._id);
+    }
+
+    const consFilter = (base) => {
+      if (studentIds) {
+        return { ...base, student: { $in: studentIds } };
+      }
+      return base;
+    };
+
+    const studentLeaveFilter = (base) => {
+      if (studentIds) {
+        return { ...base, applicantRole: 'STUDENT', student: { $in: studentIds } };
+      }
+      return { ...base, applicantRole: 'STUDENT' };
+    };
+
+    const teacherLeaveFilter = (base) => {
+      if (teacherIds) {
+        return { ...base, applicantRole: 'TEACHER', teacher: { $in: teacherIds } };
+      }
+      return { ...base, applicantRole: 'TEACHER' };
+    };
+
+    const studentAggPipeline = [];
+    if (deptId) {
+      studentAggPipeline.push({ $match: { department: deptId } });
+    }
+    studentAggPipeline.push(
+      { $group: { _id: '$semester', count: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
+    );
+
     const [
       pendingConsiderations,
       escalatedConsiderations,
@@ -149,25 +193,21 @@ export const getDashboardSummary = async (user) => {
       totalTeachersCount,
       totalUsersCount,
     ] = await Promise.all([
-      ConsiderationRequest.countDocuments({ status: { $in: ['RECOMMENDED_BY_TG', 'PENDING'] } }),
-      ConsiderationRequest.countDocuments({ status: 'PENDING', escalated: true }),
-      LeaveApplication.countDocuments({ applicantRole: 'STUDENT', status: 'RECOMMENDED_BY_TG' }),
-      LeaveApplication.countDocuments({ applicantRole: 'STUDENT', status: 'PENDING', escalated: true }),
-      LeaveApplication.countDocuments({ applicantRole: 'TEACHER', status: 'PENDING' }),
-      LeaveApplication.countDocuments({ applicantRole: 'HOD', status: 'PENDING' }),
-      LeaveApplication.countDocuments({
-        applicantRole: 'TEACHER',
+      ConsiderationRequest.countDocuments(consFilter({ status: { $in: ['RECOMMENDED_BY_TG', 'PENDING'] } })),
+      ConsiderationRequest.countDocuments(consFilter({ status: 'PENDING', escalated: true })),
+      LeaveApplication.countDocuments(studentLeaveFilter({ status: 'RECOMMENDED_BY_TG' })),
+      LeaveApplication.countDocuments(studentLeaveFilter({ status: 'PENDING', escalated: true })),
+      LeaveApplication.countDocuments(teacherLeaveFilter({ status: 'PENDING' })),
+      LeaveApplication.countDocuments(deptId ? { applicantRole: 'HOD', status: 'PENDING', department: deptId } : { applicantRole: 'HOD', status: 'PENDING' }),
+      LeaveApplication.countDocuments(teacherLeaveFilter({
         status: 'APPROVED',
         startDate: { $lte: todayIST },
         endDate: { $gte: todayIST },
-      }),
-      Student.aggregate([
-        { $group: { _id: '$semester', count: { $sum: 1 } } },
-        { $sort: { _id: 1 } },
-      ]),
-      Student.countDocuments({}),
-      Teacher.countDocuments({}),
-      User.countDocuments({}),
+      })),
+      Student.aggregate(studentAggPipeline),
+      Student.countDocuments(deptId ? { department: deptId } : {}),
+      Teacher.countDocuments(deptId ? { department: deptId } : {}),
+      User.countDocuments(deptId ? { departmentId: deptId } : {}),
     ]);
 
     return {
@@ -595,6 +635,8 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
     const secIds = matchingSections.map((s) => s._id);
     if (secIds.length > 0) {
       studentScope.section = { $in: secIds };
+    } else {
+      studentScope.section = { $in: [] };
     }
   }
 
@@ -912,20 +954,16 @@ export const exportLeavesToExcel = async (query, res, user) => {
     const secIds = matchingSections.map((s) => s._id);
     if (secIds.length > 0) {
       studentScope.section = { $in: secIds };
+    } else {
+      studentScope.section = { $in: [] };
     }
   }
 
   if (Object.keys(studentScope).length > 0) {
     const matchingStudents = await Student.find(studentScope).select('_id');
     const studentIds = matchingStudents.map((s) => s._id);
-    if (user?.isTG) {
-      filter.student = { $in: studentIds };
-    } else {
-      filter.$or = [
-        { student: { $in: studentIds } },
-        { applicantRole: 'TEACHER' },
-      ];
-    }
+    filter.student = { $in: studentIds };
+    filter.applicantRole = 'STUDENT';
   }
 
   const leaves = await LeaveApplication.find(filter)

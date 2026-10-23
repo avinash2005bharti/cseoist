@@ -36,3 +36,10 @@ Thumbs.db
 .vscode/
 .idea/
 Avinash_Bharti_Nodejs_Developer_Resume_Final.docx
+
+# Audit and verification documentation
+flaws.md
+verification.md
+terminology-audit.md
+verification-manual.md
+fixes.md
