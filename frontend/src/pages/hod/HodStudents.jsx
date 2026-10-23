@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useERP } from '../../context/ERPContext.jsx';
 import { masterDataApi } from '../../api/modulesApi.js';
 import {
@@ -23,6 +23,7 @@ export default function HodStudents() {
   const { addToast } = useERP();
 
   const [students, setStudents] = useState([]);
+  const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [semesterFilter, setSemesterFilter] = useState('ALL');
@@ -35,8 +36,14 @@ export default function HodStudents() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await masterDataApi.getStudents();
-      setStudents(Array.isArray(res?.data) ? res.data : []);
+      const [stRes, secRes] = await Promise.all([
+        masterDataApi.getStudents({ all: 'true' }),
+        masterDataApi.getSections().catch(() => ({ data: [] })),
+      ]);
+      setStudents(Array.isArray(stRes?.data) ? stRes.data : []);
+      if (Array.isArray(secRes?.data)) {
+        setSections(secRes.data);
+      }
     } catch (err) {
       setStudents([]);
     } finally {
@@ -72,29 +79,106 @@ export default function HodStudents() {
     return name.slice(0, 2).toUpperCase();
   };
 
-  const filteredStudents = students.filter((st) => {
-    const name = (st.user?.name || '').toLowerCase();
-    const roll = (st.rollNumber || '').toLowerCase();
-    const enrollment = (st.enrollmentNumber || '').toLowerCase();
-    const email = (st.user?.email || '').toLowerCase();
-    const q = search.toLowerCase();
+  // Compute available sections dynamically from the sections database, filtered by active semester
+  const availableSectionsForFilter = useMemo(() => {
+    let list = sections;
+    if (semesterFilter !== 'ALL') {
+      const semNum = Number(semesterFilter);
+      list = sections.filter((s) => Number(s.semester) === semNum);
+    }
 
-    const matchesSearch =
-      !search ||
-      name.includes(q) ||
-      roll.includes(q) ||
-      enrollment.includes(q) ||
-      email.includes(q);
+    const optionsMap = new Map();
 
-    const matchesSection =
-      sectionFilter === 'ALL' || getSectionLetter(st.section) === sectionFilter.toUpperCase();
+    // 1. Always seed standard department sections A, B, C, D so they are always available
+    ['A', 'B', 'C', 'D'].forEach((l) => {
+      optionsMap.set(l, {
+        value: l,
+        label: `Section ${l}`,
+      });
+    });
 
-    const sem = st.semester || st.section?.semester || 5;
-    const matchesSemester =
-      semesterFilter === 'ALL' || Number(sem) === Number(semesterFilter);
+    // 2. Process sections from the database matching the active semester
+    list.forEach((s) => {
+      const letter = getSectionLetter(s);
+      if (letter) {
+        const key = letter.toUpperCase();
+        const cleanName = s.name && s.name.toLowerCase().startsWith('section')
+          ? s.name
+          : `Section ${key}`;
+        optionsMap.set(key, {
+          value: key,
+          label: cleanName,
+          semester: s.semester,
+        });
+      }
+    });
 
-    return matchesSearch && matchesSection && matchesSemester;
-  });
+    // 3. Also check if any loaded students in this semester have a section not registered in master sections
+    students.forEach((st) => {
+      const studentSem = Number(st.section?.semester ?? st.semester ?? 5);
+      const directSem = Number(st.semester ?? 5);
+      if (semesterFilter === 'ALL' || studentSem === Number(semesterFilter) || directSem === Number(semesterFilter)) {
+        const letter = getSectionLetter(st.section);
+        if (letter) {
+          const key = letter.toUpperCase();
+          if (!optionsMap.has(key)) {
+            optionsMap.set(key, {
+              value: key,
+              label: `Section ${key}`,
+            });
+          }
+        }
+      }
+    });
+
+    return Array.from(optionsMap.values()).sort((a, b) => a.value.localeCompare(b.value));
+  }, [sections, semesterFilter, students]);
+
+  // If the active section filter is not present in the current semester's sections, reset to ALL
+  useEffect(() => {
+    if (sectionFilter === 'ALL') return;
+    const exists = availableSectionsForFilter.some((opt) => opt.value === sectionFilter);
+    if (!exists) {
+      setSectionFilter('ALL');
+    }
+  }, [semesterFilter, availableSectionsForFilter]);
+
+  const filteredStudents = useMemo(() => {
+    return students.filter((st) => {
+      const name = (st.user?.name || '').toLowerCase();
+      const roll = (st.rollNumber || '').toLowerCase();
+      const enrollment = (st.enrollmentNumber || '').toLowerCase();
+      const email = (st.user?.email || '').toLowerCase();
+      const q = search.toLowerCase().trim();
+
+      const matchesSearch =
+        !q ||
+        name.includes(q) ||
+        roll.includes(q) ||
+        enrollment.includes(q) ||
+        email.includes(q);
+
+      const stSecLetter = getSectionLetter(st.section)?.toUpperCase();
+      const matchesSection =
+        sectionFilter === 'ALL' ||
+        stSecLetter === sectionFilter.toUpperCase() ||
+        (st.section?._id && String(st.section._id) === String(sectionFilter)) ||
+        (st.section && String(st.section) === String(sectionFilter));
+
+      // Resolve active student semester with precedence:
+      // 1. st.section?.semester (if section was promoted/demoted, section document reflects new semester)
+      // 2. st.semester (direct student semester)
+      const studentSem = Number(st.section?.semester ?? st.semester ?? 5);
+      const directSem = Number(st.semester ?? 5);
+
+      const matchesSemester =
+        semesterFilter === 'ALL' ||
+        studentSem === Number(semesterFilter) ||
+        directSem === Number(semesterFilter);
+
+      return matchesSearch && matchesSection && matchesSemester;
+    });
+  }, [students, search, sectionFilter, semesterFilter]);
 
   return (
     <div className="flex flex-col gap-5 w-full min-w-0 font-sans">
@@ -169,7 +253,7 @@ export default function HodStudents() {
             <option value="8">Semester 8</option>
           </select>
 
-          {/* All Sections Filter matching Image 1 */}
+          {/* All Sections Filter dynamically populated from database according to semester */}
           <select
             value={sectionFilter}
             onChange={(e) => setSectionFilter(e.target.value)}
@@ -177,10 +261,11 @@ export default function HodStudents() {
             aria-label="Filter by Section"
           >
             <option value="ALL">All Sections</option>
-            <option value="A">Section A</option>
-            <option value="B">Section B</option>
-            <option value="C">Section C</option>
-            <option value="D">Section D</option>
+            {availableSectionsForFilter.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
 
           {(semesterFilter !== 'ALL' || sectionFilter !== 'ALL' || search) && (
@@ -212,13 +297,22 @@ export default function HodStudents() {
           </div>
         ) : (
           filteredStudents.map((st) => {
-            const studentName = st.user?.name || st.rollNumber || 'Student';
-            const rollNo = st.rollNumber || st.enrollmentNumber || 'CF05/CS24/105';
-            const email = st.user?.email || 'authenticated@gmail.com';
-            const phone = st.user?.phone || '+918305072434';
-            const sem = st.semester || st.section?.semester || 5;
-            const sec = st.section?.name?.replace(/Section\s*/i, '') || st.section?.code || 'B';
-            const batch = st.batch || 'Batch 2023';
+            const studentName = st.user?.name || st.name || st.rollNumber || 'Student';
+            const rollNo = st.rollNumber || st.enrollmentNumber || 'N/A';
+            const email = st.user?.email || 'N/A';
+            const phone = st.user?.phone || 'N/A';
+            const sem = st.section?.semester ?? st.semester ?? 5;
+            const sec = getSectionLetter(st.section) || 'A';
+            const batch = (() => {
+              if (st.batch && typeof st.batch === 'string' && st.batch.trim()) {
+                const b = st.batch.trim();
+                return b.toLowerCase().startsWith('batch') ? b : `Batch ${b}`;
+              }
+              if (st.enrollmentYear) {
+                return `Batch ${st.enrollmentYear}-${st.enrollmentYear + 4}`;
+              }
+              return 'Batch 2024-2028';
+            })();
             const isActive = st.user?.isActive !== false;
             const initials = getInitials(studentName);
 

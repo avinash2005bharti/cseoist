@@ -37,6 +37,11 @@ const studentSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    batch: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     semester: {
       type: Number,
       min: 1,

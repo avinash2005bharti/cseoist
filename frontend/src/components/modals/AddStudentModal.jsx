@@ -13,7 +13,8 @@ export default function AddStudentModal({ onClose, onSuccess }) {
   const [year, setYear] = useState('3rd Year');
   const [semester, setSemester] = useState(5);
   const [section, setSection] = useState('Section B');
-  const [batch, setBatch] = useState('2022-2026');
+  const [batchFrom, setBatchFrom] = useState('2022');
+  const [batchTo, setBatchTo] = useState('2026');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('Password@123');
 
@@ -37,6 +38,11 @@ export default function AddStudentModal({ onClose, onSuccess }) {
       return;
     }
 
+    if (parseInt(batchTo, 10) <= parseInt(batchFrom, 10)) {
+      setError('Batch "To" year must be after "From" year.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const cleanSection = section.replace(/Section\s*/i, '').trim() || 'B';
@@ -50,7 +56,8 @@ export default function AddStudentModal({ onClose, onSuccess }) {
         year: cleanYear,
         semester: Number(semester),
         section: cleanSection,
-        batch: batch.trim(),
+        batch: `${batchFrom}-${batchTo}`,
+        enrollmentYear: Number(batchFrom),
         phone: phone.trim() || null,
         password,
       });
@@ -197,13 +204,44 @@ export default function AddStudentModal({ onClose, onSuccess }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Academic Batch</label>
-              <input
-                type="text"
-                value={batch}
-                onChange={(e) => setBatch(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none"
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-700">Academic Batch</label>
+                <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                  {batchFrom} – {batchTo}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <select
+                  value={batchFrom}
+                  onChange={(e) => {
+                    const fromVal = e.target.value;
+                    const fromNum = parseInt(fromVal, 10);
+                    setBatchFrom(fromVal);
+                    if (parseInt(batchTo, 10) <= fromNum || parseInt(batchTo, 10) === parseInt(batchFrom, 10) + 4) {
+                      setBatchTo(String(fromNum + 4));
+                    }
+                  }}
+                  className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none cursor-pointer"
+                >
+                  {[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={batchTo}
+                  onChange={(e) => setBatchTo(e.target.value)}
+                  className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none cursor-pointer"
+                >
+                  {[2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035].map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>

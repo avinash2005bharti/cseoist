@@ -345,8 +345,8 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
                 onClick={() => handlePresetChange('future')}
                 className={`py-1.5 px-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border text-center ${
                   datePreset === 'future'
-                    ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
-                    : 'bg-white text-amber-800 border-amber-200 hover:bg-amber-50'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                 }`}
               >
                 future
@@ -423,16 +423,33 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
             </div>
           </div>
 
-          {/* 4. Filter by Status (Properly separated to prevent overlapping with resulting architecture box) */}
-          <div className="pt-1">
-            <label className="block text-xs font-black text-slate-700 mb-1.5">
-              Status Scope
-            </label>
+          {/* 4. Filter by Status Scope (Highlighted with generous gapping, step badge & icon) */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs space-y-2.5 my-3">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-xs font-black text-slate-800 m-0">
+                <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 border border-blue-200/80">
+                  <Filter size={13} />
+                </div>
+                <span>4. Status Scope</span>
+              </label>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                {status
+                  ? status.includes('APPROVED')
+                    ? 'Approved Only'
+                    : status.includes('REJECTED')
+                    ? 'Rejected Only'
+                    : status.includes('PENDING')
+                    ? 'Pending Only'
+                    : 'Filtered'
+                  : 'All Statuses'}
+              </span>
+            </div>
+
             <div className="relative">
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none cursor-pointer block transition-colors"
+                className="w-full h-11 px-3.5 bg-white border border-slate-300 hover:border-blue-500 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none cursor-pointer block transition-all shadow-2xs"
               >
                 <option value="">All Statuses (Pending, Approved, Recommended, Rejected)</option>
                 <option value="APPROVED_BY_HOD,APPROVED">Approved Only</option>
@@ -441,6 +458,9 @@ export default function AttendanceLeaveReportsModal({ onClose, modalData = {} })
                 <option value="REJECTED_BY_HOD,REJECTED_BY_TG,REJECTED">Rejected Only</option>
               </select>
             </div>
+            <p className="text-[11px] text-slate-500 m-0 font-medium">
+              Filter records exported into the Excel sheets by their current approval stage.
+            </p>
           </div>
 
           {/* 5. Visual Representation of the Resulting Excel Sheet (Explicit top margin mt-5 prevents any overlap) */}

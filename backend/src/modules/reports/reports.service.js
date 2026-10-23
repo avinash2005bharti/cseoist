@@ -337,6 +337,25 @@ export const getConsiderationsReport = async (query = {}, user = null) => {
   if (query.type && query.type !== 'ALL') filter.eventType = query.type.toUpperCase();
   applyDateFilter(filter, query);
 
+  // For group considerations in reports (HOD/Admin): only include master request so group applications are not duplicated
+  if (!user || user.role === 'HOD' || user.role === 'ADMIN') {
+    const groupMasterCondition = {
+      $or: [
+        { isGroup: false },
+        { isGroup: { $exists: false } },
+        { isGroupMaster: true },
+      ],
+    };
+    if (filter.$and) {
+      filter.$and.push(groupMasterCondition);
+    } else if (filter.$or) {
+      filter.$and = [{ $or: filter.$or }, groupMasterCondition];
+      delete filter.$or;
+    } else {
+      Object.assign(filter, groupMasterCondition);
+    }
+  }
+
   const [requests, total] = await Promise.all([
     ConsiderationRequest.find(filter)
       .populate({
@@ -588,6 +607,25 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
     ];
   }
 
+  // Deduplicate group considerations: only master group requests
+  if (!user || user.role === 'HOD' || user.role === 'ADMIN') {
+    const groupMasterCondition = {
+      $or: [
+        { isGroup: false },
+        { isGroup: { $exists: false } },
+        { isGroupMaster: true },
+      ],
+    };
+    if (filter.$and) {
+      filter.$and.push(groupMasterCondition);
+    } else if (filter.$or) {
+      filter.$and = [{ $or: filter.$or }, groupMasterCondition];
+      delete filter.$or;
+    } else {
+      Object.assign(filter, groupMasterCondition);
+    }
+  }
+
   const requests = await ConsiderationRequest.find(filter)
     .populate({
       path: 'student',
@@ -625,7 +663,15 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
 
   // Extract all individual sanctioned student records (leader + non-excluded group members)
   const allSanctionedRows = [];
+  const seenGroupIds = new Set();
+  const seenStudentClearanceKeys = new Set();
+
   requests.forEach((req) => {
+    if (req.isGroup && req.groupId) {
+      if (seenGroupIds.has(req.groupId)) return;
+      seenGroupIds.add(req.groupId);
+    }
+
     const excludedStudentIds = new Set(
       (req.studentAudits || [])
         .filter((a) => a.status === 'EXCLUDED')
@@ -639,15 +685,19 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
     // 1. Leader / Applicant
     if (leader && !excludedStudentIds.has(leaderId)) {
       const secLetter = extractSectionLetter(leader.section);
-      allSanctionedRows.push({
-        req,
-        student: leader,
-        isLeader: isGroup,
-        secLetter,
-        studentName: leader.user?.name || leader.rollNumber || 'Student',
-        rollNumber: leader.rollNumber || leader.enrollmentNumber || 'Not provided',
-        sectionStr: leader.section?.code || leader.section?.name || `Section ${secLetter}`,
-      });
+      const studentClearanceKey = `${leaderId}_${req.startDate}_${req.endDate || req.startDate}_${req.timeFrom}_${req.timeTo}`;
+      if (!seenStudentClearanceKeys.has(studentClearanceKey)) {
+        seenStudentClearanceKeys.add(studentClearanceKey);
+        allSanctionedRows.push({
+          req,
+          student: leader,
+          isLeader: isGroup,
+          secLetter,
+          studentName: leader.user?.name || leader.rollNumber || 'Student',
+          rollNumber: leader.rollNumber || leader.enrollmentNumber || 'Not provided',
+          sectionStr: leader.section?.code || leader.section?.name || `Section ${secLetter}`,
+        });
+      }
     }
 
     // 2. Group members (excluding leader if already added, and excluding excluded students)
@@ -659,15 +709,19 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
         if (excludedStudentIds.has(mId)) return;
 
         const secLetter = extractSectionLetter(m.section) || extractSectionLetter(leader?.section);
-        allSanctionedRows.push({
-          req,
-          student: m,
-          isLeader: false,
-          secLetter,
-          studentName: m.user?.name || m.rollNumber || 'Team Member',
-          rollNumber: m.rollNumber || m.enrollmentNumber || 'Not provided',
-          sectionStr: m.section?.code || m.section?.name || `Section ${secLetter}`,
-        });
+        const memberClearanceKey = `${mId}_${req.startDate}_${req.endDate || req.startDate}_${req.timeFrom}_${req.timeTo}`;
+        if (!seenStudentClearanceKeys.has(memberClearanceKey)) {
+          seenStudentClearanceKeys.add(memberClearanceKey);
+          allSanctionedRows.push({
+            req,
+            student: m,
+            isLeader: false,
+            secLetter,
+            studentName: m.user?.name || m.rollNumber || 'Team Member',
+            rollNumber: m.rollNumber || m.enrollmentNumber || 'Not provided',
+            sectionStr: m.section?.code || m.section?.name || `Section ${secLetter}`,
+          });
+        }
       });
     }
   });

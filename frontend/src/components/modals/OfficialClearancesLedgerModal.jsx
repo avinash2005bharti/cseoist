@@ -147,15 +147,15 @@ export default function OfficialClearancesLedgerModal({
   const [printDateScope, setPrintDateScope] = useState('today'); // 'today' | 'previous'
   const [printDateFrom, setPrintDateFrom] = useState('');
   const [printDateTo, setPrintDateTo] = useState('');
+  const [printStatusScope, setPrintStatusScope] = useState(''); // '' (All Statuses) | 'APPROVED_BY_HOD,APPROVED' | 'PENDING' | 'RECOMMENDED_BY_TG' | 'REJECTED_BY_HOD,REJECTED_BY_TG,REJECTED'
   const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchRecords = async (overrideParams = null) => {
     setLoading(true);
     try {
       const params = {
-        status: 'APPROVED_BY_HOD,APPROVED',
-        approvedOnly: true,
-        limit: 500,
+        status: 'ALL',
+        limit: 1000,
         ...(overrideParams || {}),
       };
 
@@ -174,11 +174,7 @@ export default function OfficialClearancesLedgerModal({
         : Array.isArray(rawCon)
         ? rawCon
         : [];
-      // STRICT FILTER: Only approved considerations
-      const approvedCons = rawConList.filter(
-        (c) => c.status === 'APPROVED_BY_HOD' || c.status === 'APPROVED'
-      );
-      setConsiderations(approvedCons);
+      setConsiderations(rawConList);
 
       const rawLeave = leaveRes.status === 'fulfilled' ? leaveRes.value : null;
       const rawLeaveList = Array.isArray(rawLeave?.data?.leaves)
@@ -190,11 +186,7 @@ export default function OfficialClearancesLedgerModal({
         : Array.isArray(rawLeave)
         ? rawLeave
         : [];
-      // STRICT FILTER: Only approved leaves
-      const approvedLeaves = rawLeaveList.filter(
-        (l) => l.status === 'APPROVED_BY_HOD' || l.status === 'APPROVED'
-      );
-      setLeaves(approvedLeaves);
+      setLeaves(rawLeaveList);
     } finally {
       setLoading(false);
     }
@@ -245,11 +237,25 @@ export default function OfficialClearancesLedgerModal({
   };
 
   // Expand considerations into individual student clearance rows (Leader + non-excluded Group Members)
+  // Expand considerations into individual student clearance rows (Leader + non-excluded Group Members)
   const expandedConsiderationRows = useMemo(() => {
     const rows = [];
-    considerations.forEach((item) => {
-      const isApproved = item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD';
-      if (!isApproved) return;
+    const seenGroupIds = new Set();
+    const seenStudentClearanceSlots = new Set();
+
+    // Sort so master group requests are processed before slave group requests
+    const sortedConsiderations = [...considerations].sort((a, b) => {
+      if (a.isGroupMaster && !b.isGroupMaster) return -1;
+      if (!a.isGroupMaster && b.isGroupMaster) return 1;
+      return 0;
+    });
+
+    sortedConsiderations.forEach((item) => {
+      // Group request deduplication: if multiple requests exist with the same groupId, process only once
+      if (item.isGroup && item.groupId) {
+        if (seenGroupIds.has(item.groupId)) return;
+        seenGroupIds.add(item.groupId);
+      }
 
       const excludedIds = new Set(
         (item.studentAudits || [])
@@ -261,37 +267,43 @@ export default function OfficialClearancesLedgerModal({
       const leaderId = (leader?._id || leader)?.toString();
       const isGroup = Boolean(item.isGroup || (item.groupMembers && item.groupMembers.length > 0));
 
+      const periodsStr = item.selectedPeriods?.length
+        ? item.selectedPeriods.join(', ')
+        : item.requestedPeriods
+        ? `P1 - P${item.requestedPeriods}`
+        : 'P2, P3, P4';
+
       // 1. Leader / Applicant
       if (leader && !excludedIds.has(leaderId)) {
-        rows.push({
-          _id: `${item._id}_lead_${leaderId}`,
-          rawItem: item,
-          isGroup,
-          isLeader: isGroup,
-          student: leader,
-          studentName: leader.user?.name || item.applicant?.name || leader.designation || 'Student',
-          enrollmentNumber: leader.enrollmentNumber || leader.rollNumber || item.applicant?.rollNumber || 'Not provided',
-          section: leader.section,
-          sectionName: (leader.section?.name || leader.section?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
-          semester: leader.section?.semester || leader.semester || 5,
-          eventTitle: item.eventTitle,
-          category: item.eventType || 'Consideration',
-          description: item.description || item.reason || 'Approved attendance consideration',
-          selectedPeriods: item.selectedPeriods,
-          requestedPeriods: item.requestedPeriods,
-          periodsStr: item.selectedPeriods?.length
-            ? item.selectedPeriods.join(', ')
-            : item.requestedPeriods
-            ? `P1 - P${item.requestedPeriods}`
-            : 'P2, P3, P4',
-          timeFrom: item.timeFrom || '10:50 AM',
-          timeTo: item.timeTo || '01:20 PM',
-          startDate: item.startDate,
-          endDate: item.endDate || item.startDate,
-          totalDays: item.totalDays || 1,
-          status: item.status,
-          createdAt: item.createdAt,
-        });
+        const leaderSlotKey = `${leaderId || leader.enrollmentNumber || leader.rollNumber}_${item.startDate}_${item.endDate || item.startDate}_${item.timeFrom || ''}_${item.timeTo || ''}_${periodsStr}`;
+        if (!seenStudentClearanceSlots.has(leaderSlotKey)) {
+          seenStudentClearanceSlots.add(leaderSlotKey);
+          rows.push({
+            _id: `${item._id}_lead_${leaderId}`,
+            rawItem: item,
+            isGroup,
+            isLeader: isGroup,
+            student: leader,
+            studentName: leader.user?.name || item.applicant?.name || leader.designation || 'Student',
+            enrollmentNumber: leader.enrollmentNumber || leader.rollNumber || item.applicant?.rollNumber || 'Not provided',
+            section: leader.section,
+            sectionName: (leader.section?.name || leader.section?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
+            semester: leader.section?.semester || leader.semester || 5,
+            eventTitle: item.eventTitle,
+            category: item.eventType || 'Consideration',
+            description: item.description || item.reason || 'Attendance consideration',
+            selectedPeriods: item.selectedPeriods,
+            requestedPeriods: item.requestedPeriods,
+            periodsStr,
+            timeFrom: item.timeFrom || '10:50 AM',
+            timeTo: item.timeTo || '01:20 PM',
+            startDate: item.startDate,
+            endDate: item.endDate || item.startDate,
+            totalDays: item.totalDays || 1,
+            status: item.status,
+            createdAt: item.createdAt,
+          });
+        }
       }
 
       // 2. Non-excluded Group Members
@@ -303,35 +315,35 @@ export default function OfficialClearancesLedgerModal({
           if (excludedIds.has(memberId)) return;
 
           const memberSec = member.section || leader?.section;
-          rows.push({
-            _id: `${item._id}_mbr_${memberId}_${mIdx}`,
-            rawItem: item,
-            isGroup: true,
-            isLeader: false,
-            student: member,
-            studentName: member.user?.name || member.name || member.rollNumber || 'Team Member',
-            enrollmentNumber: member.enrollmentNumber || member.rollNumber || 'Not provided',
-            section: memberSec,
-            sectionName: (memberSec?.name || memberSec?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
-            semester: memberSec?.semester || member.semester || leader?.section?.semester || 5,
-            eventTitle: item.eventTitle,
-            category: item.eventType || 'Consideration',
-            description: item.description || item.reason || 'Approved attendance consideration',
-            selectedPeriods: item.selectedPeriods,
-            requestedPeriods: item.requestedPeriods,
-            periodsStr: item.selectedPeriods?.length
-              ? item.selectedPeriods.join(', ')
-              : item.requestedPeriods
-              ? `P1 - P${item.requestedPeriods}`
-              : 'P2, P3, P4',
-            timeFrom: item.timeFrom || '10:50 AM',
-            timeTo: item.timeTo || '01:20 PM',
-            startDate: item.startDate,
-            endDate: item.endDate || item.startDate,
-            totalDays: item.totalDays || 1,
-            status: item.status,
-            createdAt: item.createdAt,
-          });
+          const memberSlotKey = `${memberId || member.enrollmentNumber || member.rollNumber}_${item.startDate}_${item.endDate || item.startDate}_${item.timeFrom || ''}_${item.timeTo || ''}_${periodsStr}`;
+          if (!seenStudentClearanceSlots.has(memberSlotKey)) {
+            seenStudentClearanceSlots.add(memberSlotKey);
+            rows.push({
+              _id: `${item._id}_mbr_${memberId}_${mIdx}`,
+              rawItem: item,
+              isGroup: true,
+              isLeader: false,
+              student: member,
+              studentName: member.user?.name || member.name || member.rollNumber || 'Team Member',
+              enrollmentNumber: member.enrollmentNumber || member.rollNumber || 'Not provided',
+              section: memberSec,
+              sectionName: (memberSec?.name || memberSec?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
+              semester: memberSec?.semester || member.semester || leader?.section?.semester || 5,
+              eventTitle: item.eventTitle,
+              category: item.eventType || 'Consideration',
+              description: item.description || item.reason || 'Attendance consideration',
+              selectedPeriods: item.selectedPeriods,
+              requestedPeriods: item.requestedPeriods,
+              periodsStr,
+              timeFrom: item.timeFrom || '10:50 AM',
+              timeTo: item.timeTo || '01:20 PM',
+              startDate: item.startDate,
+              endDate: item.endDate || item.startDate,
+              totalDays: item.totalDays || 1,
+              status: item.status,
+              createdAt: item.createdAt,
+            });
+          }
         });
       }
     });
@@ -340,38 +352,47 @@ export default function OfficialClearancesLedgerModal({
 
   // Expand leaves into individual clearance rows
   const expandedLeaveRows = useMemo(() => {
-    return leaves
-      .filter((item) => item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD')
-      .map((item, idx) => {
-        const student = item.student || {};
-        return {
-          _id: `${item._id || idx}_leave`,
-          rawItem: item,
-          isGroup: false,
-          isLeader: false,
-          student,
-          studentName: item.applicant?.name || student.user?.name || student.designation || 'Student',
-          enrollmentNumber: student.enrollmentNumber || student.rollNumber || item.applicant?.rollNumber || 'N/A',
-          section: student.section,
-          sectionName: (student.section?.name || student.section?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
-          semester: student.section?.semester || student.semester || 5,
-          eventTitle: `${item.leaveType} Leave`,
-          category: item.leaveType,
-          description: item.reason || item.description || 'Approved student leave',
-          periodsStr: item.leaveType || 'Sanctioned Leave',
-          timeFrom: 'Full Day',
-          timeTo: 'Full Day',
-          startDate: item.startDate,
-          endDate: item.endDate || item.startDate,
-          totalDays: item.totalDays || 1,
-          status: item.status,
-          createdAt: item.createdAt,
-        };
+    const seenLeaveSlots = new Set();
+    const rows = [];
+    leaves.forEach((item, idx) => {
+      const student = item.student || {};
+      const studentId = (student._id || student || item.applicant?._id)?.toString();
+      const leaveSlotKey = `${studentId || student.enrollmentNumber || student.rollNumber}_${item.startDate}_${item.endDate || item.startDate}_${item.leaveType}`;
+      if (seenLeaveSlots.has(leaveSlotKey)) return;
+      seenLeaveSlots.add(leaveSlotKey);
+
+      rows.push({
+        _id: `${item._id || idx}_leave`,
+        rawItem: item,
+        isGroup: false,
+        isLeader: false,
+        student,
+        studentName: item.applicant?.name || student.user?.name || student.designation || 'Student',
+        enrollmentNumber: student.enrollmentNumber || student.rollNumber || item.applicant?.rollNumber || 'N/A',
+        section: student.section,
+        sectionName: (student.section?.name || student.section?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
+        semester: student.section?.semester || student.semester || 5,
+        eventTitle: `${item.leaveType} Leave`,
+        category: item.leaveType,
+        description: item.reason || item.description || 'Student leave application',
+        periodsStr: item.leaveType || 'Sanctioned Leave',
+        timeFrom: 'Full Day',
+        timeTo: 'Full Day',
+        startDate: item.startDate,
+        endDate: item.endDate || item.startDate,
+        totalDays: item.totalDays || 1,
+        status: item.status,
+        createdAt: item.createdAt,
       });
+    });
+    return rows;
   }, [leaves]);
 
   const filterRows = (rows) => {
     return rows.filter((row) => {
+      // Official clearances ledger table strictly displays authorized/approved records
+      const isApproved = row.status === 'APPROVED' || row.status === 'APPROVED_BY_HOD';
+      if (!isApproved) return false;
       // 1. Date filtering
       const itemStart = row.startDate ? row.startDate.slice(0, 10) : '';
       const itemEnd = row.endDate ? row.endDate.slice(0, 10) : itemStart;
@@ -536,9 +557,35 @@ export default function OfficialClearancesLedgerModal({
       }
     }
 
+    // Filter by Status Scope
+    if (printStatusScope) {
+      const allowedStatuses = printStatusScope.split(',').map((s) => s.trim().toUpperCase());
+      reportList = reportList.filter((row) => allowedStatuses.includes((row.status || '').toUpperCase()));
+    }
+
+    // Secondary strict deduplication to ensure identical student slot records are never duplicated
+    const seenPrintKeys = new Set();
+    reportList = reportList.filter((row) => {
+      const sId = (row.student?._id || row.enrollmentNumber || row.studentName || '').toString().trim().toLowerCase();
+      const timeKey = `${row.startDate}_${row.endDate || row.startDate}_${row.timeFrom}_${row.timeTo}_${row.periodsStr}`;
+      const compositeKey = `${sId}_${timeKey}`;
+      if (seenPrintKeys.has(compositeKey)) return false;
+      seenPrintKeys.add(compositeKey);
+      return true;
+    });
+
     if (reportList.length === 0) {
+      const scopeLabel = !printStatusScope
+        ? 'All Statuses'
+        : printStatusScope.includes('APPROVED')
+        ? 'Approved'
+        : printStatusScope.includes('PENDING')
+        ? 'Pending Review'
+        : printStatusScope.includes('RECOMMENDED')
+        ? 'Recommended by TG'
+        : 'Rejected';
       alert(
-        `No approved sanction records found for the selected print scope (${
+        `No records found for the selected print scope (${scopeLabel}, ${
           printDateScope === 'today'
             ? `Today: ${formatDateSlash(todayStr)}`
             : printDateScope === 'future'
@@ -562,10 +609,26 @@ export default function OfficialClearancesLedgerModal({
         ? `Future / Upcoming Clearances`
         : `${formatDateSlash(printDateFrom) || 'Initial'} to ${formatDateSlash(printDateTo) || 'Latest'}`;
 
+    const statusScopeDisplay = !printStatusScope
+      ? 'All Statuses'
+      : printStatusScope.includes('APPROVED')
+      ? 'Approved Only'
+      : printStatusScope.includes('PENDING')
+      ? 'Pending Review Only'
+      : printStatusScope.includes('RECOMMENDED')
+      ? 'Recommended by TG'
+      : printStatusScope.includes('REJECTED')
+      ? 'Rejected Only'
+      : 'Filtered';
+
     const reportTitle =
       activeTab === 'considerations'
-        ? 'Official Approved Clearances'
-        : 'Official Approved Clearances (Student Leaves)';
+        ? printStatusScope === 'APPROVED_BY_HOD,APPROVED'
+          ? 'Official Approved Clearances'
+          : 'Official Clearances Ledger'
+        : printStatusScope === 'APPROVED_BY_HOD,APPROVED'
+          ? 'Official Approved Clearances (Student Leaves)'
+          : 'Official Leaves Ledger';
 
     const rowsHtml = reportList
       .map((row, idx) => {
@@ -582,6 +645,21 @@ export default function OfficialClearancesLedgerModal({
           ? ' <span style="font-size:9px;color:#4F46E5;font-weight:700;">(TEAM)</span>'
           : '';
 
+        const st = (row.status || 'APPROVED').toUpperCase();
+        let badgeStyle = 'color: #059669; background: #ECFDF5; border: 1px solid #A7F3D0;';
+        let statusLabel = 'APPROVED';
+
+        if (st.includes('REJECT')) {
+          badgeStyle = 'color: #DC2626; background: #FEF2F2; border: 1px solid #FECACA;';
+          statusLabel = 'REJECTED';
+        } else if (st.includes('RECOMMEND')) {
+          badgeStyle = 'color: #2563EB; background: #EFF6FF; border: 1px solid #BFDBFE;';
+          statusLabel = 'RECOMMENDED';
+        } else if (st.includes('PENDING')) {
+          badgeStyle = 'color: #D97706; background: #FFFBEB; border: 1px solid #FDE68A;';
+          statusLabel = 'PENDING';
+        }
+
         return `
           <tr style="border-bottom: 1px solid #E2E8F0; font-size: 11px;">
             <td style="padding: 7px 6px; text-align: center; font-weight: 700; color: #64748B;">${idx + 1}</td>
@@ -593,8 +671,8 @@ export default function OfficialClearancesLedgerModal({
             <td style="padding: 7px 8px; text-align: center; color: #475569; white-space: nowrap;">${dateStr}</td>
             <td style="padding: 7px 6px; text-align: center; font-weight: 800; color: #0F172A;">${days}</td>
             <td style="padding: 7px 8px; text-align: center;">
-              <span style="font-weight: 800; font-size: 10px; color: #059669; text-transform: uppercase; background: #ECFDF5; padding: 2px 6px; border-radius: 4px; border: 1px solid #A7F3D0;">
-                APPROVED
+              <span style="font-weight: 800; font-size: 10px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; ${badgeStyle}">
+                ${statusLabel}
               </span>
             </td>
           </tr>
@@ -712,8 +790,9 @@ export default function OfficialClearancesLedgerModal({
             <span>Date Scope: <strong>${dateScopeDisplay}</strong></span>
             <span>Generated: ${formattedPrintTimestamp}</span>
             <span>Semester: ${semDisplay}</span>
+            <span>Status Scope: <strong>${statusScopeDisplay}</strong></span>
             <span>Authorized by: Head of Department (HOD CSE)</span>
-            <span>Total Sanctions: <strong>${reportList.length} Approved</strong></span>
+            <span>Total Records: <strong>${reportList.length} ${statusScopeDisplay}</strong></span>
           </div>
 
           <table>
@@ -1477,11 +1556,11 @@ export default function OfficialClearancesLedgerModal({
             onClick={() => setShowPrintModal(false)}
           >
             <div
-              className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative text-slate-900"
+              className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative text-slate-900"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-start justify-between pb-3.5 border-b border-slate-100">
+              <div className="flex items-start justify-between pb-4 border-b border-slate-100">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200 shadow-2xs">
                     <Calendar size={18} />
@@ -1505,10 +1584,10 @@ export default function OfficialClearancesLedgerModal({
               </div>
 
               {/* Form Content */}
-              <div className="space-y-4 mt-4">
+              <div className="space-y-5 mt-5">
                 {/* Semester Selection */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 mb-2">
                     Target Semester:
                   </label>
                   {isTgView ? (
@@ -1519,7 +1598,7 @@ export default function OfficialClearancesLedgerModal({
                     <select
                       value={targetPrintSemester}
                       onChange={(e) => setTargetPrintSemester(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-all cursor-pointer"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-all cursor-pointer shadow-2xs"
                     >
                       <option value="All Semesters (Comprehensive Ledger)">
                         All Semesters (Comprehensive Ledger)
@@ -1535,10 +1614,10 @@ export default function OfficialClearancesLedgerModal({
 
                 {/* Date Scope for Print */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 mb-2">
                     Report Date Scope:
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2.5">
                     <button
                       type="button"
                       onClick={() => setPrintDateScope('today')}
@@ -1547,7 +1626,7 @@ export default function OfficialClearancesLedgerModal({
                           ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8' }
                           : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
                       }
-                      className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                      className={`min-h-[40px] py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                         printDateScope === 'today' ? 'shadow-xs' : 'hover:bg-slate-100'
                       }`}
                     >
@@ -1562,7 +1641,7 @@ export default function OfficialClearancesLedgerModal({
                           ? { backgroundColor: '#D97706', color: '#FFFFFF', borderColor: '#B45309' }
                           : { backgroundColor: '#FFFBEB', color: '#92400E', borderColor: '#FCD34D' }
                       }
-                      className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                      className={`min-h-[40px] py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                         printDateScope === 'future' ? 'shadow-xs' : 'hover:bg-amber-100'
                       }`}
                     >
@@ -1577,7 +1656,7 @@ export default function OfficialClearancesLedgerModal({
                           ? { backgroundColor: '#4F46E5', color: '#FFFFFF', borderColor: '#4338CA' }
                           : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
                       }
-                      className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                      className={`min-h-[40px] py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                         printDateScope === 'previous' ? 'shadow-xs' : 'hover:bg-slate-100'
                       }`}
                     >
@@ -1587,9 +1666,9 @@ export default function OfficialClearancesLedgerModal({
                   </div>
 
                   {printDateScope === 'previous' && (
-                    <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100 animate-in fade-in duration-100">
+                    <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-100 animate-in fade-in duration-100">
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        <label className="block text-[11px] font-bold text-slate-600 mb-1.5">
                           From Date:
                         </label>
                         <input
@@ -1597,11 +1676,11 @@ export default function OfficialClearancesLedgerModal({
                           value={printDateFrom}
                           onChange={(e) => setPrintDateFrom(e.target.value)}
                           style={{ backgroundColor: '#F8FAFC', color: '#0F172A', border: '1.5px solid #CBD5E1' }}
-                          className="w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold"
+                          className="w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-600 transition-all"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                        <label className="block text-[11px] font-bold text-slate-600 mb-1.5">
                           To Date:
                         </label>
                         <input
@@ -1609,22 +1688,64 @@ export default function OfficialClearancesLedgerModal({
                           value={printDateTo}
                           onChange={(e) => setPrintDateTo(e.target.value)}
                           style={{ backgroundColor: '#F8FAFC', color: '#0F172A', border: '1.5px solid #CBD5E1' }}
-                          className="w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold"
+                          className="w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-600 transition-all"
                         />
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800 text-[11px] font-semibold flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                {/* Status Scope Selection */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-2xs space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 m-0">
+                      <Filter size={13} className="text-blue-600" />
+                      <span>Status Scope:</span>
+                    </label>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                      {!printStatusScope
+                        ? 'All Statuses'
+                        : printStatusScope.includes('APPROVED')
+                        ? 'Approved Only'
+                        : printStatusScope.includes('REJECTED')
+                        ? 'Rejected Only'
+                        : printStatusScope.includes('PENDING')
+                        ? 'Pending Only'
+                        : 'Filtered'}
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <select
+                      value={printStatusScope}
+                      onChange={(e) => setPrintStatusScope(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-300 hover:border-blue-500 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-all cursor-pointer shadow-2xs"
+                    >
+                      <option value="">All Statuses (Pending, Approved, Recommended, Rejected)</option>
+                      <option value="APPROVED_BY_HOD,APPROVED">Approved Only</option>
+                      <option value="PENDING">Pending Review Only</option>
+                      <option value="RECOMMENDED_BY_TG">Recommended by TG</option>
+                      <option value="REJECTED_BY_HOD,REJECTED_BY_TG,REJECTED">Rejected Only</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-blue-50/70 rounded-2xl border border-blue-200 text-blue-900 text-xs font-medium flex items-start gap-2.5 leading-relaxed">
+                  <CheckCircle2 size={16} className="text-blue-600 shrink-0 mt-0.5" />
                   <span>
-                    Report generation enforces 100% approved sanction criteria. Rejected applications are strictly excluded.
+                    {!printStatusScope
+                      ? 'Generating comprehensive report across all workflow stages (Pending, Approved, Recommended, Rejected).'
+                      : printStatusScope.includes('APPROVED')
+                      ? 'Report generation enforces 100% approved sanction criteria. Rejected applications are strictly excluded.'
+                      : printStatusScope.includes('PENDING')
+                      ? 'Report will display pending applications awaiting institutional review.'
+                      : printStatusScope.includes('RECOMMENDED')
+                      ? 'Report will display applications recommended by Teacher Guardian (TG).'
+                      : 'Report will display rejected applications.'}
                   </span>
                 </div>
 
-                {/* Footer Buttons: Cancel & Generate PDF / Print */}
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                {/* Footer Buttons: Cancel & Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-100 mt-2">
                   <button
                     type="button"
                     onClick={() => setShowPrintModal(false)}
@@ -1633,41 +1754,43 @@ export default function OfficialClearancesLedgerModal({
                       color: '#334155',
                       border: '1px solid #CBD5E1',
                     }}
-                    className="px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-200 cursor-pointer transition-colors"
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-200 cursor-pointer transition-colors min-h-[42px] flex items-center justify-center order-2 sm:order-1"
                   >
                     Cancel
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPrintModal(false);
-                      setShowExportModal(true);
-                    }}
-                    style={{
-                      backgroundColor: '#059669',
-                      color: '#FFFFFF',
-                      border: '1px solid #047857',
-                      boxShadow: '0 4px 12px rgba(5, 150, 105, 0.35)',
-                    }}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-2 cursor-pointer transition-all hover:bg-emerald-700"
-                  >
-                    <Download size={15} style={{ color: '#FFFFFF' }} />
-                    <span style={{ color: '#FFFFFF' }}>Export Excel (.xlsx)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={executeGenerateReport}
-                    style={{
-                      backgroundColor: '#2563EB',
-                      color: '#FFFFFF',
-                      border: '1px solid #1D4ED8',
-                      boxShadow: '0 4px 12px rgba(37, 99, 235, 0.35)',
-                    }}
-                    className="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white flex items-center gap-2 cursor-pointer transition-all"
-                  >
-                    <Printer size={15} style={{ color: '#FFFFFF' }} />
-                    <span style={{ color: '#FFFFFF' }}>Generate PDF / Print</span>
-                  </button>
+                  <div className="flex items-center gap-2.5 order-1 sm:order-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPrintModal(false);
+                        setShowExportModal(true);
+                      }}
+                      style={{
+                        backgroundColor: '#059669',
+                        color: '#FFFFFF',
+                        border: '1px solid #047857',
+                        boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
+                      }}
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 cursor-pointer transition-all hover:bg-emerald-700 min-h-[42px] shadow-xs flex-1 sm:flex-none"
+                    >
+                      <Download size={15} style={{ color: '#FFFFFF' }} />
+                      <span style={{ color: '#FFFFFF' }}>Export Excel (.xlsx)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={executeGenerateReport}
+                      style={{
+                        backgroundColor: '#2563EB',
+                        color: '#FFFFFF',
+                        border: '1px solid #1D4ED8',
+                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
+                      }}
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[42px] shadow-xs flex-1 sm:flex-none"
+                    >
+                      <Printer size={15} style={{ color: '#FFFFFF' }} />
+                      <span style={{ color: '#FFFFFF' }}>Generate PDF / Print</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

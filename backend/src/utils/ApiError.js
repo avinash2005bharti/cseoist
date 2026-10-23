@@ -21,6 +21,10 @@ export class ApiError extends Error {
     return new ApiError(401, 'UNAUTHENTICATED', message);
   }
 
+  static unauthorized(message = 'Authentication required') {
+    return new ApiError(401, 'UNAUTHORIZED', message);
+  }
+
   static forbidden(message = 'Access forbidden') {
     return new ApiError(403, 'FORBIDDEN', message);
   }

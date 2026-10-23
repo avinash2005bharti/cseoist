@@ -12,23 +12,32 @@ import { parsePagination, buildPaginationMeta } from '../../utils/pagination.js'
 
 export const listStudents = async (query) => {
   const { page, limit, skip } = parsePagination(query);
-  const filter = {};
+  const andConditions = [];
 
   if (query.section) {
-    filter.section = query.section;
+    andConditions.push({ section: query.section });
   }
-  if (query.semester) {
+
+  if (query.semester && String(query.semester).toUpperCase() !== 'ALL') {
     const semNum = parseInt(String(query.semester).replace(/\D/g, ''), 10);
     if (!isNaN(semNum)) {
       const matchingSections = await Section.find({ semester: semNum }).select('_id');
-      filter.section = { $in: matchingSections.map((s) => s._id) };
+      const secIds = matchingSections.map((s) => s._id);
+      andConditions.push({
+        $or: [
+          { semester: semNum },
+          ...(secIds.length > 0 ? [{ section: { $in: secIds } }] : []),
+        ],
+      });
     }
   }
+
   if (query.department) {
-    filter.department = query.department;
+    andConditions.push({ department: query.department });
   }
+
   if (query.mentor) {
-    filter.mentorGroup = query.mentor;
+    andConditions.push({ mentorGroup: query.mentor });
   }
 
   // If search query is provided, search rollNumber, enrollmentNumber or matching user IDs
@@ -39,13 +48,16 @@ export const listStudents = async (query) => {
       $or: [{ name: searchRegex }, { email: searchRegex }],
     }).select('_id');
 
-    filter.$or = [
-      { rollNumber: searchRegex },
-      { enrollmentNumber: searchRegex },
-      { user: { $in: matchingUsers.map((u) => u._id) } },
-    ];
+    andConditions.push({
+      $or: [
+        { rollNumber: searchRegex },
+        { enrollmentNumber: searchRegex },
+        { user: { $in: matchingUsers.map((u) => u._id) } },
+      ],
+    });
   }
 
+  const filter = andConditions.length > 0 ? { $and: andConditions } : {};
   const fetchAll = query.all === 'true' || query.limit === 'all';
   const queryLimit = fetchAll ? 0 : limit;
   const querySkip = fetchAll ? 0 : skip;
@@ -120,6 +132,21 @@ export const updateStudent = async (id, data) => {
     }
   }
 
+  // Update Academic Batch and Enrollment Year if provided
+  if (data.batch !== undefined || data.enrollmentYear !== undefined) {
+    if (data.batch) {
+      student.batch = String(data.batch).trim();
+    }
+    if (data.enrollmentYear) {
+      student.enrollmentYear = Number(data.enrollmentYear);
+    } else if (data.batch && typeof data.batch === 'string' && data.batch.includes('-')) {
+      const parsedYear = parseInt(data.batch.split('-')[0], 10);
+      if (!isNaN(parsedYear)) {
+        student.enrollmentYear = parsedYear;
+      }
+    }
+  }
+
   // Update Section if provided
   if (data.section) {
     let resolvedSection = null;
@@ -130,8 +157,22 @@ export const updateStudent = async (id, data) => {
 
     if (!resolvedSection) {
       const rawSec = String(data.section).trim();
-      const secLetterMatch = rawSec.match(/([A-D])/i);
-      const letter = secLetterMatch ? secLetterMatch[1].toUpperCase() : 'B';
+      let letter = 'B';
+      const cseMatch = rawSec.match(/CSE[\s\-_]*(?:SEM\s*\d+[\s\-_]*|\d+[\s\-_]*)?([A-Z0-9]+)/i);
+      const secMatch = rawSec.match(/SEC(?:TION)?[\s\-_]*([A-Z0-9]+)/i);
+      const singleMatch = rawSec.match(/^([A-Z0-9])$/i);
+
+      if (singleMatch) {
+        letter = singleMatch[1].toUpperCase();
+      } else if (secMatch) {
+        letter = secMatch[1].toUpperCase();
+      } else if (cseMatch) {
+        letter = cseMatch[1].toUpperCase();
+      } else {
+        const match = rawSec.match(/([A-Z0-9]+)/i);
+        if (match) letter = match[1].toUpperCase();
+      }
+
       const targetSem = student.semester || 5;
 
       resolvedSection = await Section.findOne({
@@ -139,8 +180,8 @@ export const updateStudent = async (id, data) => {
         $or: [
           { code: `CSE-${letter}` },
           { name: `Section ${letter}` },
-          { code: new RegExp(letter, 'i') },
-          { name: new RegExp(letter, 'i') },
+          { code: new RegExp(`[\\b-_]${letter}(?:[\\b-_]|$)`, 'i') },
+          { name: new RegExp(`Section\\s*${letter}`, 'i') },
         ],
       });
 

@@ -178,18 +178,24 @@ export const handleGoogleCallback = asyncHandler(async (req, res) => {
   const userAgent = req.headers['user-agent'];
   const ip = req.ip;
 
-  const result = await authService.loginWithGoogle({
-    googleUser,
-    userAgent,
-    ip,
-  });
+  try {
+    const result = await authService.loginWithGoogle({
+      googleUser,
+      userAgent,
+      ip,
+    });
 
-  res.cookie('refreshToken', result.refreshToken, REFRESH_COOKIE_OPTIONS);
+    res.cookie('refreshToken', result.refreshToken, REFRESH_COOKIE_OPTIONS);
 
-  const role = (result.user.role || '').toLowerCase();
-  return res.redirect(
-    `${clientUrl}/login?google_token=${encodeURIComponent(result.accessToken)}&role=${encodeURIComponent(role)}&isTG=${result.user.isTG ? 'true' : 'false'}`
-  );
+    const role = (result.user.role || '').toLowerCase();
+    return res.redirect(
+      `${clientUrl}/login?google_token=${encodeURIComponent(result.accessToken)}&role=${encodeURIComponent(role)}&isTG=${result.user.isTG ? 'true' : 'false'}`
+    );
+  } catch (err) {
+    console.error('❌ Google OAuth sign-in error:', err.message);
+    const errorMsg = err.message || 'Google authentication failed.';
+    return res.redirect(`${clientUrl}/login?error=${encodeURIComponent(errorMsg)}`);
+  }
 });
 
 export default {

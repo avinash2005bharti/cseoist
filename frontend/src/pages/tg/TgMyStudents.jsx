@@ -11,6 +11,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import EditStudentModal from '../../components/modals/EditStudentModal.jsx';
+import { getSectionLetter } from '../../utils/constants.js';
 
 export default function TgMyStudents() {
   const { addToast } = useERP();
@@ -37,7 +38,7 @@ export default function TgMyStudents() {
         // If students array inside cohort doc wasn't populated or was empty, fetch students of this section
         if (cohortData.section?._id || cohortData.section) {
           const secId = cohortData.section?._id || cohortData.section;
-          const res = await masterDataApi.getStudents({ section: secId });
+          const res = await masterDataApi.getStudents({ section: secId, all: 'true' });
           if (res?.data?.length) {
             setStudents(res.data);
             return;
@@ -46,7 +47,7 @@ export default function TgMyStudents() {
       }
 
       // Fallback to masterDataApi students list if cohort not assigned yet
-      const res = await masterDataApi.getStudents();
+      const res = await masterDataApi.getStudents({ all: 'true' });
       setStudents(res?.data || []);
     } finally {
       setLoading(false);
@@ -116,10 +117,20 @@ export default function TgMyStudents() {
               .join('')
               .toUpperCase()
               .slice(0, 2) || 'ST';
-            const secName = st.section?.name?.replace(/Section\s*/i, '') || st.section?.code || 'B';
+            const secName = getSectionLetter(st.section) || 'B';
             const semNum = st.semester || st.section?.semester || 5;
             const email = st.user?.email || 'Not provided';
             const phone = st.user?.phone || 'Not provided';
+            const batchDisplay = (() => {
+              if (st.batch && typeof st.batch === 'string' && st.batch.trim()) {
+                const b = st.batch.trim();
+                return b.toLowerCase().startsWith('batch') ? b : `Batch ${b}`;
+              }
+              if (st.enrollmentYear) {
+                return `Batch ${st.enrollmentYear}-${st.enrollmentYear + 4}`;
+              }
+              return 'Batch 2024-2028';
+            })();
 
             return (
               <div
@@ -161,7 +172,7 @@ export default function TgMyStudents() {
                         ACADEMIC CLASS
                       </span>
                       <span className="font-bold text-slate-800">
-                        Batch {st.enrollmentYear || 2023} • {secName}
+                        {batchDisplay} • Sec {secName}
                       </span>
                     </div>
                     <div>

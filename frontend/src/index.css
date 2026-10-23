@@ -1002,6 +1002,20 @@ textarea {
   color: #FFFFFF !important;
 }
 
+.bg-amber-500 {
+  background-color: var(--warning-500) !important;
+  color: #FFFFFF !important;
+}
+
+.bg-amber-600 {
+  background-color: var(--warning-600) !important;
+  color: #FFFFFF !important;
+}
+
+.border-amber-600 {
+  border-color: var(--warning-600) !important;
+}
+
 .hover\:bg-emerald-700:hover {
   background-color: #047857 !important;
 }
@@ -7534,6 +7548,12 @@ button:disabled:active,
 .auth-login-card input.pl-11,
 .auth-register-card input.pl-11 {
   padding-left: 44px !important;
+}
+
+.auth-login-card select,
+.auth-register-card select {
+  padding: 0 10px !important;
+  font-size: 13.5px !important;
 }
 
 /* Auto-padding for password fields or inputs with trailing buttons */

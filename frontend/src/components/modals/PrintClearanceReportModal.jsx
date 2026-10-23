@@ -14,6 +14,7 @@ export default function PrintClearanceReportModal({
   const [dateScope, setDateScope] = useState('TODAY'); // 'TODAY' | 'FUTURE' | 'PREVIOUS' | 'ALL'
   const [printFrom, setPrintFrom] = useState('');
   const [printTo, setPrintTo] = useState('');
+  const [statusScope, setStatusScope] = useState(''); // '' | 'APPROVED_BY_HOD,APPROVED' | 'PENDING' | 'RECOMMENDED_BY_TG' | 'REJECTED_BY_HOD,REJECTED_BY_TG,REJECTED'
   const [sections, setSections] = useState(initialSections);
 
   const todayStr = (() => {
@@ -153,11 +154,18 @@ export default function PrintClearanceReportModal({
         (cleanItemSec && cleanTargetSec && cleanItemSec === cleanTargetSec) ||
         secName.toLowerCase().includes(cleanTargetSec.toLowerCase());
 
-      const isApproved =
-        item.status === 'APPROVED' ||
-        item.status === 'APPROVED_BY_HOD' ||
-        item.tier2Reviewer?.status === 'APPROVED';
-      if (!isApproved) return false;
+      let matchesStatus = true;
+      if (statusScope) {
+        const allowed = statusScope.split(',').map((s) => s.trim().toUpperCase());
+        matchesStatus = allowed.includes((item.status || '').toUpperCase());
+      } else if (reportType === 'APPROVED_ONLY') {
+        const isApproved =
+          item.status === 'APPROVED' ||
+          item.status === 'APPROVED_BY_HOD' ||
+          item.tier2Reviewer?.status === 'APPROVED';
+        matchesStatus = Boolean(isApproved);
+      }
+      if (!matchesStatus) return false;
 
       let matchesType = true;
       if (reportType === 'CONSIDERATION') {
@@ -189,6 +197,21 @@ export default function PrintClearanceReportModal({
       return matchesSem && matchesSec && matchesType && matchesDate;
     });
 
+    // Deduplicate student clearances
+    const seenPrintKeys = new Set();
+    const deduplicatedFiltered = filtered.filter((item) => {
+      const sId = (item.student?._id || item.student?.enrollmentNumber || item.applicant?.rollNumber || item.applicant?.name || '').toString().trim().toLowerCase();
+      const periods = Array.isArray(item.selectedPeriods) && item.selectedPeriods.length > 0
+        ? item.selectedPeriods.join(', ')
+        : Array.isArray(item.requestedPeriods)
+        ? item.requestedPeriods.join(', ')
+        : '';
+      const slotKey = `${sId}_${item.startDate}_${item.endDate || item.startDate}_${item.timeFrom || ''}_${item.timeTo || ''}_${periods}`;
+      if (seenPrintKeys.has(slotKey)) return false;
+      seenPrintKeys.add(slotKey);
+      return true;
+    });
+
     const semLabel =
       selectedSemester === 'ALL' ? 'All Semesters' : `Semester ${selectedSemester}`;
     const secLabel =
@@ -200,9 +223,9 @@ export default function PrintClearanceReportModal({
       year: 'numeric',
     });
 
-    const rowsHtml = filtered.length === 0
-      ? `<tr><td colspan="10" style="padding: 24px; text-align: center; color: #64748B; font-weight: 600;">No approved clearances found for ${targetScope}.</td></tr>`
-      : filtered
+    const rowsHtml = deduplicatedFiltered.length === 0
+      ? `<tr><td colspan="10" style="padding: 24px; text-align: center; color: #64748B; font-weight: 600;">No clearances found for ${targetScope}.</td></tr>`
+      : deduplicatedFiltered
           .map((item, idx) => {
             const studentName =
               item.student?.user?.name ||
@@ -483,7 +506,7 @@ export default function PrintClearanceReportModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between pb-3.5 border-b border-slate-100">
+        <div className="flex items-start justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200 shadow-2xs">
               <Printer size={18} />
@@ -507,10 +530,10 @@ export default function PrintClearanceReportModal({
         </div>
 
         {/* Configuration Body */}
-        <div className="space-y-4 mt-4">
+        <div className="space-y-5 mt-5">
           {/* Step 1: Select Semester */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+            <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
               <Calendar size={13} className="text-blue-600" />
               <span>1. Choose Semester:</span>
             </label>
@@ -520,7 +543,7 @@ export default function PrintClearanceReportModal({
                 setSelectedSemester(e.target.value);
                 setSelectedSection('ALL'); // reset section when semester changes
               }}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-all cursor-pointer"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-all cursor-pointer shadow-2xs"
             >
               <option value="ALL">All Semesters (Comprehensive Ledger)</option>
               {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
@@ -533,14 +556,14 @@ export default function PrintClearanceReportModal({
 
           {/* Step 2: Select Section (Reactive based on semester) */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+            <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
               <Users size={13} className="text-blue-600" />
               <span>2. Choose Section:</span>
             </label>
             <select
               value={selectedSection}
               onChange={(e) => setSelectedSection(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-all cursor-pointer"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-all cursor-pointer shadow-2xs"
             >
               {sectionOptions.map((opt) => (
                 <option key={opt.id} value={opt.id}>
@@ -552,11 +575,11 @@ export default function PrintClearanceReportModal({
 
           {/* Step 3: Report Scope */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+            <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
               <Layers size={13} className="text-blue-600" />
               <span>3. Report Clearance Category:</span>
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               {[
                 { id: 'ALL', label: 'All Clearances' },
                 { id: 'CONSIDERATION', label: 'Considerations' },
@@ -572,8 +595,8 @@ export default function PrintClearanceReportModal({
                       ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8' }
                       : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
                   }
-                  className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
-                    reportType === tab.id ? 'shadow-2xs' : 'hover:bg-slate-100'
+                  className={`min-h-[40px] py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
+                    reportType === tab.id ? 'shadow-xs' : 'hover:bg-slate-100'
                   }`}
                 >
                   {tab.label}
@@ -584,11 +607,11 @@ export default function PrintClearanceReportModal({
 
           {/* Step 4: Date Scope */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+            <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
               <Calendar size={13} className="text-blue-600" />
               <span>4. Report Date Scope:</span>
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2.5">
               {[
                 { id: 'TODAY', label: `Today` },
                 { id: 'FUTURE', label: 'Future' },
@@ -604,8 +627,8 @@ export default function PrintClearanceReportModal({
                       ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8' }
                       : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
                   }
-                  className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
-                    dateScope === tab.id ? 'shadow-2xs' : 'hover:bg-slate-100'
+                  className={`min-h-[40px] py-2 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
+                    dateScope === tab.id ? 'shadow-xs' : 'hover:bg-slate-100'
                   }`}
                 >
                   {tab.label}
@@ -614,36 +637,72 @@ export default function PrintClearanceReportModal({
             </div>
 
             {dateScope === 'PREVIOUS' && (
-              <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100 animate-in fade-in duration-100">
+              <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-100 animate-in fade-in duration-100">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1.5">
                     From Date:
                   </label>
                   <input
                     type="date"
                     value={printFrom}
                     onChange={(e) => setPrintFrom(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                    style={{ backgroundColor: '#F8FAFC', color: '#0F172A', border: '1.5px solid #CBD5E1' }}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-600 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1.5">
                     To Date:
                   </label>
                   <input
                     type="date"
                     value={printTo}
                     onChange={(e) => setPrintTo(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                    style={{ backgroundColor: '#F8FAFC', color: '#0F172A', border: '1.5px solid #CBD5E1' }}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-600 transition-all"
                   />
                 </div>
               </div>
             )}
           </div>
 
+          {/* Step 5: Filter by Status Scope */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-2xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 m-0">
+                <Filter size={13} className="text-blue-600" />
+                <span>Status Scope:</span>
+              </label>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                {!statusScope
+                  ? 'All Statuses'
+                  : statusScope.includes('APPROVED')
+                  ? 'Approved Only'
+                  : statusScope.includes('REJECTED')
+                  ? 'Rejected Only'
+                  : statusScope.includes('PENDING')
+                  ? 'Pending Only'
+                  : 'Filtered'}
+              </span>
+            </div>
+            <div className="relative">
+              <select
+                value={statusScope}
+                onChange={(e) => setStatusScope(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 hover:border-blue-500 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-all cursor-pointer shadow-2xs"
+              >
+                <option value="">All Statuses (Pending, Approved, Recommended, Rejected)</option>
+                <option value="APPROVED_BY_HOD,APPROVED">Approved Only</option>
+                <option value="PENDING">Pending Review Only</option>
+                <option value="RECOMMENDED_BY_TG">Recommended by TG</option>
+                <option value="REJECTED_BY_HOD,REJECTED_BY_TG,REJECTED">Rejected Only</option>
+              </select>
+            </div>
+          </div>
+
           {/* Preview Note */}
-          <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200/80 text-[11px] text-blue-900 flex items-start gap-2">
-            <CheckCircle2 size={15} className="text-blue-600 shrink-0 mt-0.5" />
+          <div className="p-3.5 bg-blue-50/70 rounded-2xl border border-blue-200/80 text-xs text-blue-900 flex items-start gap-2.5 leading-relaxed">
+            <CheckCircle2 size={16} className="text-blue-600 shrink-0 mt-0.5" />
             <span>
               The report will be formatted into an official OIST CSE departmental document
               in landscape layout with digital authorization stamps ready for institutional printing.
@@ -651,7 +710,7 @@ export default function PrintClearanceReportModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 mt-2">
             <button
               type="button"
               onClick={onClose}
@@ -660,7 +719,7 @@ export default function PrintClearanceReportModal({
                 color: '#334155',
                 border: '1px solid #CBD5E1',
               }}
-              className="px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-200 cursor-pointer transition-colors"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-200 cursor-pointer transition-colors min-h-[42px] flex items-center justify-center"
             >
               Cancel
             </button>
@@ -673,7 +732,7 @@ export default function PrintClearanceReportModal({
                 border: '1px solid #1D4ED8',
                 boxShadow: '0 4px 12px rgba(37, 99, 235, 0.35)',
               }}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white flex items-center gap-2 cursor-pointer transition-all"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[42px] shadow-xs"
             >
               <Printer size={15} style={{ color: '#FFFFFF' }} />
               <span style={{ color: '#FFFFFF' }}>Generate & Print Report</span>

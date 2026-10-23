@@ -516,6 +516,7 @@ export const registerStudent = async ({
     role: 'STUDENT',
     phone: phone ? phone.trim() : null,
     isActive: true,
+    isVerified: true,
     mustChangePassword: false,
   });
 
@@ -623,6 +624,7 @@ export const registerTeacher = async ({
     role: 'TEACHER',
     phone: phone ? phone.trim() : null,
     isActive: true,
+    isVerified: true,
     mustChangePassword: false,
   });
 
@@ -730,52 +732,35 @@ export const loginWithGoogle = async ({ googleUser, userAgent, ip }) => {
     throw ApiError.badRequest('No email address provided by Google account');
   }
 
-  let user = await User.findOne({ email });
-
-  if (user) {
-    if (!user.isActive) {
-      throw ApiError.forbidden('Your account is deactivated. Contact Administrator.');
-    }
-    if (!user.profileImage?.url && googleUser.picture) {
-      user.profileImage = { url: googleUser.picture };
-    }
-    user.lastLoginAt = new Date();
-    await user.save();
-  } else {
-    // If user does not exist in User collection, auto-provision a verified Student
-    const defaultDept =
-      (await Department.findOne({ code: 'CSE' })) ||
-      (await Department.findOne());
-    const defaultSec =
-      (await Section.findOne({ department: defaultDept?._id })) ||
-      (await Section.findOne());
-
-    const randomPass = crypto.randomBytes(24).toString('hex');
-    const passwordHash = await User.hashPassword(randomPass);
-
-    user = await User.create({
-      name: googleUser.name || 'Student',
-      email,
-      passwordHash,
-      role: 'STUDENT',
-      mustChangePassword: false,
-      isActive: true,
-      profileImage: googleUser.picture ? { url: googleUser.picture } : undefined,
-      lastLoginAt: new Date(),
-    });
-
-    const rollNum = '0105CS' + Math.floor(100000 + Math.random() * 900000);
-    if (defaultDept && defaultSec) {
-      await Student.create({
-        user: user._id,
-        department: defaultDept._id,
-        section: defaultSec._id,
-        rollNumber: rollNum,
-        enrollmentYear: new Date().getFullYear(),
-        semester: defaultSec.semester || 5,
-      });
-    }
+  // 1. Google email verification check
+  if (googleUser.email_verified === false) {
+    throw ApiError.unauthorized('Your Google account email is not verified by Google.');
   }
+
+  const user = await User.findOne({ email });
+
+  // 2. Only allow already registered accounts
+  if (!user) {
+    throw ApiError.unauthorized('There is no account linked to this email. Please create one.');
+  }
+
+  // 3. Verify that the user account is verified
+  if (user.isVerified === false) {
+    throw ApiError.forbidden(
+      'Your account is not verified yet. Please complete email verification before signing in.'
+    );
+  }
+
+  // 4. Verify account is active
+  if (!user.isActive) {
+    throw ApiError.forbidden('Your account is deactivated. Contact Administrator.');
+  }
+
+  if (!user.profileImage?.url && googleUser.picture) {
+    user.profileImage = { url: googleUser.picture };
+  }
+  user.lastLoginAt = new Date();
+  await user.save();
 
   // Resolve TG & Profile details (identical to standard login)
   let isTG = false;

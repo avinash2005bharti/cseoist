@@ -22,6 +22,9 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
+const FROM_YEAR_OPTIONS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030];
+const TO_YEAR_OPTIONS = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035];
+
 export default function StudentRegisterPage() {
   const navigate = useNavigate();
 
@@ -34,7 +37,8 @@ export default function StudentRegisterPage() {
     year: '3rd Year',
     semester: 5,
     section: 'Section A',
-    batch: '2022-2026',
+    batchFrom: '2022',
+    batchTo: '2026',
     phone: '',
     password: '',
     confirmPassword: '',
@@ -73,16 +77,61 @@ export default function StudentRegisterPage() {
   const handleYearChange = (e) => {
     const yr = e.target.value;
     let sem = 1;
-    if (yr === '1st Year') sem = 1;
-    else if (yr === '2nd Year') sem = 3;
-    else if (yr === '3rd Year') sem = 5;
-    else if (yr === '4th Year') sem = 7;
+    let fromYr = '2024';
+    let toYr = '2028';
+    if (yr === '1st Year') {
+      sem = 1;
+      fromYr = '2024';
+      toYr = '2028';
+    } else if (yr === '2nd Year') {
+      sem = 3;
+      fromYr = '2023';
+      toYr = '2027';
+    } else if (yr === '3rd Year') {
+      sem = 5;
+      fromYr = '2022';
+      toYr = '2026';
+    } else if (yr === '4th Year') {
+      sem = 7;
+      fromYr = '2021';
+      toYr = '2025';
+    }
 
     setFormData((prev) => ({
       ...prev,
       year: yr,
       semester: sem,
+      batchFrom: fromYr,
+      batchTo: toYr,
     }));
+    if (error) setError('');
+  };
+
+  const handleBatchFromChange = (e) => {
+    const fromVal = e.target.value;
+    const fromNum = parseInt(fromVal, 10);
+    setFormData((prev) => {
+      const currentToNum = parseInt(prev.batchTo, 10);
+      let nextTo = prev.batchTo;
+      if (isNaN(currentToNum) || currentToNum <= fromNum || currentToNum === parseInt(prev.batchFrom, 10) + 4) {
+        nextTo = String(fromNum + 4);
+      }
+      return {
+        ...prev,
+        batchFrom: fromVal,
+        batchTo: nextTo,
+      };
+    });
+    if (error) setError('');
+  };
+
+  const handleBatchToChange = (e) => {
+    const toVal = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      batchTo: toVal,
+    }));
+    if (error) setError('');
   };
 
   // Step 1: Validate form and dispatch Brevo OTP email
@@ -103,6 +152,16 @@ export default function StudentRegisterPage() {
 
     if (!formData.enrollment_no.trim()) {
       setError('Enrollment No. / Student ID is required.');
+      return;
+    }
+
+    if (!formData.batchFrom || !formData.batchTo) {
+      setError('Please select academic batch start and end years.');
+      return;
+    }
+
+    if (parseInt(formData.batchTo, 10) <= parseInt(formData.batchFrom, 10)) {
+      setError('Academic Batch "To" year must be greater than "From" year.');
       return;
     }
 
@@ -182,6 +241,7 @@ export default function StudentRegisterPage() {
     try {
       const cleanSection = formData.section.replace(/Section\s*/i, '').trim() || 'A';
       const cleanYear = parseInt(formData.year) || 3;
+      const computedBatch = `${formData.batchFrom}-${formData.batchTo}`;
 
       const res = await authApi.registerStudent({
         name: formData.name.trim(),
@@ -192,7 +252,8 @@ export default function StudentRegisterPage() {
         year: cleanYear,
         semester: Number(formData.semester),
         section: cleanSection,
-        batch: formData.batch.trim(),
+        batch: computedBatch,
+        enrollmentYear: Number(formData.batchFrom),
         phone: formData.phone.trim() || undefined,
         otp: otp.trim(),
       });
@@ -450,23 +511,52 @@ export default function StudentRegisterPage() {
                 </div>
               </div>
 
-              {/* Academic Batch & Contact Phone */}
+              {/* Academic Batch (From & To) and Contact Phone */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    Academic Batch <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Calendar size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input
-                      type="text"
-                      name="batch"
-                      value={formData.batch}
-                      onChange={handleChange}
-                      placeholder="2022-2026"
-                      required
-                      className="w-full pl-11 pr-4 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-sm text-slate-800 font-medium"
-                    />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 m-0">
+                      <Calendar size={13} className="text-slate-500 shrink-0" />
+                      <span>Academic Batch <span className="text-rose-500">*</span></span>
+                    </label>
+                    <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                      {formData.batchFrom} – {formData.batchTo}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <select
+                        id="academic_batch_from"
+                        name="batchFrom"
+                        value={formData.batchFrom}
+                        onChange={handleBatchFromChange}
+                        aria-label="Academic Batch From Year"
+                        className="w-full px-2.5 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-xs sm:text-sm text-slate-800 font-medium cursor-pointer"
+                      >
+                        {FROM_YEAR_OPTIONS.map((yr) => (
+                          <option key={yr} value={yr}>
+                            From {yr}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <select
+                        id="academic_batch_to"
+                        name="batchTo"
+                        value={formData.batchTo}
+                        onChange={handleBatchToChange}
+                        aria-label="Academic Batch To Year"
+                        className="w-full px-2.5 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-xs sm:text-sm text-slate-800 font-medium cursor-pointer"
+                      >
+                        {TO_YEAR_OPTIONS.map((yr) => (
+                          <option key={yr} value={yr}>
+                            To {yr}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
 

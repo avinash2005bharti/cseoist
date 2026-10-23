@@ -32,7 +32,7 @@ export default function SectionTgMatrixModal({
       try {
         const [secRes, stuRes] = await Promise.allSettled([
           masterDataApi.getSections(),
-          masterDataApi.getStudents(),
+          masterDataApi.getStudents({ all: 'true' }),
         ]);
         if (secRes.status === 'fulfilled' && secRes.value?.data?.length) {
           setSections(secRes.value.data);

@@ -52,7 +52,7 @@ export default function HodMentorship() {
       const [teachersRes, groupsRes, studentsRes] = await Promise.allSettled([
         masterDataApi.getTeachers(),
         mentorshipApi.listGroups(),
-        masterDataApi.getStudents(),
+        masterDataApi.getStudents({ all: 'true' }),
       ]);
 
       if (teachersRes.status === 'fulfilled') setTeachers(teachersRes.value?.data || []);

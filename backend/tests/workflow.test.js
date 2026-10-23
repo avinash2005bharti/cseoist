@@ -359,6 +359,83 @@ describe('11. Group Attendance Consideration Architecture (Per-Section TG & Mast
     assert.equal(hodVisibleRequests.length, 2);
     assert.deepEqual(hodVisibleRequests.map((r) => r.id), ['r1', 'r2']);
   });
+
+  it('should deduplicate student rows across group considerations and child requests', () => {
+    const rawItems = [
+      {
+        id: 'req_master',
+        isGroup: true,
+        isGroupMaster: true,
+        groupId: 'g123',
+        startDate: '2026-10-22',
+        endDate: '2026-10-22',
+        timeFrom: '10:00 AM',
+        timeTo: '04:30 PM',
+        periods: 'P1 - P3',
+        leader: { id: 's1', name: 'Avinash Bharti' },
+        groupMembers: [
+          { id: 's2', name: 'Ayush Mishra' },
+          { id: 's3', name: 'Ayushi Sahu' },
+          { id: 's4', name: 'Bharat Jain' },
+        ],
+      },
+      {
+        id: 'req_slave',
+        isGroup: true,
+        isGroupMaster: false,
+        groupId: 'g123',
+        startDate: '2026-10-22',
+        endDate: '2026-10-22',
+        timeFrom: '10:00 AM',
+        timeTo: '04:30 PM',
+        periods: 'P1 - P3',
+        leader: { id: 's1', name: 'Avinash Bharti' },
+        groupMembers: [
+          { id: 's2', name: 'Ayush Mishra' },
+          { id: 's3', name: 'Ayushi Sahu' },
+          { id: 's4', name: 'Bharat Jain' },
+        ],
+      },
+      {
+        id: 'req_individual',
+        isGroup: false,
+        startDate: '2026-10-22',
+        endDate: '2026-10-22',
+        timeFrom: '2:00 PM',
+        timeTo: '04:40 PM',
+        periods: 'P1 - P3',
+        leader: { id: 's4', name: 'Bharat Jain' },
+        groupMembers: [],
+      },
+    ];
+
+    const seenGroupIds = new Set();
+    const seenStudentClearanceSlots = new Set();
+    const resultRows = [];
+
+    rawItems.forEach((item) => {
+      if (item.isGroup && item.groupId) {
+        if (seenGroupIds.has(item.groupId)) return;
+        seenGroupIds.add(item.groupId);
+      }
+
+      const allStudents = [item.leader, ...item.groupMembers];
+      allStudents.forEach((st) => {
+        const slotKey = `${st.id}_${item.startDate}_${item.endDate}_${item.timeFrom}_${item.timeTo}_${item.periods}`;
+        if (!seenStudentClearanceSlots.has(slotKey)) {
+          seenStudentClearanceSlots.add(slotKey);
+          resultRows.push({ studentId: st.id, name: st.name, time: `${item.timeFrom} - ${item.timeTo}` });
+        }
+      });
+    });
+
+    // Exactly 5 rows: 4 students from the group consideration + 1 distinct row for Bharat Jain's separate 2:00 PM event
+    assert.equal(resultRows.length, 5);
+    assert.equal(resultRows.filter((r) => r.name === 'Avinash Bharti').length, 1);
+    assert.equal(resultRows.filter((r) => r.name === 'Ayush Mishra').length, 1);
+    assert.equal(resultRows.filter((r) => r.name === 'Ayushi Sahu').length, 1);
+    assert.equal(resultRows.filter((r) => r.name === 'Bharat Jain').length, 2); // 1 from group (10:00 AM), 1 from separate event (2:00 PM)
+  });
 });
 
 describe('12. Section Letter Isolation, Temporary Passwords & Student Profile Updates', () => {
