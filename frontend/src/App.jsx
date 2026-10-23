@@ -119,34 +119,28 @@ function RoleRouteGuard({ role, children }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const isStudent = currentUser?.role === 'STUDENT' || currentRole === 'student';
-  const isFaculty = currentUser?.role === 'TEACHER' || currentUser?.role === 'HOD';
+  const userRole = (currentUser?.role || currentRole || 'student').toLowerCase();
+  const isStudent = userRole === 'student';
+  const isFaculty = userRole === 'teacher' || userRole === 'hod';
   const isAppointedTg = isFaculty && Boolean(currentUser?.isTG);
+  const isAdmin = userRole === 'admin';
 
   let isMatch = false;
+  const targetRoles = Array.isArray(role) ? role : [role];
 
   if (isStudent) {
-    // Students can only access student routes
-    isMatch = (Array.isArray(role) ? role.includes('student') : role === 'student');
-  } else if (Array.isArray(role)) {
-    isMatch = role.some((r) => {
-      if (r === currentRole) return true;
-      if (r === 'teacher') return currentRole === 'teacher' || (currentRole === 'tg' && isAppointedTg);
-      if (r === 'tg') return isAppointedTg;
-      return false;
-    });
-  } else if (role === currentRole) {
-    if (role === 'tg') {
-      isMatch = isAppointedTg;
-    } else {
-      isMatch = true;
-    }
-  } else if (role === 'teacher') {
-    isMatch = currentRole === 'teacher' || (currentRole === 'tg' && isAppointedTg);
-    if (role === 'tg' && (currentRole === 'teacher' || currentRole === 'tg')) {
-      return children;
-    }
+    isMatch = targetRoles.includes('student');
+  } else if (isAdmin) {
+    isMatch = targetRoles.some((r) => ['admin', 'hod', 'audit'].includes(r));
+  } else if (userRole === 'hod') {
+    isMatch = targetRoles.some((r) => ['hod', 'teacher', 'audit'].includes(r));
+  } else if (userRole === 'tg' || isAppointedTg) {
+    isMatch = targetRoles.some((r) => ['tg', 'teacher'].includes(r));
+  } else if (userRole === 'teacher') {
+    isMatch = targetRoles.includes('teacher');
+  }
 
+  if (!isMatch) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-4">
         <div className="card text-center max-w-md w-full p-8 flex flex-col items-center gap-4">

@@ -28,7 +28,6 @@ const sectionSchema = new mongoose.Schema(
     code: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
       trim: true,
     },
@@ -43,6 +42,8 @@ const sectionSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+sectionSchema.index({ department: 1, semester: 1, code: 1 }, { unique: true });
 
 const Section = mongoose.model('Section', sectionSchema);
 export default Section;

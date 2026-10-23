@@ -89,14 +89,14 @@ export const uploadDirect = async (file, userId) => {
 
   const ik = getImageKit();
   if (!ik) {
-    const dataUrl = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    // FLAW-FE-01: Avoid storing heavy base64 strings in MongoDB documents
     return {
       fileId: `local-${Date.now()}`,
-      filePath: `/campusflow/dev/${file.originalname}`,
+      filePath: `/campusflow/dev/${userId || 'user'}/${file.originalname}`,
       name: file.originalname,
       mimeType: file.mimetype,
       size: file.size,
-      url: dataUrl,
+      url: '',
       uploadedAt: new Date(),
     };
   }
@@ -152,6 +152,11 @@ export const generateSignedUrl = async (fileId, user) => {
     if (!isOwner && !isAuthorizedRole) {
       throw ApiError.forbidden('You do not have permission to view this attachment');
     }
+  } else {
+    // FLAW-AUTH-07: Fail closed if file is unattached and requester is not Admin/HOD
+    if (user.role !== 'ADMIN' && user.role !== 'HOD') {
+      throw ApiError.forbidden('You do not have permission to access unattached document storage assets');
+    }
   }
 
   // 1. If stored attachment has a direct valid URL, return it
@@ -170,7 +175,7 @@ export const generateSignedUrl = async (fileId, user) => {
     };
   }
 
-  // 2. Try fetching details directly from ImageKit
+  // 2. Fetch details from ImageKit
   if (!fileId.startsWith('local-')) {
     try {
       const details = await ik.getFileDetails(fileId);
@@ -186,30 +191,8 @@ export const generateSignedUrl = async (fileId, user) => {
         expiresIn: 3600,
       };
     } catch {
-      // Fall through to smart fallback
+      // Fall through to fallback
     }
-  }
-
-  // 3. Fallback: Search ImageKit for recent file by name or return available demo asset
-  try {
-    const searchName = targetAttachment?.name || 'download';
-    const cleanSearch = searchName.replace(/\.[^/.]+$/, '');
-    const files = await ik.listFiles({ searchQuery: `name : "${cleanSearch}"`, limit: 1 });
-    if (files && files.length > 0) {
-      const found = files[0];
-      const cleanPath = (found.filePath || '').replace(/^\/+/, '');
-      const signedUrl = ik.url({
-        path: cleanPath,
-        signed: true,
-        expireSeconds: 3600,
-      });
-      return {
-        url: signedUrl || found.url,
-        expiresIn: 3600,
-      };
-    }
-  } catch {
-    // ignore
   }
 
   // Default institutional document preview
@@ -225,7 +208,7 @@ export const generateSignedUrl = async (fileId, user) => {
   };
 };
 
-export const deleteFile = async (fileId, userId) => {
+export const deleteFile = async (fileId, userId, user = null) => {
   // Check if file is already linked to a submitted request
   const [consideration, leave] = await Promise.all([
     ConsiderationRequest.findOne({ 'attachments.fileId': fileId }),
@@ -239,9 +222,19 @@ export const deleteFile = async (fileId, userId) => {
   const ik = getImageKit();
   if (ik && !fileId.startsWith('local-')) {
     try {
+      // FLAW-AUTH-08: Verify ownership before deleting unattached upload
+      const details = await ik.getFileDetails(fileId);
+      const isOwner = details.filePath && userId && details.filePath.includes(`/${userId}/`);
+      const isAdmin = user && (user.role === 'ADMIN' || user.role === 'HOD');
+
+      if (!isOwner && !isAdmin) {
+        throw ApiError.forbidden('You are only authorized to delete files you uploaded');
+      }
+
       await ik.deleteFile(fileId);
-    } catch {
-      // ignore
+    } catch (err) {
+      if (err.statusCode === 403 || err.status === 403) throw err;
+      // non-fatal if file already deleted from storage
     }
   }
 

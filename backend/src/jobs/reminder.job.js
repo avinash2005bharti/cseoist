@@ -79,6 +79,17 @@ export const runAttendanceReminder = async (slot = 'MIDDAY', mockClock = null) =
     const { default: AuditLog } = await import('../models/AuditLog.js');
     const { emitNotification, emitToUser } = await import('../sockets/emitters.js');
     const { sendPushToUser } = await import('../utils/webPush.js');
+    const { acquireDistributedLock, releaseDistributedLock } = await import('../utils/distributedLock.js');
+
+    // FLAW-BKD-04: Prevent multi-instance / clustered duplicate reminder dispatch
+    if (!mockClock) {
+      const lockKey = `reminder_${slot.toLowerCase()}`;
+      const lockAcquired = await acquireDistributedLock(lockKey, 20 * 60 * 1000);
+      if (!lockAcquired) {
+        console.log(`[ReminderJob] Another worker instance holds lock for ${slot} reminder. Skipping.`);
+        return { recipientsCount: 0, pushDelivered: 0, slot, skipped: true };
+      }
+    }
 
     const now = mockClock || new Date();
     const isMidday = slot === 'MIDDAY';

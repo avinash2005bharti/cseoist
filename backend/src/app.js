@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import mongoose from 'mongoose';
 import env from './config/env.js';
 import corsOptions from './config/cors.js';
 import { generalLimiter } from './middleware/rateLimit.js';
@@ -48,11 +49,29 @@ if (env.NODE_ENV !== 'test') {
 
 // Health check endpoint (Phase 1 Acceptance: GET /api/v1/health returns 200)
 app.get('/api/v1/health', (req, res) => {
+  const isDbConnected = mongoose.connection.readyState === 1;
   res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     service: 'CampusFlow Lite API',
     version: '1.0.0',
+    database: isDbConnected ? 'connected' : 'disconnected',
+  });
+});
+
+// Liveness/Readiness probe endpoint
+app.get('/api/v1/ready', (req, res) => {
+  const isDbConnected = mongoose.connection.readyState === 1;
+  if (!isDbConnected) {
+    return res.status(503).json({
+      status: 'unavailable',
+      message: 'Database not connected',
+      readyState: mongoose.connection.readyState,
+    });
+  }
+  return res.status(200).json({
+    status: 'ready',
+    database: 'connected',
   });
 });
 

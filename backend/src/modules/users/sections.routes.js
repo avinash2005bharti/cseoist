@@ -93,9 +93,9 @@ router.post(
     const formattedName = `Section ${cleanName}`;
     const formattedCode = (code || `CSE-${cleanName}-S${semNum}`).toUpperCase().trim();
 
-    const existing = await Section.findOne({ code: formattedCode });
+    const existing = await Section.findOne({ department, semester: semNum, code: formattedCode });
     if (existing) {
-      throw ApiError.conflict(`Section with code '${formattedCode}' already exists`);
+      throw ApiError.conflict(`Section with code '${formattedCode}' already exists in this department and semester`);
     }
 
     const capNum = parseInt(capacity, 10);

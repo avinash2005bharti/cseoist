@@ -23,7 +23,7 @@ export const uploadDirect = asyncHandler(async (req, res) => {
 });
 
 export const deleteUpload = asyncHandler(async (req, res) => {
-  const result = await uploadsService.deleteFile(req.params.fileId, req.user.id);
+  const result = await uploadsService.deleteFile(req.params.fileId, req.user.id, req.user);
   return sendSuccess(res, result);
 });
 

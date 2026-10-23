@@ -67,7 +67,8 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await axios.post('/api/v1/auth/refresh', {}, { withCredentials: true });
+        const refreshUrl = `${apiBaseUrl.replace(/\/+$/, '')}/auth/refresh`;
+        const res = await axios.post(refreshUrl, {}, { withCredentials: true });
         const newToken = res.data?.data?.accessToken;
         if (newToken) {
           setAuthToken(newToken);

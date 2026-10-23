@@ -96,6 +96,7 @@ export const importStudents = async (fileBuffer) => {
   });
 
   for (const r of rows) {
+    let createdUserId = null;
     try {
       if (!r.name || !r.email || !r.deptCode || !r.sectionCode || !r.rollNumber || !r.enrollmentYear) {
         errors.push({ row: r.rowNumber, error: 'Missing required fields' });
@@ -142,6 +143,7 @@ export const importStudents = async (fileBuffer) => {
         mustChangePassword: true,
         isActive: true,
       });
+      createdUserId = user._id;
 
       const student = await Student.create({
         user: user._id,
@@ -161,6 +163,9 @@ export const importStudents = async (fileBuffer) => {
         tempPassword,
       });
     } catch (err) {
+      if (createdUserId) {
+        await User.findByIdAndDelete(createdUserId).catch(() => {});
+      }
       errors.push({ row: r.rowNumber, error: err.message });
     }
   }
@@ -202,6 +207,7 @@ export const importTeachers = async (fileBuffer) => {
   });
 
   for (const r of rows) {
+    let createdUserId = null;
     try {
       if (!r.name || !r.email || !r.deptCode || !r.employeeId) {
         errors.push({ row: r.rowNumber, error: 'Missing required fields' });
@@ -240,6 +246,7 @@ export const importTeachers = async (fileBuffer) => {
         mustChangePassword: true,
         isActive: true,
       });
+      createdUserId = user._id;
 
       const teacher = await Teacher.create({
         user: user._id,
@@ -256,6 +263,9 @@ export const importTeachers = async (fileBuffer) => {
         tempPassword,
       });
     } catch (err) {
+      if (createdUserId) {
+        await User.findByIdAndDelete(createdUserId).catch(() => {});
+      }
       errors.push({ row: r.rowNumber, error: err.message });
     }
   }

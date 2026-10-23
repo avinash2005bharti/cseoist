@@ -7,14 +7,24 @@ import { sendSuccess } from '../../utils/response.js';
 
 const router = Router();
 
-// HOD, Admin, TG, and Students can list and view students
+// HOD, Admin, and TG can list full student directory (STUDENT is restricted)
 router.get(
   '/',
   auth,
-  authorize('HOD', 'ADMIN', 'TG', 'STUDENT'),
+  authorize('HOD', 'ADMIN', 'TG'),
   asyncHandler(async (req, res) => {
     const result = await studentsService.listStudents(req.query);
     return sendSuccess(res, result.students, result.meta);
+  })
+);
+
+// Students and faculty can search peers for group applications (sanitized public fields only)
+router.get(
+  '/search-peers',
+  auth,
+  asyncHandler(async (req, res) => {
+    const peers = await studentsService.searchPeers(req.query, req.user);
+    return sendSuccess(res, peers);
   })
 );
 
@@ -33,7 +43,7 @@ router.patch(
   auth,
   authorize('HOD', 'ADMIN', 'TG'),
   asyncHandler(async (req, res) => {
-    const student = await studentsService.updateStudent(req.params.id, req.body);
+    const student = await studentsService.updateStudent(req.params.id, req.body, req.user);
     return sendSuccess(res, student);
   })
 );

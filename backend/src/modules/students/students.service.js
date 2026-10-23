@@ -8,6 +8,7 @@ import Teacher from '../../models/Teacher.js';
 import ConsiderationRequest from '../../models/ConsiderationRequest.js';
 import LeaveApplication from '../../models/LeaveApplication.js';
 import Notification from '../../models/Notification.js';
+import ApiError from '../../utils/ApiError.js';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.js';
 
 export const listStudents = async (query) => {
@@ -101,10 +102,39 @@ export const getStudentById = async (id) => {
     });
 };
 
-export const updateStudent = async (id, data) => {
+export const updateStudent = async (id, data, actorUser = null) => {
   const student = await Student.findById(id);
   if (!student) {
-    throw new Error('Student not found');
+    throw ApiError.notFound('Student not found');
+  }
+
+  // FLAW-AUTH-04: Strict cohort scoping and field restrictions for Tutor Guardians
+  if (actorUser && actorUser.role === 'TG') {
+    const activeGroups = await MentorGroup.find({ tg: actorUser.teacherId, isActive: true });
+    const assignedSectionIds = activeGroups.map((g) => g.section?.toString()).filter(Boolean);
+    const assignedStudentIds = activeGroups.flatMap((g) => (g.students || []).map((s) => s.toString()));
+
+    const isMentee =
+      assignedStudentIds.includes(student._id.toString()) ||
+      (student.mentorGroup && activeGroups.some((g) => g._id.toString() === student.mentorGroup.toString())) ||
+      (student.section && assignedSectionIds.includes(student.section.toString()));
+
+    if (!isMentee) {
+      throw ApiError.forbidden('You are only authorized to update students assigned to your cohort');
+    }
+
+    // TGs are NOT authorized to alter institutional attributes or account status
+    if (
+      data.status !== undefined ||
+      data.rollNumber ||
+      data.enrollmentYear ||
+      data.batch ||
+      data.section ||
+      data.semester ||
+      data.department
+    ) {
+      throw ApiError.forbidden('Tutor Guardians cannot alter student status, roll number, semester, section, or enrollment parameters');
+    }
   }
 
   if (data.name || data.phone || data.status !== undefined || data.email) {
@@ -248,9 +278,45 @@ export const deleteStudent = async (id) => {
   return { message: 'Student deleted successfully' };
 };
 
+export const searchPeers = async (query = {}, user = null) => {
+  const search = (query.search || query.q || '').trim();
+  if (!search || search.length < 2) {
+    return [];
+  }
+
+  const searchRegex = new RegExp(search, 'i');
+  const matchingUsers = await User.find({
+    role: 'STUDENT',
+    isActive: true,
+    name: searchRegex,
+  }).select('_id name');
+
+  const students = await Student.find({
+    $or: [
+      { rollNumber: searchRegex },
+      { user: { $in: matchingUsers.map((u) => u._id) } },
+    ],
+  })
+    .populate('user', 'name')
+    .populate('section', 'name code semester')
+    .select('_id rollNumber user section semester')
+    .limit(20);
+
+  return students.map((s) => ({
+    _id: s._id,
+    id: s._id,
+    name: s.user?.name || 'Student',
+    rollNumber: s.rollNumber,
+    section: s.section,
+    semester: s.semester,
+  }));
+};
+
 export default {
   listStudents,
   getStudentById,
   updateStudent,
   deleteStudent,
+  searchPeers,
 };
+

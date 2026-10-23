@@ -553,9 +553,28 @@ export const tgReviewLeave = async (id, user, { decision, remarks }) => {
     console.error('[Email Dispatch Failed]:', e.message);
   }
 
-  // If recommended, notify HOD
+  // If recommended, notify HOD of applicant's department only (and Admin)
   if (decision === 'RECOMMEND') {
-    const hodUsers = await User.find({ role: { $in: ['HOD', 'ADMIN'] }, isActive: true });
+    let deptId = null;
+    if (leave.student) {
+      const studentDoc = await Student.findById(leave.student).select('department');
+      deptId = studentDoc?.department;
+    }
+    let hodUsers = [];
+    if (deptId) {
+      const deptTeachers = await Teacher.find({ department: deptId }).select('user');
+      const deptTeacherUserIds = deptTeachers.map((t) => t.user);
+      hodUsers = await User.find({
+        $or: [
+          { role: 'ADMIN' },
+          { role: 'HOD', _id: { $in: deptTeacherUserIds } },
+        ],
+        isActive: true,
+      });
+    } else {
+      hodUsers = await User.find({ role: { $in: ['HOD', 'ADMIN'] }, isActive: true });
+    }
+
     for (const hod of hodUsers) {
       const hNotif = await Notification.create({
         user: hod._id,
@@ -590,16 +609,19 @@ export const finalReviewLeave = async (id, user, { decision, remarks }) => {
     throw ApiError.forbidden('You cannot review your own leave application');
   }
 
-  // BKD-02: HOD department scope check
-  if (user.role === 'HOD' && user.departmentId) {
+  // BKD-02 / FLAW-AUTH-05: HOD department scope check (fail-closed)
+  if (user.role === 'HOD') {
+    if (!user.departmentId) {
+      throw ApiError.forbidden('Head of Department account has no assigned department');
+    }
     if (leave.applicantRole === 'STUDENT' && leave.student) {
       const student = await Student.findById(leave.student);
-      if (student && student.department?.toString() !== user.departmentId) {
+      if (student && student.department?.toString() !== user.departmentId.toString()) {
         throw ApiError.forbidden('You are only authorized to review leaves from your department');
       }
     } else if (leave.applicantRole === 'TEACHER' && leave.teacher) {
       const teacher = await Teacher.findById(leave.teacher);
-      if (teacher && teacher.department?.toString() !== user.departmentId) {
+      if (teacher && teacher.department?.toString() !== user.departmentId.toString()) {
         throw ApiError.forbidden('You are only authorized to review leaves from your department');
       }
     }

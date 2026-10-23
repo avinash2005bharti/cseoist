@@ -10,6 +10,7 @@ import ConsiderationRequest from '../../models/ConsiderationRequest.js';
 import LeaveApplication from '../../models/LeaveApplication.js';
 import RefreshToken from '../../models/RefreshToken.js';
 import Notification from '../../models/Notification.js';
+import Notice from '../../models/Notice.js';
 import ApiError from '../../utils/ApiError.js';
 import { sendTemporaryPasswordEmail } from '../../utils/sendEmail.js';
 import { emitNotification } from '../../sockets/emitters.js';
@@ -436,9 +437,11 @@ export const deleteUser = async (id, requestingUser = null) => {
     }
   }
 
-  // Clean tokens and notifications
+  // Clean tokens, notifications, notices, and HOD appointments
   await Notification.deleteMany({ user: user._id });
   await RefreshToken.deleteMany({ user: user._id });
+  await Notice.deleteMany({ author: user._id });
+  await HodAppointment.deleteMany({ user: user._id });
   await User.findByIdAndDelete(id);
 
   return {
@@ -824,10 +827,44 @@ export const removeTG = async (userId, actorUser = null) => {
   };
 };
 
-export const resetPassword = async (id, customPassword = null) => {
+export const resetPassword = async (id, customPassword = null, actorUser = null) => {
   const user = await User.findById(id);
   if (!user) {
     throw ApiError.notFound('User not found');
+  }
+
+  // FLAW-AUTH-02: Strict role and cohort boundary enforcement
+  if (actorUser) {
+    if (actorUser.role === 'TG') {
+      // TG can strictly only reset credentials for students
+      if (user.role !== 'STUDENT') {
+        throw ApiError.forbidden('Tutor Guardians are only authorized to reset student credentials');
+      }
+
+      // Verify student belongs to this TG's cohort
+      const student = await Student.findOne({ user: user._id });
+      if (!student) {
+        throw ApiError.forbidden('Target student profile not found');
+      }
+
+      const activeGroups = await MentorGroup.find({ tg: actorUser.teacherId, isActive: true });
+      const assignedSectionIds = activeGroups.map((g) => g.section?.toString()).filter(Boolean);
+      const assignedStudentIds = activeGroups.flatMap((g) => (g.students || []).map((s) => s.toString()));
+
+      const isMentee =
+        assignedStudentIds.includes(student._id.toString()) ||
+        (student.mentorGroup && activeGroups.some((g) => g._id.toString() === student.mentorGroup.toString())) ||
+        (student.section && assignedSectionIds.includes(student.section.toString()));
+
+      if (!isMentee) {
+        throw ApiError.forbidden('You can only reset credentials for students assigned to your cohort');
+      }
+    } else if (actorUser.role === 'HOD') {
+      // HOD cannot reset Administrator passwords
+      if (user.role === 'ADMIN') {
+        throw ApiError.forbidden('Head of Department cannot reset Administrator credentials');
+      }
+    }
   }
 
   const newPassword = (customPassword && customPassword.trim().length >= 6)

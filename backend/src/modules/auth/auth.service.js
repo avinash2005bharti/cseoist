@@ -19,6 +19,11 @@ const hashToken = (token) => {
   return crypto.createHash('sha256').update(token).digest('hex');
 };
 
+export const hashOtp = (otp) => {
+  if (!otp) return null;
+  return crypto.createHash('sha256').update(String(otp).trim()).digest('hex');
+};
+
 const generateAccessToken = (user, extraClaims = {}) => {
   return jwt.sign(
     {
@@ -318,19 +323,20 @@ export const sendStudentRegistrationOtp = async ({ email, name }) => {
   // Generate 6-digit numeric OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes validity
+  const hashedOtp = hashOtp(otp);
 
-  // 1. Save persistently in MongoDB Otp collection
+  // 1. Save persistently in MongoDB Otp collection with hashed OTP
   await Otp.deleteMany({ email: normEmail, purpose: 'REGISTRATION' });
   await Otp.create({
     email: normEmail,
-    otp,
+    otp: hashedOtp,
     purpose: 'REGISTRATION',
     expiresAt,
   });
 
-  // 2. Also keep in memory map as immediate fallback
+  // 2. Also keep in memory map as immediate fallback with hashed OTP
   registrationOtps.set(normEmail, {
-    otp,
+    otp: hashedOtp,
     expiresAt: expiresAt.getTime(),
     name: (name || 'Student').trim(),
   });
@@ -340,9 +346,9 @@ export const sendStudentRegistrationOtp = async ({ email, name }) => {
     console.error('❌ [Brevo Send OTP Error]:', err.message);
   });
 
-  console.log(`\n======================================================`);
-  console.log(`🔑 [STUDENT REGISTRATION OTP]: ${otp} for ${normEmail}`);
-  console.log(`======================================================\n`);
+  // Sanitized operational logging - never leak raw OTPs
+  const maskedEmail = normEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+  console.log(`[AuthService] Dispatched student registration verification code to ${maskedEmail}`);
 
   return {
     message: `A 6-digit verification code has been dispatched to ${normEmail}.`,
@@ -365,15 +371,16 @@ export const verifyRegistrationOtp = async ({ email, otp }) => {
 
   const memOtp = registrationOtps.get(normEmail);
   const rawStoredOtp = dbOtp?.otp || memOtp?.otp;
-  const storedOtp = rawStoredOtp ? String(rawStoredOtp).replace(/\D/g, '').trim() : null;
+  const storedOtp = rawStoredOtp ? String(rawStoredOtp).trim() : null;
   const isExpired =
     (dbOtp && dbOtp.expiresAt < new Date()) ||
     (memOtp && memOtp.expiresAt < Date.now());
 
-  if (!storedOtp) {
-    if (cleanOtp === '123456' && process.env.NODE_ENV !== 'production') {
-      return { success: true, verified: true, message: 'Verification code verified (dev mode).' };
-    }
+  const hashedInput = hashOtp(cleanOtp);
+  const matchesStored = storedOtp && (storedOtp === hashedInput || storedOtp === cleanOtp);
+  const isTestBypass = cleanOtp === '123456' && process.env.NODE_ENV === 'test';
+
+  if (!storedOtp && !isTestBypass) {
     throw ApiError.badRequest('No active verification code found for this email. Please request a new code.');
   }
 
@@ -383,7 +390,7 @@ export const verifyRegistrationOtp = async ({ email, otp }) => {
     throw ApiError.badRequest('Verification code has expired. Please request a new code.');
   }
 
-  if (cleanOtp !== storedOtp && cleanOtp !== '123456') {
+  if (!matchesStored && !isTestBypass) {
     throw ApiError.badRequest('Invalid verification code. Please check your email.');
   }
 
@@ -417,6 +424,7 @@ export const registerStudent = async ({
   // If OTP is provided, verify against database and memory
   if (otp) {
     const cleanOtp = String(otp).replace(/\D/g, '').trim();
+    const hashedInput = hashOtp(cleanOtp);
     const dbOtp = await Otp.findOne({
       email: normEmail,
       purpose: 'REGISTRATION',
@@ -424,10 +432,13 @@ export const registerStudent = async ({
 
     const memOtp = registrationOtps.get(normEmail);
     const rawStoredOtp = dbOtp?.otp || memOtp?.otp;
-    const storedOtp = rawStoredOtp ? String(rawStoredOtp).replace(/\D/g, '').trim() : null;
+    const storedOtp = rawStoredOtp ? String(rawStoredOtp).trim() : null;
     const isExpired =
       (dbOtp && dbOtp.expiresAt < new Date()) ||
       (memOtp && memOtp.expiresAt < Date.now());
+
+    const matchesStored = storedOtp && (storedOtp === hashedInput || storedOtp === cleanOtp);
+    const isTestBypass = cleanOtp === '123456' && process.env.NODE_ENV === 'test';
 
     if (storedOtp) {
       if (isExpired) {
@@ -435,13 +446,13 @@ export const registerStudent = async ({
         registrationOtps.delete(normEmail);
         throw ApiError.badRequest('Verification code has expired. Please request a new code.');
       }
-      if (cleanOtp !== storedOtp && cleanOtp !== '123456') {
+      if (!matchesStored && !isTestBypass) {
         throw ApiError.badRequest('Invalid verification code. Please check the code sent to your email.');
       }
       // Verified! Remove OTP from store
       await Otp.deleteMany({ email: normEmail, purpose: 'REGISTRATION' });
       registrationOtps.delete(normEmail);
-    } else if (cleanOtp !== '123456') {
+    } else if (!isTestBypass) {
       const verifiedRecord = await Otp.findOne({
         email: normEmail,
         purpose: 'REGISTRATION',
@@ -661,16 +672,17 @@ export const forgotPassword = async (email) => {
   // Generate 6-digit numeric OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+  const hashedOtp = hashOtp(otp);
 
-  user.resetPasswordOtp = otp;
+  user.resetPasswordOtp = hashedOtp;
   user.resetPasswordExpires = expires;
   await user.save();
 
-  // Also persist in Otp collection
+  // Also persist in Otp collection with hashed value
   await Otp.deleteMany({ email: normEmail, purpose: 'RESET_PASSWORD' });
   await Otp.create({
     email: normEmail,
-    otp,
+    otp: hashedOtp,
     purpose: 'RESET_PASSWORD',
     expiresAt: expires,
   });
@@ -680,9 +692,9 @@ export const forgotPassword = async (email) => {
     console.error('[Forgot Password Email Error]:', err.message);
   });
 
-  console.log(`\n======================================================`);
-  console.log(`🔑 [PASSWORD RESET OTP]: ${otp} for ${normEmail}`);
-  console.log(`======================================================\n`);
+  // Sanitized operational logging - never log raw OTPs
+  const maskedEmail = normEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+  console.log(`[AuthService] Password reset verification code dispatched to ${maskedEmail}`);
 
   return { message: 'If this email is registered in our portal, a password reset code has been sent.' };
 };
@@ -690,23 +702,25 @@ export const forgotPassword = async (email) => {
 export const resetPasswordWithOtp = async ({ email, otp, newPassword }) => {
   const normEmail = (email || '').toLowerCase().trim();
   const cleanOtp = String(otp || '').replace(/\D/g, '').trim();
+  const hashedInput = hashOtp(cleanOtp);
+  const isTestBypass = cleanOtp === '123456' && process.env.NODE_ENV === 'test';
 
-  // 1. Query User document with resetPasswordOtp
+  // 1. Query User document with hashed resetPasswordOtp (or plaintext for backward compatibility)
   let user = await User.findOne({
     email: normEmail,
-    resetPasswordOtp: cleanOtp,
+    resetPasswordOtp: { $in: [hashedInput, cleanOtp] },
     resetPasswordExpires: { $gt: new Date() },
   }).select('+resetPasswordOtp +resetPasswordExpires');
 
-  // 2. Fallback to Otp collection or dev bypass
+  // 2. Fallback to Otp collection or test mock bypass
   if (!user) {
     const dbOtp = await Otp.findOne({
       email: normEmail,
       purpose: 'RESET_PASSWORD',
-      otp: cleanOtp,
+      otp: { $in: [hashedInput, cleanOtp] },
       expiresAt: { $gt: new Date() },
     });
-    if (dbOtp || (cleanOtp === '123456' && process.env.NODE_ENV !== 'production')) {
+    if (dbOtp || isTestBypass) {
       user = await User.findOne({ email: normEmail }).select('+resetPasswordOtp +resetPasswordExpires');
     }
   }

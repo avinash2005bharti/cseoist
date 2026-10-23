@@ -888,9 +888,15 @@ export const hodReview = async (id, user, { decision, remarks, approvedPeriods }
     throw ApiError.forbidden('You cannot review your own request');
   }
 
-  // BKD-01: HOD can only review requests from their own department
-  if (user.role === 'HOD' && user.departmentId && request.student?.department?.toString() !== user.departmentId) {
-    throw ApiError.forbidden('You are only authorized to review requests from your department');
+  // BKD-01 / FLAW-AUTH-05: HOD can strictly only review requests from their assigned department
+  if (user.role === 'HOD') {
+    if (!user.departmentId) {
+      throw ApiError.forbidden('Head of Department account has no assigned department');
+    }
+    const studentDept = request.student?.department?.toString();
+    if (studentDept && studentDept !== user.departmentId.toString()) {
+      throw ApiError.forbidden('You are only authorized to review requests from your department');
+    }
   }
 
   // Allowed transitions: HOD can review RECOMMENDED_BY_TG, PENDING (direct approval/override), APPLIED, or escalated

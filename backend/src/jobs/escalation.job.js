@@ -17,8 +17,19 @@ export const runEscalationScan = async (mockClock = null) => {
     const { default: User } = await import('../models/User.js');
     const { default: Notification } = await import('../models/Notification.js');
     const { default: AuditLog } = await import('../models/AuditLog.js');
+    const { default: Teacher } = await import('../models/Teacher.js');
     const { emitNotification, emitQueueChanged } = await import('../sockets/emitters.js');
     const { getTodayIST } = await import('../utils/dates.js');
+    const { acquireDistributedLock, releaseDistributedLock } = await import('../utils/distributedLock.js');
+
+    // FLAW-BKD-04: Prevent multi-instance / clustered duplicate execution
+    if (!mockClock) {
+      const lockAcquired = await acquireDistributedLock('escalation_scan', 10 * 60 * 1000);
+      if (!lockAcquired) {
+        console.log('[EscalationJob] Another worker instance is currently executing or holds lock. Skipping cycle.');
+        return;
+      }
+    }
 
     const now = mockClock || new Date();
     const escalationHours = env.ESCALATION_HOURS || 48;
@@ -58,8 +69,20 @@ export const runEscalationScan = async (mockClock = null) => {
       });
       await req.save();
 
-      // Find HOD users to notify
-      const hodUsers = await User.find({ role: { $in: ['HOD', 'ADMIN'] }, isActive: true });
+      // FLAW-AUTH-06: Find HOD users for this student's department specifically (and Admin)
+      let deptHodQuery = { role: { $in: ['HOD', 'ADMIN'] }, isActive: true };
+      if (req.student?.department) {
+        const deptTeachers = await Teacher.find({ department: req.student.department }).select('user');
+        const deptTeacherUserIds = deptTeachers.map((t) => t.user);
+        deptHodQuery = {
+          $or: [
+            { role: 'ADMIN' },
+            { role: 'HOD', _id: { $in: deptTeacherUserIds } },
+          ],
+          isActive: true,
+        };
+      }
+      const hodUsers = await User.find(deptHodQuery);
       for (const hod of hodUsers) {
         const notif = await Notification.create({
           user: hod._id,
@@ -118,7 +141,20 @@ export const runEscalationScan = async (mockClock = null) => {
       });
       await leave.save();
 
-      const hodUsers = await User.find({ role: { $in: ['HOD', 'ADMIN'] }, isActive: true });
+      // FLAW-AUTH-06: Find HOD users for this student's department specifically (and Admin)
+      let deptHodQuery = { role: { $in: ['HOD', 'ADMIN'] }, isActive: true };
+      if (leave.student?.department) {
+        const deptTeachers = await Teacher.find({ department: leave.student.department }).select('user');
+        const deptTeacherUserIds = deptTeachers.map((t) => t.user);
+        deptHodQuery = {
+          $or: [
+            { role: 'ADMIN' },
+            { role: 'HOD', _id: { $in: deptTeacherUserIds } },
+          ],
+          isActive: true,
+        };
+      }
+      const hodUsers = await User.find(deptHodQuery);
       for (const hod of hodUsers) {
         const notif = await Notification.create({
           user: hod._id,
@@ -160,6 +196,13 @@ export const runEscalationScan = async (mockClock = null) => {
     }
   } catch (error) {
     console.error('[EscalationJob] Error running escalation scan:', error.message);
+  } finally {
+    if (!mockClock) {
+      try {
+        const { releaseDistributedLock } = await import('../utils/distributedLock.js');
+        await releaseDistributedLock('escalation_scan');
+      } catch {}
+    }
   }
 };
 

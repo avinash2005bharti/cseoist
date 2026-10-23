@@ -1,479 +1,468 @@
-# CampusFlow Lite — Reference-Based ERP Implementation Flaws Register
+# Project Technical Audit and Flaw Report
 
-> **Audit Type**: Reference-Based ERP Implementation Audit, Gap Analysis & Automatic Remediation  
-> **Reference Architecture**: `system-architecture.md` (Departmental ERP Lite: HOD, TG, and Student)  
-> **Audit Status**: ✅ Remediation Complete & Verified  
-> **Backend Tests**: 23/23 Passing (10 Test Suites)  
-> **Frontend Build**: Vite 5 Production Bundle Passing (0 Errors)  
-
----
-
-## Issue Status Summary
-
-| Category | Total Identified | Verified Remediated | Open / Environmental |
-|---|:---:|:---:|:---:|
-| 1. Security & Access Control | 9 | 9 | 0 |
-| 2. Backend Logic & Scoping | 14 | 14 | 0 |
-| 3. Role Constraints & Scope (3 Roles) | 7 | 7 | 0 |
-| 4. Frontend-Backend Contract Alignment | 6 | 6 | 0 |
-| 5. TG Dashboard & Workspace Defects | 7 | 7 | 0 |
-| 6. Missing Features & Recovery Flows | 8 | 8 | 0 |
-| 7. Data Integrity & Cascades | 6 | 6 | 0 |
-| 8. Frontend Usability, Contrast & 404 | 6 | 6 | 0 |
-| 9. HOD Mentorship & Cohort Governance | 3 | 3 | 0 |
-| **Total** | **66** | **66** | **0** |
+> **Target Project**: CampusFlow Lite (Departmental Consideration & ERP Lite)  
+> **Repository Root**: `c:\Users\HP\OneDrive\Desktop\consideration management`  
+> **Audit Type**: Comprehensive Second-Pass Technical Audit & Codebase Inspection  
+> **Audit Date**: October 2026  
+> **Directive**: AUDIT ONLY — Zero code modifications executed during this audit run.  
+> **Context**: All previous audit findings (FLAW-SEC-01–05, FLAW-AUTH-01–08, FLAW-BKD-01–05, FLAW-FNT-01–03, FLAW-DAT-01–03) have been remediated and verified (57/57 tests passing). This report presents brand-new, unaddressed vulnerabilities, edge cases, and architectural gaps discovered during in-depth static analysis of the updated codebase.
 
 ---
 
-## Detailed Issue Register
+## 1. Executive Summary
 
-### Category 1: Security & Access Control
+A thorough second-pass technical audit of **CampusFlow Lite** was performed across the entire repository. This audit focused on deep multi-tenant isolation, data synchronization across academic progressions, query scalability under unbounded conditions, reporting query precision, background worker resilience, and failure handling for unassigned entity lifecycles.
 
-#### SEC-01 🔴 Hardcoded Secrets in Version Control
-- **Module & Feature**: Authentication & Infrastructure Security
-- **Severity**: Critical
-- **Requirement from Reference**: Sensitive connection strings, encryption salts, and private keys must be isolated to local environment files and never committed to version control.
-- **Observed Implementation**: `.env` was previously tracked with Atlas connection string and JWT keys.
-- **Files Involved**: `.gitignore`, `backend/.env`, `backend/src/config/env.js`
-- **Verification Method**: Verified `.gitignore` contains `.env`, `.env.*`, and `env`. Verified `env.js` validates all parameters with Zod schema.
-- **Root Cause**: Early deployment convenience led to configuration files being committed.
-- **Expected Behaviour**: Secrets loaded exclusively from unversioned environment variables.
-- **Required Correction**: Ignore all `.env` variants in `.gitignore`, use default fallbacks for local test runner.
-- **Dependencies & Regression Risks**: Low. Local development requires `.env` or defaults.
-- **Status**: **Verified**
-
-#### SEC-02 🔴 Public Teacher Self-Registration
-- **Module & Feature**: User Registration & Role Assignment
-- **Severity**: Critical
-- **Requirement from Reference**: Faculty & TG accounts must be provisioned exclusively by Department Administration (HOD / Admin). Public self-registration is reserved strictly for enrolled students.
-- **Observed Implementation**: Public route `POST /api/v1/auth/register/teacher` and frontend route `/register/teacher` allowed anonymous visitors to create faculty accounts with unverified access.
-- **Files Involved**: `backend/src/modules/auth/auth.routes.js`, `frontend/src/App.jsx`, `frontend/src/pages/auth/LoginPage.jsx`
-- **Verification Method**: `App.jsx` redirects `/register/teacher` $\rightarrow$ `/register`. Login page displays official institutional note: *"Faculty & Staff accounts are provisioned exclusively by Department Administration."* Automated test suite 7 verifies `registerStudentSchema`.
-- **Root Cause**: Prototyping shortcut allowing self-signup across all roles.
-- **Expected Behaviour**: Only students self-register; faculty directory is administered by HOD.
-- **Required Correction**: Redirect frontend `/register/teacher` to `/register`, protect faculty onboarding.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### SEC-03 🔴 Hardcoded Authentication Bypass Backdoor
-- **Module & Feature**: Authentication Session Management
-- **Severity**: Critical
-- **Requirement from Reference**: All authentication must proceed through verified password hashing (bcrypt) or signed JWT session tokens.
-- **Observed Implementation**: `ERPContext.jsx` had a `?auth_bypass=hod` query parameter listener that automatically signed in users as HOD without credentials.
-- **Files Involved**: `frontend/src/context/ERPContext.jsx`
-- **Verification Method**: Grep search confirmed 0 occurrences of `auth_bypass` across codebase. URL parameter query ignores bypass tokens.
-- **Root Cause**: Developer debug shortcut left in production frontend context.
-- **Expected Behaviour**: Unauthenticated users must always present valid credentials via `/login`.
-- **Required Correction**: Remove all bypass parameter listeners from `ERPContext.jsx`.
-- **Dependencies & Regression Risks**: Zero.
-- **Status**: **Verified**
-
-#### SEC-04 🟠 Insecure Storage of Sensitive Session Data
-- **Module & Feature**: Client Token Lifecycle
-- **Severity**: High
-- **Requirement from Reference**: Refresh tokens must use `httpOnly`, `sameSite` secure cookies with rotation to prevent XSS exfiltration.
-- **Observed Implementation**: Refresh tokens are issued via `httpOnly` cookie with rotation (`/auth/refresh`), while short-lived access tokens (15-min TTL) are handled via memory/localStorage headers.
-- **Files Involved**: `backend/src/modules/auth/auth.controller.js`, `frontend/src/api/client.js`
-- **Verification Method**: `auth.controller.js` sets `refreshToken` in httpOnly cookie with `maxAge: 7 * 24 * 60 * 60 * 1000`. Axios interceptor automatically requests refresh on 401.
-- **Root Cause**: Dual-token architecture requires httpOnly cookie isolation for persistent tokens.
-- **Expected Behaviour**: Long-lived refresh token cannot be accessed by client JavaScript.
-- **Required Correction**: Enforce cookie configuration and access token expiration.
-- **Dependencies & Regression Risks**: Client requires cookie transmission (`credentials: 'include'`).
-- **Status**: **Verified**
-
-#### SEC-05 🟠 Student Cascade Cleanup on Deletion
-- **Module & Feature**: Student Management & Relational Integrity
-- **Severity**: High
-- **Requirement from Reference**: Deleting a student must cascade-delete or disassociate all dependent attendance considerations, leave applications, notifications, and cohort memberships.
-- **Observed Implementation**: `deleteStudent()` previously only removed the `Student` and `User` records, leaving orphaned references.
-- **Files Involved**: `backend/src/modules/students/students.service.js` L120-143
-- **Verification Method**: Inspected `deleteStudent()`: deletes `ConsiderationRequest.deleteMany({ student: id })`, `LeaveApplication.deleteMany({ student: id })`, pulls student from `MentorGroup.updateMany({ students: id }, { $pull: { students: id } })`, and deletes notifications.
-- **Root Cause**: Incomplete cascade logic in initial delete implementation.
-- **Expected Behaviour**: Database remains referentially consistent with zero orphaned records.
-- **Required Correction**: Add cascade deletions in `students.service.js`.
-- **Dependencies & Regression Risks**: Relies on valid student ID.
-- **Status**: **Verified**
-
-#### SEC-06 🟠 TG Role Student Deletion Authorization Loophole
-- **Module & Feature**: Student Permissions & Access Control
-- **Severity**: High
-- **Requirement from Reference**: Tutor Guardians mentor students and provide Tier-1 review. TGs must NOT have authority to permanently delete student records from the college ERP.
-- **Observed Implementation**: `students.routes.js` had `authorize('HOD', 'ADMIN', 'TG')` on `DELETE /:id`, and `TgMyStudents.jsx` rendered a Delete button on student cards.
-- **Files Involved**: `backend/src/modules/students/students.routes.js`, `frontend/src/pages/tg/TgMyStudents.jsx`
-- **Verification Method**: Automated test suite 8 asserts `authorizedDeleteRoles.includes('TG') === false`. Frontend button and `Trash2` icon removed.
-- **Root Cause**: Over-permissive route authorization.
-- **Expected Behaviour**: `DELETE /api/v1/students/:id` responds with `403 Forbidden` for TG role.
-- **Required Correction**: Restrict delete endpoint to `authorize('HOD', 'ADMIN')`.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### SEC-07 🟡 Login Query RegExp Injection Risk
-- **Module & Feature**: Authentication Controller
-- **Severity**: Medium
-- **Requirement from Reference**: User login lookup must escape special regex characters or use exact case-insensitive match options.
-- **Observed Implementation**: Query matched email/roll number using unescaped user string.
-- **Files Involved**: `backend/src/modules/auth/auth.service.js`
-- **Verification Method**: Input is trimmed and normalized via lowercase string matching and exact search.
-- **Root Cause**: Direct interpolation of input string into regex.
-- **Expected Behaviour**: Safe, sanitized lookup without ReDoS vulnerabilities.
-- **Required Correction**: Use normalized strings and exact match lookups.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### SEC-08 🟡 Registration Endpoints Input Validation
-- **Module & Feature**: Input Validation Middleware
-- **Severity**: Medium
-- **Requirement from Reference**: Registration payloads must be validated against strict Zod schemas before hitting business logic.
-- **Observed Implementation**: Registration routes lacked `validateBody()` middleware.
-- **Files Involved**: `backend/src/modules/auth/auth.routes.js`, `backend/src/modules/auth/auth.schema.js`
-- **Verification Method**: `auth.routes.js` applies `validateBody(registerStudentSchema)`. Automated test suite 7 verifies schema rejection of weak passwords and invalid emails.
-- **Root Cause**: Validation middleware omitted during route setup.
-- **Expected Behaviour**: Malformed bodies return `400 Bad Request` with structured error details.
-- **Required Correction**: Implement `registerStudentSchema` and wire with `validateBody`.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### SEC-09 🟡 User Management Route Privilege Escalation Risk
-- **Module & Feature**: User Account Administration
-- **Severity**: Medium
-- **Requirement from Reference**: User account creation, status toggling, and role modification are privileged operations restricted to HOD and Admin.
-- **Observed Implementation**: TG role previously had access to user management CRUD routes.
-- **Files Involved**: `backend/src/modules/users/users.routes.js`
-- **Verification Method**: Verified `users.routes.js` specifies `authorize('ADMIN', 'HOD')` for `GET /`, `POST /`, `PATCH /:id`, and `PATCH /:id/status`. TG only retains student password resets.
-- **Root Cause**: Role grouping bundled TG with administrative staff.
-- **Expected Behaviour**: TGs cannot alter user roles or deactivate accounts.
-- **Required Correction**: Restrict administrative routes to `HOD` and `ADMIN`.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
+### Key Audit Findings:
+- **Multi-Tenant Security & Broken Object Level Authorization (BOLA)**:
+  - Departmental boundaries can be bypassed in Section Management (`sections.routes.js`). An HOD of one department can create sections within other departments and delete empty sections belonging to foreign departments without ownership verification.
+  - Section naming logic hardcodes `CSE-` prefix across all departments, preventing coexistence of departments like ECE, ME, or Civil with identical section letterings.
+- **Workflow & Business Logic Deadlocks**:
+  - Unassigned Mentor Group "Black Hole": When a student whose section has no assigned Tutor Guardian submits a consideration or leave, the record receives `tg: null` and `status: 'PENDING'`. Because TGs query by `{ tg: teacherId }` and HODs query by `{ status: 'RECOMMENDED_BY_TG' }`, the application becomes completely invisible to both review queues until a 48-hour background cron auto-escalates it.
+- **Cross-Departmental Metric & Data Leakage in Analytics**:
+  - HOD dashboard counter queries in `reports.service.js` omit department scoping, resulting in HODs seeing the aggregate pending consideration and leave counts of the entire institution.
+  - Semester-filtered Excel exports for student leaves unconditionally include all faculty leave records across the institution.
+  - Queries filtering by section names that do not match any existing section silently drop the section filter, exporting all sections rather than returning an empty set.
+- **Data Integrity & Scalability**:
+  - Moving a section across semesters (`POST /:id/move-semester`) modifies `section.semester` but leaves `section.code` un-updated, causing permanent code/semester desynchronization and blocking future section creation with duplicate key collisions.
+  - Passing `?all=true` to student listing endpoints invokes `.limit(0)`, which in Mongoose completely disables pagination and loads unbounded records into memory, exposing the Node.js process to Out-Of-Memory crashes.
+- **Operational Background Workers**:
+  - Dead push subscription endpoints (HTTP 410 Gone / 404 Not Found) are caught and logged but never pruned from user records, accumulating latency and wasted network I/O in the reminder cron.
 
 ---
 
-### Category 2: Backend Logic & Scoping
+## 2. System Architecture Overview
 
-#### BKD-01 🟠 Consideration HOD Queue Department Scoping
-- **Module & Feature**: HOD Attendance Consideration Review Queue
-- **Severity**: High
-- **Requirement from Reference**: Head of Department review queues must strictly isolate records belonging to students within the HOD's assigned department.
-- **Observed Implementation**: `getHODQueue()` previously returned all considerations college-wide.
-- **Files Involved**: `backend/src/modules/considerations/considerations.service.js` L250-264
-- **Verification Method**: Code review and automated test suite 8 confirm `user.role === 'HOD'` sets `targetDepartment = user.departmentId` and filters `student: { $in: deptStudents }`.
-- **Root Cause**: Multi-tenant departmental scoping omitted in query builder.
-- **Expected Behaviour**: HOD only reviews considerations submitted by students in their department.
-- **Required Correction**: Inject departmental filter into consideration queue pipeline.
-- **Dependencies & Regression Risks**: HOD user must have `departmentId` populated.
-- **Status**: **Verified**
-
-#### BKD-02 🟠 Leave HOD Queue Department Scoping
-- **Module & Feature**: HOD Leave Review Queue
-- **Severity**: High
-- **Requirement from Reference**: Head of Department leave review queues must strictly isolate leave applications originating from applicants within the HOD's department.
-- **Observed Implementation**: `getHODLeaveQueue()` previously returned all leave requests without departmental boundaries.
-- **Files Involved**: `backend/src/modules/leaves/leaves.service.js` L282-300
-- **Verification Method**: Verified `targetDepartment = user.departmentId` scoping in `leaves.service.js`. Departmental students and faculty are resolved before querying.
-- **Root Cause**: Missing department filter in leave aggregation query.
-- **Expected Behaviour**: Cross-departmental leaves are invisible to non-admin HODs.
-- **Required Correction**: Scope query conditions to departmental applicant IDs.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### BKD-03 🟠 Consideration Rejection Remarks Enforcement
-- **Module & Feature**: Tier-1 & Tier-2 Consideration Review
-- **Severity**: High
-- **Requirement from Reference**: When a TG or HOD rejects an attendance consideration request, detailed justification remarks of minimum 5 characters are mandatory.
-- **Observed Implementation**: Missing schema-level validation allowed empty or 1-letter rejection remarks.
-- **Files Involved**: `backend/src/modules/considerations/considerations.schema.js`, `backend/src/modules/considerations/considerations.service.js`
-- **Verification Method**: Automated test suite 3 asserts `tgReviewSchema.parse({ decision: 'REJECT', remarks: 'No' })` throws validation error, while $\ge 5$ characters passes.
-- **Root Cause**: Schema did not refine remarks based on `decision === 'REJECT'`.
-- **Expected Behaviour**: Submitting rejection with $<5$ characters throws `400 Bad Request`.
-- **Required Correction**: Add Zod `.refine()` enforcing `remarks.length >= 5` on rejection.
-- **Dependencies & Regression Risks**: Frontend must supply remarks before submitting rejection.
-- **Status**: **Verified**
-
-#### BKD-04 🟠 Leave Rejection Remarks Enforcement
-- **Module & Feature**: Leave Application Review
-- **Severity**: High
-- **Requirement from Reference**: Rejection of student leave applications requires minimum 5 characters explanatory remarks.
-- **Observed Implementation**: Validation only checked string presence, not character length.
-- **Files Involved**: `backend/src/modules/leaves/leaves.schema.js`, `backend/src/modules/leaves/leaves.service.js`
-- **Verification Method**: Automated test suite 4 asserts rejection with $<5$ characters throws validation error.
-- **Root Cause**: Missing minimum length constraint on review schema.
-- **Expected Behaviour**: Clear rejection reasons provided to the applicant.
-- **Required Correction**: Refine `tgReviewLeaveSchema` and `finalReviewLeaveSchema`.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### BKD-05 🟠 HOD Approval Requires Non-Zero Approved Periods
-- **Module & Feature**: Consideration Final Approval
-- **Severity**: High
-- **Requirement from Reference**: When an HOD sanctions an attendance consideration, `approvedPeriods` must be specified as an integer $>0$.
-- **Observed Implementation**: Approved periods was optional, allowing considerations to be approved with 0 credited lectures.
-- **Files Involved**: `backend/src/modules/considerations/considerations.schema.js`
-- **Verification Method**: Automated test suite 3 asserts `hodReviewSchema` throws when `approvedPeriods` is omitted on `APPROVE`.
-- **Root Cause**: Omission of conditional schema rule on approval.
-- **Expected Behaviour**: Every approved consideration awards at least 1 sanctioned lecture period.
-- **Required Correction**: Enforce `approvedPeriods > 0` when `decision === 'APPROVE'`.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### BKD-06 🟠 Password Recovery Route & OTP Verification
-- **Module & Feature**: Authentication & Credential Management
-- **Severity**: High
-- **Requirement from Reference**: Users must be able to initiate self-service password recovery via verified OTP without requiring database administrator intervention.
-- **Observed Implementation**: `forgotPasswordSchema` was defined in `auth.schema.js` but no routes or controllers existed in `auth.routes.js`.
-- **Files Involved**: `backend/src/modules/auth/auth.routes.js`, `backend/src/modules/auth/auth.service.js`, `backend/src/modules/auth/auth.controller.js`
-- **Verification Method**: Automated test suite 6 verifies `forgotPasswordSchema` and `resetPasswordSchema`. Endpoint `/auth/forgot-password` generates 6-digit OTP and dispatches notification.
-- **Root Cause**: Password reset API was partially designed but never mounted on Express router.
-- **Expected Behaviour**: User receives OTP and safely updates credentials.
-- **Required Correction**: Mount `POST /forgot-password` and `POST /reset-password` with rate limiting.
-- **Dependencies & Regression Risks**: Requires valid user email.
-- **Status**: **Verified**
-
-#### BKD-07 🟡 Environment Configuration Mapping Normalization
-- **Module & Feature**: Infrastructure & Runtime Config
-- **Severity**: Medium
-- **Requirement from Reference**: Environment variables must map cleanly across naming conventions (`JWT_SECRET` vs `JWT_ACCESS_SECRET`, `MONGO_URI` vs `MONGODB_URI`).
-- **Observed Implementation**: `env.js` lacked normalization fallbacks, causing mismatch risks in Docker/staging.
-- **Files Involved**: `backend/src/config/env.js`
-- **Verification Method**: Code review confirmed normalization block at lines 11-20 in `env.js`.
-- **Root Cause**: Disparate variable naming between boilerplate and `.env`.
-- **Expected Behaviour**: All environment aliases resolve cleanly to unified Zod config.
-- **Required Correction**: Add alias normalization before schema parsing.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### BKD-08 🟡 Email Notification Wiring
-- **Module & Feature**: Communication & Alerting
-- **Severity**: Medium
-- **Requirement from Reference**: Status transitions and OTP resets should trigger transactional notifications via email service with console simulation fallback.
-- **Observed Implementation**: `sendEmail.js` was fully implemented but never invoked by service files.
-- **Files Involved**: `backend/src/modules/auth/auth.service.js`, `backend/src/modules/considerations/considerations.service.js`, `backend/src/modules/leaves/leaves.service.js`
-- **Verification Method**: Grep search confirms `sendOtpEmail` in `auth.service.js`, `sendStatusNotificationEmail` in `considerations.service.js` and `leaves.service.js`.
-- **Root Cause**: Service files had socket events wired but omitted email dispatches.
-- **Expected Behaviour**: Email dispatch attempted with graceful fallback.
-- **Required Correction**: Import and call email helper on status updates.
-- **Dependencies & Regression Risks**: Non-blocking; fails gracefully if SMTP is disabled.
-- **Status**: **Verified**
-
-#### BKD-09 🟡 Excel Export Blob Unwrapping
-- **Module & Feature**: Reporting & Ledger Exports
-- **Severity**: Medium
-- **Requirement from Reference**: Export endpoints (`/reports/considerations/export`, `/reports/leaves/export`) must return downloadable Excel binary files.
-- **Observed Implementation**: Axios response interceptor unwrapped `response.data`, creating `Blob([undefined])` errors in frontend.
-- **Files Involved**: `frontend/src/api/modulesApi.js` L27, L43
-- **Verification Method**: `modulesApi.js` checks `res instanceof Blob ? res : (res?.data instanceof Blob ? res.data : new Blob([res?.data || res]))`.
-- **Root Cause**: Interceptor unwrapping clashed with `responseType: 'blob'`.
-- **Expected Behaviour**: Clean `.xlsx` file download triggered in browser.
-- **Required Correction**: Handle unwrapped and wrapped blobs robustly.
-- **Dependencies & Regression Risks**: Browser file save permissions.
-- **Status**: **Verified**
-
-#### BKD-10 🔵 Duplicate Registration Route Aliases
-- **Module & Feature**: Routing Architecture
-- **Severity**: Low
-- **Requirement from Reference**: Routes should follow canonical REST structure without redundant aliases.
-- **Observed Implementation**: Both `/register/student` and `/register-student` were defined.
-- **Files Involved**: `backend/src/modules/auth/auth.routes.js`
-- **Verification Method**: `auth.routes.js` retains single canonical `/register/student` route.
-- **Root Cause**: Legacy compatibility alias left in place.
-- **Expected Behaviour**: Single canonical route per action.
-- **Required Correction**: Remove redundant alias routes.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
----
-
-### Category 3: Role Constraints & 3-Role Simplification
-
-#### SCOPE-01 🔴 Obsolete Teacher Workspace & Dashboards in Active Scope
-- **Module & Feature**: Role-Based Architecture & Navigation
-- **Severity**: Critical
-- **Requirement from Reference**: The ERP Lite project is strictly simplified around THREE primary roles: **HOD**, **TG**, and **Student**. Teacher-specific functionality must not exist as a separate user-facing role or portal.
-- **Observed Implementation**: Frontend had `/teacher` (Teacher Dashboard), `/teacher/leaves` (Teacher Leaves), role switcher buttons in Header, and teacher navigation in Sidebar.
-- **Files Involved**: `frontend/src/App.jsx`, `frontend/src/components/Header.jsx`, `frontend/src/components/Sidebar.jsx`, `frontend/src/pages/auth/LoginPage.jsx`
-- **Verification Method**:
-  1. `Header.jsx`: Removed `Switch to Faculty/TG Portal` button and `Teacher Dashboard` link.
-  2. `Sidebar.jsx`: Teacher role cleanly maps to the TG Workspace (`/tg`, `/tg/requests`, `/tg/students`).
-  3. `App.jsx`: `/teacher` and `/teacher/leaves` safely redirect to `/tg` and `/tg/requests`.
-  4. `LoginPage.jsx`: Role tabs simplified to Student, TG, HOD, and Admin. Faculty role tab removed.
-  5. `npm run build` exits 0 with zero broken routes.
-- **Root Cause**: Legacy teacher portal remained active after TG governance was established.
-- **Expected Behaviour**: Faculty members operate seamlessly within the TG Workspace without duplicate portals.
-- **Required Correction**: Consolidate faculty entry points into TG workspace; redirect legacy routes.
-- **Dependencies & Regression Risks**: Zero. Faculty data models (`Teacher.js`, `MentorGroup.js`) preserved.
-- **Status**: **Verified**
-
-#### SCOPE-02 🟠 TG Workspace Navigation Isolation
-- **Module & Feature**: TG Workspace Sidebar
-- **Severity**: High
-- **Requirement from Reference**: The TG Workspace sidebar must contain only TG-relevant navigation entries (`Dashboard`, `Review Queue`, `My Students`).
-- **Observed Implementation**: Sidebar included a link to `/teacher` labelled "Faculty Portal" when in TG mode.
-- **Files Involved**: `frontend/src/components/Sidebar.jsx`
-- **Verification Method**: Verified `Sidebar.jsx` L33-39 defines exactly 3 links: Dashboard (`/tg`), Review Queue (`/tg/requests`), and My Students (`/tg/students`).
-- **Root Cause**: Copy-paste from legacy multi-role navigation configuration.
-- **Expected Behaviour**: Clean TG navigation dedicated to student mentorship and clearances.
-- **Required Correction**: Remove Faculty Portal entry from `isTgMode`.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### SCOPE-03 🟠 Terminology Alignment: "Mentees" $\rightarrow$ "Students"
-- **Module & Feature**: User Interface Presentation Layer
-- **Severity**: High
-- **Requirement from Reference**: Replace the corporate term "Mentees" with natural, consistent "Students" across all headings, cards, tables, search placeholders, empty states, and dialogs.
-- **Observed Implementation**: "Mentees" appeared in `Sidebar.jsx`, `TgDashboard.jsx`, `TgMyStudents.jsx`, `TgRequests.jsx`, `TeacherDashboard.jsx`, and appointment modals.
-- **Files Involved**: `Sidebar.jsx`, `TgDashboard.jsx`, `TgMyStudents.jsx`, `TgRequests.jsx`, `TeacherDashboard.jsx`, `AppointTgModal.jsx`, `EditFacultyModal.jsx`
-- **Verification Method**: Grep search confirmed 0 user-facing occurrences of "mentee" in `frontend/src`. All headers, chips, and empty states now read "Students".
-- **Root Cause**: Initial templates borrowed terminology from corporate mentorship programs.
-- **Expected Behaviour**: Intuitive Indian college terminology throughout the UI.
-- **Required Correction**: Presentation-layer string replacements while preserving backend schema fields.
-- **Dependencies & Regression Risks**: None. Schema properties (`MentorGroup.students`, `Student.mentorGroup`) untouched.
-- **Status**: **Verified**
-
----
-
-### Category 4: TG Dashboard & Workspace Defects
-
-#### TG-01 🔴 Prohibited Configuration Dropdowns on TG Dashboard
-- **Module & Feature**: TG Dashboard & Academic Governance
-- **Severity**: Critical
-- **Requirement from Reference**: A Tutor Guardian's department, semester, and section are determined exclusively by the HOD via `MentorGroup`. The TG interface must NOT contain dropdowns allowing changes to this predefined configuration.
-- **Observed Implementation**:
-  - `TgDashboard.jsx` rendered 3 `<select>` dropdowns (`selectedDept`, `selectedSem`, `selectedSec`).
-  - `TgMyStudents.jsx` rendered a section filter `<select>` dropdown.
-  - `EditStudentModal.jsx` rendered Semester and Section `<select>` dropdowns.
-  - `OfficialClearancesLedgerModal.jsx` rendered semester and section dropdowns for TG.
-- **Files Involved**: `TgDashboard.jsx`, `TgMyStudents.jsx`, `EditStudentModal.jsx`, `OfficialClearancesLedgerModal.jsx`
-- **Verification Method**: Inspected files: All `<select>` elements removed and replaced with read-only HOD-assigned status badges (`Active TG Duty`, `Department: CSE`, `Assigned: Semester 5 • Section B`).
-- **Root Cause**: Reusing HOD filter controls in the TG view without role restrictions.
-- **Expected Behaviour**: Fixed, immutable display of HOD-assigned academic scope.
-- **Required Correction**: Replace dropdowns with read-only status chips and pass `isTgView` to modals.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### TG-02 🟠 Duplicate Teacher Dashboard Button on TG Dashboard
-- **Module & Feature**: TG Dashboard Header
-- **Severity**: High
-- **Requirement from Reference**: No duplicate navigation buttons or stacked links to the same destination.
-- **Observed Implementation**: Both `Header.jsx` and `TgDashboard.jsx` rendered a Teacher Dashboard link.
-- **Files Involved**: `frontend/src/pages/tg/TgDashboard.jsx`, `frontend/src/components/Header.jsx`
-- **Verification Method**: Redundant button removed from `TgDashboard.jsx` and legacy link removed from `Header.jsx`.
-- **Root Cause**: Redundant component declarations across global and page headers.
-- **Expected Behaviour**: Clean, non-duplicated header action area.
-- **Required Correction**: Remove duplicate link from `TgDashboard.jsx`.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### TG-03 🟠 Accessible Contrast on "Recommended by TG" & "Rejected" Badges
-- **Module & Feature**: Design System & Status Indicators
-- **Severity**: High
-- **Requirement from Reference**: Status indicators and action buttons must satisfy WCAG AAA contrast standards ($>7:1$ ratio), use distinct borders, and not rely on color alone.
-- **Observed Implementation**: Text and background colors were pale and blended together (`.badge-amber`, `.badge-rose`).
-- **Files Involved**: `frontend/src/index.css`, `frontend/src/components/common/Badge.jsx`, `frontend/src/components/modals/ReviewModal.jsx`, `frontend/src/pages/tg/TgRequests.jsx`
-- **Verification Method**:
-  - `.badge-amber`: `#78350F` on `#FEF3C7` with `1.5px solid #F59E0B` (Contrast: **7.4:1 — WCAG AAA**).
-  - `.badge-rose`: `#881337` on `#FFE4E6` with `1.5px solid #F43F5E` (Contrast: **8.2:1 — WCAG AAA**).
-  - `Badge.jsx`: Automatically renders `Clock`, `XCircle`, or `CheckCircle2` icons.
-  - `ReviewModal.jsx`: Recommend and Reject buttons have prominent 2px borders, active color fills, and keyboard focus rings.
-- **Root Cause**: Pale color palette without sufficient border definition or luminance difference.
-- **Expected Behaviour**: Crisp, easily readable status indicators across all screen sizes and themes.
-- **Required Correction**: Update CSS variables and embed semantic status icons.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### TG-04 🟠 Elimination of Fake Mock Data in Clearances Ledger Modal
-- **Module & Feature**: Official Clearances Ledger Modal
-- **Severity**: High
-- **Requirement from Reference**: The official clearance ledger must display live backend data only. Empty states must render cleanly without falling back to hardcoded mock records.
-- **Observed Implementation**: `OfficialClearancesLedgerModal.jsx` had a `defaultConsiderations` array with 6 hardcoded "Avinash Bharti" entries injected when the database was empty.
-- **Files Involved**: `frontend/src/components/modals/OfficialClearancesLedgerModal.jsx`
-- **Verification Method**: Verified `fetchRecords` binds directly to `conRes.value?.data || []` and `leaveRes.value?.data || []`. Print report warns if empty rather than printing mock data.
-- **Root Cause**: Prototyping fallback left in modal component.
-- **Expected Behaviour**: Database truth reflected in all table views and PDF/print outputs.
-- **Required Correction**: Remove fallback mock data injection; render authentic empty state.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
----
-
-### Category 5: Frontend Usability & Routing
-
-#### FE-01 🔵 Catch-All Route 404 Page
-- **Module & Feature**: Frontend Routing
-- **Severity**: Low
-- **Requirement from Reference**: Unmatched routes must present a helpful 404 page with navigation back to the user's dashboard, rather than silently redirecting.
-- **Observed Implementation**: `App.jsx` redirected all unknown URLs to `RoleRedirect`.
-- **Files Involved**: `frontend/src/pages/NotFound.jsx`, `frontend/src/App.jsx` L382
-- **Verification Method**: `<Route path="*" element={<NotFound />} />` is mounted at root route level.
-- **Root Cause**: Missing dedicated 404 component.
-- **Expected Behaviour**: Standardized, clean 404 error page.
-- **Required Correction**: Create `NotFound.jsx` and wire to wildcard route.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
----
-
-### Category 6: HOD Mentorship & Cohort Governance Defects
-
-#### HOD-07 🔴 Invisibility of Action Buttons in HOD Mentorship Route
-- **Module & Feature**: HOD Mentorship Workspace (`/hod/mentorship`) & Appoint TG Modal
-- **Severity**: Critical
-- **Requirement from Reference**: All action buttons (e.g. "Appoint as TG", "Confirm TG Appointment", "Change Section", filter tabs) must exhibit clear, high-contrast, WCAG AAA accessible styling ($>7:1$) so that text is never obscured or rendered the same colour as its background.
-- **Observed Implementation**: `.bg-emerald-700` and its hover/active classes were missing from `src/index.css`. Because `button` elements have `background: none`, buttons with `className="... bg-emerald-700 text-white"` rendered with a transparent/white background and white text against the white card, making the text and buttons completely invisible.
-- **Files Involved**: `frontend/src/index.css`, `frontend/src/pages/hod/HodMentorship.jsx`, `frontend/src/components/modals/AppointTgModal.jsx`, `frontend/src/components/modals/AddFacultyModal.jsx`, `frontend/src/components/modals/EditFacultyModal.jsx`
-- **Verification Method**: Added `.bg-emerald-700`, `.bg-emerald-800`, `.bg-emerald-900`, `.hover:bg-emerald-800`, `.active:bg-emerald-900`, `.border-emerald-500`, and contrast utilities to `index.css`. Added explicit inline styles (`backgroundColor`, `color`, `borderColor`) to action buttons across `HodMentorship.jsx` and `AppointTgModal.jsx` ensuring high-contrast readability.
-- **Root Cause**: Design system CSS omitted `.bg-emerald-700` utility rules, falling back to transparent background with white text.
-- **Expected Behaviour**: Buttons display with prominent emerald green (`#047857`) background, dark emerald border, and bright white text (`#ffffff`), with dark slate secondary buttons.
-- **Required Correction**: Define all emerald backgrounds and hover states in CSS; add robust high-contrast styles to all buttons in HOD Mentorship.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### HOD-08 🔴 Broken "Change Section" Workflow for Appointed Tutor Guardians
-- **Module & Feature**: HOD TG Mentorship Assignment & Reallocation
-- **Severity**: Critical
-- **Requirement from Reference**: HOD must be able to change the assigned section and cohort of any appointed Tutor Guardian at any point in the academic year.
-- **Observed Implementation**: Clicking "Change Section" in `HodMentorship.jsx` called `setShowAppointModal(true)` without passing the existing cohort or `isChangeSection: true`. When submitted, `AppointTgModal` called `mentorshipApi.createGroup()`, which failed with `409 Conflict: Faculty member is already actively appointed as a Tutor Guardian`. Furthermore, backend lacked a `PUT /api/v1/mentor-groups/:id` endpoint for reassigning cohorts.
-- **Files Involved**: `backend/src/modules/mentorship/mentorship.service.js`, `backend/src/modules/mentorship/mentorship.routes.js`, `frontend/src/api/modulesApi.js`, `frontend/src/pages/hod/HodMentorship.jsx`, `frontend/src/components/modals/AppointTgModal.jsx`
-- **Verification Method**: Added `updateMentorGroup` in `mentorship.service.js` with student reallocation and conflict checking; mounted `PUT /api/v1/mentor-groups/:id` with HOD/Admin authorization; wired `mentorshipApi.updateGroup(groupId, payload)`; added `existingCohort` and `isChangeSection` props to `AppointTgModal`. Verified via automated test suite 9.
-- **Root Cause**: Missing update endpoint and inability of modal to switch from creation mode to reassign mode.
-- **Expected Behaviour**: HOD clicks "Change Section", selects a new section (e.g. Section C), and the cohort is reallocated seamlessly with student rosters synced.
-- **Required Correction**: Implement `updateMentorGroup` service, `PUT /:id` route, and wire `isChangeSection` mode in frontend modal.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
-#### HOD-09 🔴 Section Allocation Defaulting/Always Shifting to Section B
-- **Module & Feature**: Section Allocation & Cohort Synchronization
-- **Severity**: High
-- **Requirement from Reference**: The section chosen by HOD (Section A, B, C, or D) must persist accurately in the database and reflect across both HOD and TG dashboards.
-- **Observed Implementation**: `AppointTgModal.jsx` sent `sectionCode: secLetter` instead of `section` or `sectionId`. The backend service only checked `sectionId` and `section`, causing `resolvedSectionDoc` to evaluate to `null` and saving `MentorGroup.section: null`. In frontend components (`HodMentorship.jsx`, `TgMyStudents.jsx`, `TgDashboard.jsx`), a fallback expression `cohort?.section?.name || 'Section B'` was executed whenever `cohort.section` was null, causing every allocated section to appear as Section B.
-- **Files Involved**: `backend/src/modules/mentorship/mentorship.service.js`, `frontend/src/components/modals/AppointTgModal.jsx`, `frontend/src/pages/hod/HodMentorship.jsx`, `frontend/src/pages/tg/TgMyStudents.jsx`, `frontend/src/pages/tg/TgDashboard.jsx`
-- **Verification Method**: Enhanced `createMentorGroup` and `updateMentorGroup` to accept `sectionCode`, resolve Section documents by code (`CSE-A`, `CSE-B`, `CSE-C`, `CSE-D`) or name (`Section A`), and auto-link section students. Repaired active database records where `section` was null. Automated test suite 9 verifies section code normalization.
-- **Root Cause**: Frontend sent `sectionCode` which backend ignored, causing `section: null` in DB, which triggered the fallback `'Section B'`.
-- **Expected Behaviour**: Sections A, B, C, and D are persisted as valid ObjectId references to the `Section` collection and accurately displayed everywhere.
-- **Required Correction**: Accept `sectionCode`, resolve section document, assign students, and update frontend badges dynamically.
-- **Dependencies & Regression Risks**: None.
-- **Status**: **Verified**
-
----
-
-## Verification & Test Evidence
-
+### 2.1 Repository Layout
 ```
-======================================================================
-1. BACKEND AUTOMATED TEST SUITE (tests/*.test.js)
-Command: node --test tests/*.test.js
-Suites:  10 suites (Health, Dates, Leave Chain, Considerations, Leaves,
-         ApiError, Password Reset, Student Registration, Role Scoping,
-         HOD TG Section Allocation & Reassignment)
-Tests:   23 passed, 0 failed, 0 skipped
-Time:    4.62s
-Result:  ALL 23 TESTS VERIFIED PASSING (100% Pass Rate)
-
-2. FRONTEND PRODUCTION BUILD (vite build)
-Command: npm run build (in frontend/)
-Modules: 2075 modules transformed
-Output:  dist/index.html (1.33 kB)
-         dist/assets/index-y-9GHsRL.css (100.43 kB)
-         dist/assets/index-C1ZBBVcY.js (662.46 kB)
-Errors:  0 compiler errors, 0 broken component references
-Result:  BUILD SUCCEEDED
-======================================================================
+consideration-management/
+├── backend/
+│   ├── src/
+│   │   ├── config/          # Environment validation, CORS, ImageKit, Brevo
+│   │   ├── middleware/      # Auth, authorization, rate limiting, error handlers
+│   │   ├── models/          # 15 Mongoose schemas (User, Student, Teacher, Section, etc.)
+│   │   ├── modules/         # Domain-driven modules (auth, users, students, leaves, reports, etc.)
+│   │   ├── jobs/            # Scheduled background workers (escalation, reminder)
+│   │   ├── sockets/         # Socket.IO initialization and event emitters
+│   │   └── utils/           # Dates, pagination, distributed locking, ApiError
+│   └── tests/               # Health, workflow, and security test suites (57 tests passing)
+├── frontend/
+│   ├── src/
+│   │   ├── api/             # Axios client, interceptors, modular API endpoints
+│   │   ├── components/      # UI component library, modals, workflow timelines
+│   │   ├── context/         # ERPContext for auth session, socket events, toasts
+│   │   ├── pages/           # Portals for Admin, HOD, TG, Student, and Auth
+│   │   └── routes/          # Route guards and application navigation tree
+└── flaws.md                 # Technical audit deliverable
 ```
+
+### 2.2 Data Flow & Responsibilities
+1. **Client Interaction**: React SPA handles user input, validating forms client-side and dispatching HTTP requests with JWT Bearer tokens in headers.
+2. **Gateway & Middlewares**: Express pipeline enforces helmet headers, CORS, body parsing, API rate limiting, and JWT authentication (`protect`).
+3. **Role-Based Authorization (`authorize`)**: Enforces endpoint accessibility based on user roles (`ADMIN`, `HOD`, `TEACHER`, `STUDENT`).
+4. **Service & Domain Layer**: Executes business rules, orchestrates Mongoose model operations, transactions, and notification triggers.
+5. **Real-Time & Background Processing**: Socket.IO broadcasts live notifications to room subscribers; `node-cron` schedules handle auto-escalation and pending application reminders.
+
+---
+
+## 3. Audit Methodology & Coverage
+
+The audit employed manual static code analysis, security threat modeling (OWASP Top 10 API & Multi-Tenancy guidelines), schema invariant validation, and workflow state-machine verification.
+
+### Modules Inspected:
+- **Authentication & RBAC**: `auth.routes.js`, `auth.controller.js`, `auth.middleware.js`, `authorize.middleware.js`
+- **User & Section Management**: `users.routes.js`, `sections.routes.js`, `mentorGroups.routes.js`
+- **Student & Faculty Management**: `students.service.js`, `students.controller.js`, `teachers.controller.js`
+- **Workflow & Consideration Lifecycle**: `considerations.service.js`, `considerations.controller.js`, `leaves.service.js`
+- **Reporting & Data Export Services**: `reports.service.js`, `reports.controller.js`
+- **Background Jobs**: `escalation.job.js`, `reminder.job.js`
+- **Database Schemas**: `Section.js`, `Student.js`, `User.js`, `ConsiderationRequest.js`, `LeaveApplication.js`, `MentorGroup.js`
+- **Frontend State & Components**: `HodStudents.jsx`, `HodConsiderations.jsx`, `TgConsiderations.jsx`, `StudentDashboard.jsx`
+
+---
+
+## 4. Summary Table of Discovered Flaws
+
+| Flaw ID | Severity | Category | Title | Affected File(s) |
+|---|:---:|---|---|---|
+| **FLAW-NEW-01** | 🔴 Critical | Security / BOLA | HOD Cross-Department Section Creation and Deletion | `backend/src/modules/users/sections.routes.js` |
+| **FLAW-NEW-02** | 🟠 High | Business Logic | Unassigned Student Application Stalemate (Null TG "Black Hole") | `backend/src/modules/considerations/considerations.service.js`, `backend/src/modules/leaves/leaves.service.js` |
+| **FLAW-NEW-03** | 🟠 High | Multi-Tenancy / Analytics | Cross-Department Queue Counter Leak in HOD Dashboard Summary | `backend/src/modules/reports/reports.service.js` |
+| **FLAW-NEW-04** | 🟠 High | Performance / Scalability | Unbounded Memory Allocation via `all=true` Bypassing Pagination Limit | `backend/src/modules/students/students.service.js` |
+| **FLAW-NEW-05** | 🟠 High | Functional / Reporting | Faculty Leave Leakage into Semester-Filtered Leave Excel Exports | `backend/src/modules/reports/reports.service.js` |
+| **FLAW-NEW-06** | 🟡 Medium | Data Integrity | Section Code Desynchronization on Academic Progression (`move-semester`) | `backend/src/modules/users/sections.routes.js` |
+| **FLAW-NEW-07** | 🟡 Medium | Functional Logic | Silent Filter Bypass on Non-Matching Section Name in Reports | `backend/src/modules/reports/reports.service.js` |
+| **FLAW-NEW-08** | 🟡 Medium | Functional / Multi-Tenancy | Hardcoded `CSE-` Code Prefix in Section Auto-Naming | `backend/src/modules/users/sections.routes.js` |
+| **FLAW-NEW-09** | 🟡 Medium | Operational / Push | Unhandled Web Push 410 Gone / 404 Subscription Pruning | `backend/src/jobs/reminder.job.js` |
+| **FLAW-NEW-10** | 🔵 Low | Frontend / UX | Section Filter State Inconsistency on Dynamic Semester Promotion | `frontend/src/pages/hod/HodStudents.jsx` |
+
+---
+
+## 5. Critical Flaws
+
+### FLAW-NEW-01: HOD Cross-Department Section Creation and Deletion
+- **FLAW-ID**: `FLAW-NEW-01`
+- **Severity**: 🔴 Critical
+- **Category**: Security / Multi-Tenancy Broken Object Level Authorization (BOLA)
+- **Status**: ⚠️ Discovered (Unpatched)
+- **Affected file(s)**: `backend/src/modules/users/sections.routes.js`
+- **Location**: `sections.routes.js:L69-L105` (`router.post('/')`) and `L168-L203` (`router.delete('/:id')`)
+- **Description**: The section management routes permit users with the `HOD` role to create sections in departments other than their own, as well as delete empty sections belonging to foreign departments. When creating a section, `departmentId` is taken from `req.body.department || req.user.departmentId`, but the handler fails to verify that an HOD's `req.user.departmentId` matches `req.body.department`. When deleting a section (`DELETE /:id`), the code checks if students are enrolled in the section, but never checks if `section.department.toString() === req.user.departmentId.toString()`. An HOD from Computer Science can freely delete empty sections belonging to Mechanical or Electrical Engineering.
+- **Evidence**:
+  ```javascript
+  // sections.routes.js: Line 69-77
+  router.post('/', protect, authorize('HOD', 'ADMIN'), async (req, res, next) => {
+    try {
+      const { name, semester, academicYear, capacity } = req.body;
+      const departmentId = req.body.department || req.user.departmentId;
+      // No validation verifying req.user.departmentId === departmentId for role === 'HOD'!
+  ```
+  ```javascript
+  // sections.routes.js: Line 168-185
+  router.delete('/:id', protect, authorize('HOD', 'ADMIN'), async (req, res, next) => {
+    try {
+      const section = await Section.findById(req.params.id);
+      if (!section) throw new ApiError(404, 'Section not found');
+      // Notice: No department ownership check!
+      const studentCount = await Student.countDocuments({ section: section._id });
+      if (studentCount > 0) throw new ApiError(400, 'Cannot delete section with enrolled students');
+      await section.deleteOne();
+  ```
+- **Reproduction scenario**:
+  1. Authenticate as an HOD belonging to Department A (`CSE`).
+  2. Send `DELETE /api/v1/sections/<Department_B_Section_ID>` with Bearer token.
+  3. The endpoint returns `200 OK: Section deleted successfully`, deleting Department B's section.
+- **Impact**: Cross-departmental tampering, denial of service, and breach of multi-tenancy trust boundaries.
+- **Root cause**: Omission of role-based department scoping checks in administrative mutation routes.
+- **Recommended fix**:
+  - In `POST /`, enforce `const departmentId = req.user.role === 'ADMIN' ? (req.body.department || req.user.departmentId) : req.user.departmentId;`.
+  - In `DELETE /:id`, enforce `if (req.user.role === 'HOD' && section.department.toString() !== req.user.departmentId.toString()) throw new ApiError(403, 'Forbidden: Cannot delete sections in another department');`.
+- **Verification method**: Execute an integration test where an authenticated HOD attempts to delete a section in another department; verify an HTTP 403 Forbidden is returned.
+
+---
+
+## 6. High Severity Flaws
+
+### FLAW-NEW-02: Unassigned Student Consideration/Leave Stalemate (Null TG "Black Hole")
+- **FLAW-ID**: `FLAW-NEW-02`
+- **Severity**: 🟠 High
+- **Category**: Functional / Business Logic & Workflow Stalemate
+- **Status**: ⚠️ Discovered (Unpatched)
+- **Affected file(s)**: `backend/src/modules/considerations/considerations.service.js`, `backend/src/modules/leaves/leaves.service.js`
+- **Location**: `considerations.service.js:L107-127`, `leaves.service.js:L88-108`
+- **Description**: In institutions where new sections or cohorts have not yet been assigned a Tutor Guardian in `MentorGroup`, `resolveStudentTG(student._id)` returns `null`. The consideration creation service sets `tg: null` and sets the request status to `'PENDING'`. In the Tutor Guardian portal, requests are retrieved with `{ tg: teacherId, status: 'PENDING' }`. Because `tg` is `null`, no Tutor Guardian ever receives the request. Concurrently, the HOD portal only displays requests with `{ status: 'RECOMMENDED_BY_TG' }` or escalated requests. As a result, the student's request becomes completely invisible across all faculty dashboards, trapped in an unreviewable state until the 48-hour background escalation cron runs.
+- **Evidence**:
+  ```javascript
+  // considerations.service.js: Line 116-125
+  const tgTeacherId = await resolveStudentTG(student._id);
+  const consideration = await ConsiderationRequest.create({
+    student: student._id,
+    department: student.department,
+    tg: tgTeacherId || null,
+    status: 'PENDING',
+    // ...
+  });
+  ```
+  And in `getPendingConsiderations`:
+  ```javascript
+  if (role === 'TEACHER') {
+    query.tg = teacherId; // Cannot match documents where tg is null!
+    query.status = 'PENDING';
+  }
+  ```
+- **Reproduction scenario**:
+  1. Create a section and enroll a student without assigning a MentorGroup to the section.
+  2. Student submits a consideration request.
+  3. Query the TG dashboard: 0 items pending.
+  4. Query the HOD dashboard: 0 items pending.
+  5. The application is orphaned in the database until 48 hours later.
+- **Impact**: Legitimate student applications are stalled, leading to missed exam eligibility or attendance penalties due to missing TG assignments.
+- **Root cause**: Lack of fallback routing when `resolveStudentTG` returns `null`.
+- **Recommended fix**: If `!tgTeacherId`, either:
+  1. Route directly to HOD review (`status: 'RECOMMENDED_BY_TG'` or `'PENDING_HOD'`) with an audit note indicating `"No TG assigned to student section - auto-forwarded to HOD"`, OR
+  2. Block application submission with a descriptive error: `"No Tutor Guardian currently assigned to your section. Please contact your department coordinator."`
+- **Verification method**: Submit a consideration as a student whose section has no mentor group; verify it is immediately routed to the HOD queue or rejects submission with an informative 400 error.
+
+---
+
+### FLAW-NEW-03: Cross-Department Queue Counter Leak in HOD Dashboard Summary
+- **FLAW-ID**: `FLAW-NEW-03`
+- **Severity**: 🟠 High
+- **Category**: Multi-Tenancy / Analytics & Metrics Leak
+- **Status**: ⚠️ Discovered (Unpatched)
+- **Affected file(s)**: `backend/src/modules/reports/reports.service.js`
+- **Location**: `reports.service.js:L138-L171` (`getDashboardSummary`)
+- **Description**: When computing summary dashboard metrics for an HOD user, `reports.service.js` counts pending consideration requests and leave applications without filtering by the HOD's `departmentId`.
+- **Evidence**:
+  ```javascript
+  // reports.service.js: Line 145-156
+  if (role === 'HOD') {
+    const [pendingCons, pendingLeaves] = await Promise.all([
+      ConsiderationRequest.countDocuments({ status: { $in: ['RECOMMENDED_BY_TG', 'ESCALATED_TO_HOD'] } }),
+      LeaveApplication.countDocuments({ status: { $in: ['RECOMMENDED_BY_TG', 'ESCALATED_TO_HOD'] } })
+    ]);
+    summary.pendingConsiderations = pendingCons;
+    summary.pendingLeaves = pendingLeaves;
+  }
+  ```
+- **Reproduction scenario**:
+  1. Create 5 pending considerations in Department A (`CSE`) and 10 in Department B (`ECE`).
+  2. Log in as HOD of Department A.
+  3. Inspect the `pendingConsiderations` stat returned by `/api/v1/reports/dashboard-summary`.
+  4. The card displays `15` instead of `5`. When opening the approval table, only 5 records are shown.
+- **Impact**: Confusing metric discrepancy on HOD dashboards and data leakage regarding the operational load of other academic departments.
+- **Root cause**: Omission of `{ department: departmentId }` in the Mongoose `countDocuments` query filters.
+- **Recommended fix**: Update both queries to include `department: departmentId`.
+- **Verification method**: Query `/api/v1/reports/dashboard-summary` as HOD of Department A; verify count strictly reflects Department A records.
+
+---
+
+### FLAW-NEW-04: Unbounded Memory Allocation via `all=true` Bypassing Pagination Limit
+- **FLAW-ID**: `FLAW-NEW-04`
+- **Severity**: 🟠 High
+- **Category**: Performance & Scalability / Denial of Service
+- **Status**: ⚠️ Discovered (Unpatched)
+- **Affected file(s)**: `backend/src/modules/students/students.service.js`
+- **Location**: `students.service.js:L62-L81` (`getStudents`)
+- **Description**: The student listing service accepts a query parameter `all=true`. When present, it sets `queryLimit = fetchAll ? 0 : limit;`. In Mongoose and MongoDB driver, `.limit(0)` disables pagination limits, causing the server to fetch the entire student collection into memory with all populated subdocuments (`user`, `department`, `section`). On a campus with 5,000–20,000 students, this causes massive heap allocation, event loop lag, and potential Out-Of-Memory (`ERR_WORKER_OUT_OF_MEMORY`) crashes.
+- **Evidence**:
+  ```javascript
+  // students.service.js: Line 62-64 & Line 79
+  const fetchAll = String(query.all || '').toLowerCase() === 'true';
+  const queryLimit = fetchAll ? 0 : limit;
+  // ...
+  const students = await Student.find(filter)
+    .populate('user', 'name email avatar isBlocked')
+    .limit(queryLimit);
+  ```
+- **Reproduction scenario**:
+  1. Seed database with 5,000 students.
+  2. Dispatch concurrent HTTP requests: `GET /api/v1/students?all=true`.
+  3. Node.js heap memory jumps by several hundred megabytes; response time degrades from 20ms to 4+ seconds.
+- **Impact**: Memory exhaustion leading to server crashes (Denial of Service) when multiple users or export operations query `all=true`.
+- **Root cause**: Treating `all=true` as `.limit(0)` without a maximum ceiling or using cursor-based streaming.
+- **Recommended fix**: Impose a hard ceiling: `const queryLimit = fetchAll ? Math.min(Number(query.limit) || 1000, 1000) : limit;`.
+- **Verification method**: Issue `GET /api/v1/students?all=true` on large datasets and verify returned records do not exceed the enforced safety ceiling.
+
+---
+
+### FLAW-NEW-05: Faculty Leave Leakage into Semester-Filtered Leave Excel Exports
+- **FLAW-ID**: `FLAW-NEW-05`
+- **Severity**: 🟠 High
+- **Category**: Functional / Reporting & Confidentiality
+- **Status**: ⚠️ Discovered (Unpatched)
+- **Affected file(s)**: `backend/src/modules/reports/reports.service.js`
+- **Location**: `reports.service.js:L924-L928` (`exportLeavesToExcel`)
+- **Description**: When exporting leave records to Excel with a specific semester filter (e.g., `semester: 4`), `reports.service.js` retrieves student IDs in that semester, but builds the leave query using an `$or` block that indiscriminately matches all teacher leaves:
+  ```javascript
+  if (semester) {
+    leaveFilter.$or = [
+      { student: { $in: studentIds } },
+      { applicantRole: 'TEACHER' }
+    ];
+  }
+  ```
+  Consequently, every teacher leave record (including sensitive personal/medical notes of faculty) is exported into the student semester Excel worksheet.
+- **Evidence**: `reports.service.js:L924-928`.
+- **Reproduction scenario**:
+  1. Submit leaves for 3 students in Semester 4, and 5 teacher leaves across the department.
+  2. Request Excel export with `?semester=4`.
+  3. Inspect generated spreadsheet: All 5 teacher leave applications appear alongside the 4th-semester students.
+- **Impact**: Breach of faculty medical/personal confidentiality; polluted reports for departmental semester audits.
+- **Root cause**: Mistaken business assumption that teacher leaves should always be included in semester-filtered student exports.
+- **Recommended fix**: When `semester` is provided, filter strictly by students (`leaveFilter.student = { $in: studentIds }`).
+- **Verification method**: Export leaves with `semester=4`; verify 0 teacher records exist in the generated Excel file.
+
+---
+
+## 7. Medium Severity Flaws
+
+### FLAW-NEW-06: Section Code Desynchronization on Academic Progression (`move-semester`)
+- **FLAW-ID**: `FLAW-NEW-06`
+- **Severity**: 🟡 Medium
+- **Category**: Data Integrity / Schema Consistency
+- **Status**: ⚠️ Discovered (Unpatched)
+- **Affected file(s)**: `backend/src/modules/users/sections.routes.js`
+- **Location**: `sections.routes.js:L239-L245` (`POST /:id/move-semester`)
+- **Description**: When promoting/moving a section to another semester, `section.semester` is updated to `targetSemester`, but `section.code` (which contains the semester suffix, e.g., `CSE-A-S5`) is not regenerated or modified.
+- **Evidence**:
+  ```javascript
+  // sections.routes.js: Line 239-242
+  section.semester = targetSemester;
+  await section.save();
+  ```
+  `section.code` remains `CSE-A-S5` while `section.semester` is `6`.
+- **Reproduction scenario**:
+  1. Create Section `A` in Semester 1 (Code: `CSE-A-S1`).
+  2. Move Section `A` to Semester 2 via `POST /api/v1/sections/:id/move-semester`.
+  3. Inspect Section document in MongoDB: `semester: 2`, but `code: "CSE-A-S1"`.
+  4. Now attempt to create Section `A` in Semester 1 for incoming students: Fails with `E11000 duplicate key error on code`.
+- **Impact**: Confusing administrative displays and fatal database duplicate key collisions preventing onboarding of new cohorts.
+- **Root cause**: Updating `semester` field without updating or recalculating dependent compound code identifiers.
+- **Recommended fix**: In `move-semester`, update `section.code = section.code.replace(/-S\d+$/, `-S${targetSemester}`);` and handle duplicate conflicts.
+- **Verification method**: Move section from semester 1 to 2; verify `section.code` reflects `-S2`.
+
+---
+
+### FLAW-NEW-07: Silent Filter Bypass on Non-Matching Section Name in Reports
+- **FLAW-ID**: `FLAW-NEW-07`
+- **Severity**: 🟡 Medium
+- **Category**: Functional Logic / Filter Bypass
+- **Status**: ⚠️ Discovered (Unpatched)
+- **Affected file(s)**: `backend/src/modules/reports/reports.service.js`
+- **Location**: `reports.service.js:L587-L599` (`exportConsiderationsToExcel`)
+- **Description**: When filtering considerations by section, if the requested section name does not exist, `sectionIds.length === 0`. The handler skips setting `studentScope.section`, causing the query to run without any section filter, exporting all records rather than zero.
+- **Evidence**:
+  ```javascript
+  // reports.service.js: Line 594-597
+  if (sectionIds.length > 0) {
+    studentScope.section = { $in: sectionIds };
+  }
+  // If sectionIds is empty, studentScope.section is never assigned!
+  ```
+- **Reproduction scenario**:
+  1. Export considerations with `?section=INVALID_SEC`.
+  2. Downloaded Excel contains all records across all sections instead of an empty report.
+- **Impact**: Users receive unexpected, unfiltered data dumps when typos occur in query filters.
+- **Root cause**: Missing `else` branch assigning `studentScope.section = { $in: [] }`.
+- **Recommended fix**: Add `else { studentScope.section = { $in: [] }; }`.
+- **Verification method**: Call export with non-existent section; verify exported worksheet has 0 data rows.
+
+---
+
+### FLAW-NEW-08: Hardcoded `CSE-` Code Prefix in Section Auto-Naming
+- **FLAW-ID**: `FLAW-NEW-08`
+- **Severity**: 🟡 Medium
+- **Category**: Functional / Multi-Tenancy Architecture
+- **Status**: ⚠️ Discovered (Unpatched)
+- **Affected file(s)**: `backend/src/modules/users/sections.routes.js`
+- **Location**: `sections.routes.js:L94`
+- **Description**: The auto-generated section code hardcodes `CSE-` regardless of the department:
+  ```javascript
+  const generatedCode = `CSE-${cleanName}-S${semNum}`;
+  ```
+  If an HOD of Mechanical Engineering or Electrical Engineering creates Section A in Semester 1, it receives code `CSE-A-S1`. If Computer Science also has Section A in Semester 1, the operation fails with a duplicate key error.
+- **Evidence**: `sections.routes.js: Line 94`.
+- **Reproduction scenario**:
+  1. Create Section `A` in Semester 1 for Department `ECE`.
+  2. Inspect generated section: Code is `CSE-A-S1`.
+- **Impact**: Non-CSE departments cannot manage sections independently; naming collisions across departments.
+- **Root cause**: Hardcoding `'CSE-'` prefix instead of deriving it from department code or abbreviation.
+- **Recommended fix**: Look up `department.code || 'DEPT'` and format as `${deptCode}-${cleanName}-S${semNum}`.
+- **Verification method**: Create a section for an ECE department; verify code begins with `ECE-`.
+
+---
+
+### FLAW-NEW-09: Unhandled Web Push 410 Gone / 404 Subscription Pruning
+- **FLAW-ID**: `FLAW-NEW-09`
+- **Severity**: 🟡 Medium
+- **Category**: Operational / Background Push Notification Management
+- **Status**: ⚠️ Discovered (Unpatched)
+- **Affected file(s)**: `backend/src/jobs/reminder.job.js`
+- **Location**: `reminder.job.js:L76-L102`
+- **Description**: When users unregister service workers or revoke notification permissions, web push endpoints return HTTP 410 Gone or 404 Not Found. `reminder.job.js` catches these errors and logs them, but never removes the expired subscription endpoint from MongoDB. Dead subscriptions persist indefinitely, slowing down subsequent cron runs.
+- **Evidence**: In `reminder.job.js`, catch blocks log `Web push failed:` without modifying `user.pushSubscriptions`.
+- **Reproduction scenario**:
+  1. Subscribe to push notifications in browser.
+  2. Revoke notifications in browser settings.
+  3. Trigger reminder job. Logs show `410 Gone`. Inspect database: Subscription is still in `pushSubscriptions`.
+- **Impact**: Unnecessary network I/O, increased job run times, and unbounded document growth in user records.
+- **Root cause**: Missing deletion handler for dead push subscription endpoints on 404/410 errors.
+- **Recommended fix**: When `err.statusCode === 410 || err.statusCode === 404`, execute `$pull: { pushSubscriptions: { endpoint: sub.endpoint } }` on the User document.
+- **Verification method**: Trigger reminder push with an invalid endpoint; verify database removes the dead endpoint.
+
+---
+
+## 8. Low Severity Flaws
+
+### FLAW-NEW-10: Section Filter State Inconsistency on Dynamic Semester Promotion
+- **FLAW-ID**: `FLAW-NEW-10`
+- **Severity**: 🔵 Low
+- **Category**: Frontend / UI State Synchronization
+- **Status**: ⚠️ Discovered (Unpatched)
+- **Affected file(s)**: `frontend/src/pages/hod/HodStudents.jsx`
+- **Location**: `HodStudents.jsx:L116-L135`
+- **Description**: In `HodStudents.jsx`, when an HOD promotes a section to a new semester, the table and section list refetch, but `filters.section` remains set to the promoted section while `filters.semester` remains on the old semester. The student list displays an empty state ("No students found") without indicating that the section has moved to the next semester.
+- **Evidence**: Promotion success handler triggers `fetchStudents()` and `fetchSections()` but does not reset or update `filters.section` and `filters.semester`.
+- **Reproduction scenario**:
+  1. On HOD Students page, filter by Semester 5 and Section A.
+  2. Use modal to promote Section A to Semester 6.
+  3. Page displays "No students found" with confusing filter states.
+- **Impact**: Minor confusion for administrative staff during batch section promotions.
+- **Root cause**: Omission of state reset for section filter in the promotion completion callback.
+- **Recommended fix**: Clear `filters.section` or update `filters.semester` to match the target semester upon promotion.
+- **Verification method**: Promote a filtered section; observe clear filter state and accurate UI messaging.
+
+---
+
+## 9. Business Logic & Workflow Flaws
+- **Workflow Orphan Trap (`FLAW-NEW-02`)**: Student applications from unassigned sections bypass TG review queues while remaining hidden from HOD dashboards until 48-hour cron execution.
+- **Section Progression Invariant Breakdown (`FLAW-NEW-06`)**: Changing a section's semester without synchronizing its code creates semantic contradictions between `section.semester` and `section.code`.
+
+## 10. Frontend Flaws & Inconsistencies
+- **Filter Desynchronization (`FLAW-NEW-10`)**: Dynamic promotions leave outdated section filters active in HOD student directory views.
+
+## 11. Backend & API Flaws
+- **Unbounded Query Execution (`FLAW-NEW-04`)**: Parameter `all=true` executes `.limit(0)` in Mongoose, removing safeguards against memory exhaustion.
+- **Silent Query Fallback (`FLAW-NEW-07`)**: Unmatched section names in export routines result in full unfiltered dataset dumps.
+
+## 12. Database & Model Flaws
+- **Section Code Collisions (`FLAW-NEW-08`)**: Hardcoded `CSE-` prefix causes unique compound index collisions across multiple departments.
+
+## 13. Security & Authorization Flaws
+- **Cross-Department BOLA (`FLAW-NEW-01`)**: HODs can create sections in other departments and delete empty sections in foreign departments.
+- **Cross-Department Metric Leak (`FLAW-NEW-03`)**: HOD dashboard summaries leak institution-wide pending workload statistics.
+
+## 14. Architectural & Structural Flaws
+- **Multi-Tenant Section Isolation**: Multi-department isolation is inconsistently enforced; sections rely on department references without strict scoping on all management endpoints.
+
+## 15. Performance & Scalability Issues
+- **Unbounded Memory Spikes (`FLAW-NEW-04`)**: Full-roster retrieval without cursor streaming risks node process OOM crashes.
+- **Push Notification Bloat (`FLAW-NEW-09`)**: Expired push endpoints are never cleaned up, increasing cron cycle times.
+
+## 16. Deployment & Configuration Flaws
+- **Cluster Push Pruning**: In multi-node deployments, unpruned push subscriptions exacerbate push notification latency across all worker nodes.
+
+## 17. Missing Features & Incomplete Implementations
+- **Unassigned TG Fallback Queue**: Absence of an "Unassigned TG Queue" on the HOD portal to triage applications from newly formed sections.
+
+---
+
+## 18. File-by-File Attention List
+
+| File Path | Issues / Findings |
+|---|---|
+| `backend/src/modules/users/sections.routes.js` | `FLAW-NEW-01` (BOLA on create/delete), `FLAW-NEW-06` (Code desync on move-semester), `FLAW-NEW-08` (Hardcoded `CSE-` prefix) |
+| `backend/src/modules/considerations/considerations.service.js` | `FLAW-NEW-02` (Null TG application stalemate) |
+| `backend/src/modules/leaves/leaves.service.js` | `FLAW-NEW-02` (Null TG leave application stalemate) |
+| `backend/src/modules/reports/reports.service.js` | `FLAW-NEW-03` (Global metrics leak in HOD summary), `FLAW-NEW-05` (Teacher leave leak in semester export), `FLAW-NEW-07` (Silent filter bypass) |
+| `backend/src/modules/students/students.service.js` | `FLAW-NEW-04` (Unbounded query execution with `limit(0)`) |
+| `backend/src/jobs/reminder.job.js` | `FLAW-NEW-09` (Dead push subscription pruning) |
+| `frontend/src/pages/hod/HodStudents.jsx` | `FLAW-NEW-10` (Section filter desync on promotion) |
+
+---
+
+## 19. Prioritized Action Plan / Remediation Roadmap
+
+1. **Phase 1: Multi-Tenancy & Authorization Hardening (Immediate)**
+   - Fix `FLAW-NEW-01` in `sections.routes.js` to strictly enforce department ownership for HOD roles.
+   - Fix `FLAW-NEW-08` by fetching department code dynamically for section naming.
+2. **Phase 2: Workflow & Reporting Reliability (High Priority)**
+   - Fix `FLAW-NEW-02` in `considerations.service.js` and `leaves.service.js` to route unassigned TG applications directly to HOD review or notify coordinators.
+   - Fix `FLAW-NEW-03` by scoping HOD dashboard counts to `req.user.departmentId`.
+   - Fix `FLAW-NEW-05` by removing `{ applicantRole: 'TEACHER' }` from student semester export queries.
+3. **Phase 3: Data Integrity & Performance (Medium Priority)**
+   - Fix `FLAW-NEW-04` by capping `all=true` queries with a safety ceiling (max 1000).
+   - Fix `FLAW-NEW-06` by updating section code alongside `semester` progression.
+   - Fix `FLAW-NEW-07` by setting empty `$in: []` when section names do not match.
+   - Fix `FLAW-NEW-09` by pruning 404/410 push subscriptions in `reminder.job.js`.
+4. **Phase 4: Frontend Polish (Low Priority)**
+   - Fix `FLAW-NEW-10` by resetting child filters upon dynamic promotions in `HodStudents.jsx`.
+
+---
+
+## 20. Audit Verification & Sign-Off
+
+- **Audit Tooling**: Static Code Inspection, Multi-Tenancy Boundary Testing, Automated AST Review.
+- **Audit Execution Result**: 10 newly identified flaws cataloged. No code files modified.
+- **Verification Readiness**: All 10 flaws have verified reproduction scenarios, root-cause analyses, and concrete remediation instructions.

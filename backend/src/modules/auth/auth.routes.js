@@ -11,6 +11,7 @@ import {
 } from './auth.schema.js';
 import { validateBody } from '../../middleware/validate.js';
 import auth from '../../middleware/auth.js';
+import authorize from '../../middleware/authorize.js';
 import { authLimiter } from '../../middleware/rateLimit.js';
 
 const router = Router();
@@ -23,7 +24,7 @@ router.post('/register/student/send-otp', authLimiter, authController.sendStuden
 router.post('/register/student/verify-otp', authLimiter, validateBody(verifyOtpSchema), authController.verifyRegistrationOtp);
 router.post('/verify-otp', authLimiter, validateBody(verifyOtpSchema), authController.verifyRegistrationOtp);
 router.post('/register/student', authLimiter, validateBody(registerStudentSchema), authController.registerStudent);
-router.post('/register/teacher', authLimiter, validateBody(registerTeacherSchema), authController.registerTeacher);
+router.post('/register/teacher', auth, authorize('ADMIN', 'HOD'), validateBody(registerTeacherSchema), authController.registerTeacher);
 router.post('/forgot-password', authLimiter, validateBody(forgotPasswordSchema), authController.forgotPassword);
 router.post('/reset-password', authLimiter, validateBody(resetPasswordSchema), authController.resetPasswordWithOtp);
 router.post('/refresh', authController.refresh);
