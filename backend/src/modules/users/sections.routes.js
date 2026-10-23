@@ -67,7 +67,12 @@ router.post(
   authorize('HOD', 'ADMIN'),
   asyncHandler(async (req, res) => {
     let { department, year, semester, name, code, capacity } = req.body;
-    if (!department) {
+    if (req.user.role === 'HOD') {
+      if (department && req.user.departmentId && department.toString() !== req.user.departmentId.toString()) {
+        throw ApiError.forbidden('Forbidden: Cannot create sections in another department');
+      }
+      department = req.user.departmentId;
+    } else if (!department) {
       if (req.user.departmentId) {
         department = req.user.departmentId;
       } else {
@@ -91,7 +96,8 @@ router.post(
 
     const cleanName = name.replace(/^Section\s*/i, '').trim();
     const formattedName = `Section ${cleanName}`;
-    const formattedCode = (code || `CSE-${cleanName}-S${semNum}`).toUpperCase().trim();
+    const deptPrefix = (deptDoc.code || 'SEC').toUpperCase().trim();
+    const formattedCode = (code || `${deptPrefix}-${cleanName}-S${semNum}`).toUpperCase().trim();
 
     const existing = await Section.findOne({ department, semester: semNum, code: formattedCode });
     if (existing) {
@@ -139,6 +145,11 @@ router.patch(
       throw ApiError.notFound('Section not found');
     }
 
+    const secDeptId = section.department?._id || section.department;
+    if (req.user.role === 'HOD' && req.user.departmentId && secDeptId && secDeptId.toString() !== req.user.departmentId.toString()) {
+      throw ApiError.forbidden('Forbidden: Cannot modify sections in another department');
+    }
+
     const prevCapacity = section.capacity || 60;
     if (capacity !== undefined) {
       const capNum = parseInt(capacity, 10);
@@ -180,6 +191,11 @@ router.delete(
       throw ApiError.notFound('Section not found');
     }
 
+    const secDeptId = section.department?._id || section.department;
+    if (req.user.role === 'HOD' && req.user.departmentId && secDeptId && secDeptId.toString() !== req.user.departmentId.toString()) {
+      throw ApiError.forbidden('Forbidden: Cannot delete sections in another department');
+    }
+
     const studentCount = await Student.countDocuments({ section: id });
     if (studentCount > 0) {
       throw ApiError.badRequest(
@@ -213,6 +229,11 @@ router.post(
       throw ApiError.notFound('Section not found');
     }
 
+    const secDeptId = section.department?._id || section.department;
+    if (req.user.role === 'HOD' && req.user.departmentId && secDeptId && secDeptId.toString() !== req.user.departmentId.toString()) {
+      throw ApiError.forbidden('Forbidden: Cannot move sections in another department');
+    }
+
     const currentSem = section.semester || 5;
     let newSemester = currentSem;
 
@@ -235,6 +256,23 @@ router.post(
     const prevSemester = section.semester;
     const prevYear = section.year;
     const newYear = Math.ceil(newSemester / 2);
+
+    let updatedCode = section.code;
+    if (section.code && /-S\d+$/i.test(section.code)) {
+      updatedCode = section.code.replace(/-S\d+$/i, `-S${newSemester}`);
+      const collision = await Section.findOne({
+        _id: { $ne: section._id },
+        department: secDeptId,
+        semester: newSemester,
+        code: updatedCode,
+      });
+      if (collision) {
+        throw ApiError.conflict(
+          `Cannot move section: Target section code '${updatedCode}' already exists in Semester ${newSemester}`
+        );
+      }
+      section.code = updatedCode;
+    }
 
     section.semester = newSemester;
     section.year = newYear;
