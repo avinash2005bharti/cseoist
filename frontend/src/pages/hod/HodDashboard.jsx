@@ -5,11 +5,15 @@ import { dashboardApi, considerationApi, leaveApi, masterDataApi, noticeApi } fr
 import { getSectionLetter } from '../../utils/constants.js';
 import {
   Calendar,
+  CalendarDays,
+  CalendarRange,
   Clock,
+  Clock3,
   AlertCircle,
   Users,
   GraduationCap,
   UserPlus,
+  Shield,
   ShieldCheck,
   ArrowRight,
   ChevronDown,
@@ -19,9 +23,13 @@ import {
   Megaphone,
   Trash2,
   Layers,
+  Layers3,
+  Landmark,
+  Building2,
 } from 'lucide-react';
 
 import { lazyWithRetry } from '../../utils/lazyWithRetry.js';
+import './Screen-9.screen.css';
 
 // Lazy-loaded modals with auto-retry
 const OfficialClearancesLedgerModal = lazyWithRetry(() => import('../../components/modals/OfficialClearancesLedgerModal.jsx'));
@@ -68,8 +76,8 @@ export default function HodDashboard() {
   const [showSendNoticeModal, setShowSendNoticeModal] = useState(false);
   const [showTgModal, setShowTgModal] = useState(false);
 
-  // Selected Section Overview Semester (e.g. 5)
-  const [selectedSemNumber, setSelectedSemNumber] = useState(null);
+  // Selected Section Overview Semester (default to Semester 5 matching Screen 9)
+  const [selectedSemNumber, setSelectedSemNumber] = useState(5);
 
   // Academic Year State & Dropdown
   const [academicYear, setAcademicYear] = useState('');
@@ -180,12 +188,19 @@ export default function HodDashboard() {
     fetchDashboardData();
 
     const handleQueueChange = () => fetchDashboardData();
+    const handleSectionChange = (e) => {
+      fetchDashboardData();
+      if (e?.detail?.semester) {
+        setSelectedSemNumber(Number(e.detail.semester));
+      }
+    };
     window.addEventListener('campusflow_queue_changed', handleQueueChange);
+    window.addEventListener('campusflow_sections_changed', handleSectionChange);
 
-    // Live real-time polling every 10 seconds to guarantee fresh queue counters
+    // Live real-time polling every 6 seconds to guarantee fresh queue counters and section updates
     const pollInterval = setInterval(() => {
       fetchDashboardData();
-    }, 10000);
+    }, 6000);
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('open_ledger') === 'true') {
@@ -194,15 +209,12 @@ export default function HodDashboard() {
 
     return () => {
       window.removeEventListener('campusflow_queue_changed', handleQueueChange);
+      window.removeEventListener('campusflow_sections_changed', handleSectionChange);
       clearInterval(pollInterval);
     };
   }, []);
 
-  // Filter students by selected semester for the section overview
-  const semStudents = students.filter((s) => {
-    const sem = s.semester || s.section?.semester;
-    return Number(sem) === Number(selectedSemNumber);
-  });
+  const isAllSemesters = selectedSemNumber === 'ALL' || selectedSemNumber === 'All Semesters';
 
   const availableSemesters = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -213,7 +225,7 @@ export default function HodDashboard() {
   )].sort();
 
   useEffect(() => {
-    if (selectedSemNumber === null) {
+    if (selectedSemNumber === null && sections.length > 0) {
       const activeSem = sections.find((s) => s.semester)?.semester;
       setSelectedSemNumber(activeSem ? Number(activeSem) : 5);
     }
@@ -226,22 +238,25 @@ export default function HodDashboard() {
   }, [academicYear, realAcademicYears]);
 
   const getSectionStudentCount = (section) => {
-    return semStudents.filter((s) => {
+    return students.filter((s) => {
       const sectionId = s.section?._id || s.section;
-      return sectionId === section._id;
+      return String(sectionId) === String(section._id);
     }).length;
   };
 
   const [hoveredSem, setHoveredSem] = useState(null);
 
   const visibleSections = sections
-    .filter((section) => Number(section.semester) === Number(selectedSemNumber))
+    .filter((section) => {
+      if (isAllSemesters) return true;
+      return Number(section.semester) === Number(selectedSemNumber);
+    })
     .map((section) => ({ ...section, studentCount: getSectionStudentCount(section) }));
 
   const openSectionDetails = (section) => {
     setSectionModalTarget({
       section: getSectionLetter(section) || 'B',
-      semester: Number(selectedSemNumber || section.semester || 5),
+      semester: Number(selectedSemNumber && selectedSemNumber !== 'ALL' ? selectedSemNumber : section.semester || 5),
     });
     setShowSectionModal(true);
   };
@@ -254,17 +269,17 @@ export default function HodDashboard() {
     return 'Good Evening';
   };
 
-  // Real semester distribution calculation based on enrolled students in the database
+  // Real semester distribution calculation based strictly on enrolled students in the database
   const totalStudents = students.length;
   const semesterColors = [
-    { sem: 1, label: '1st Sem', color: '#3B82F6', dotColor: 'bg-blue-500' },
-    { sem: 2, label: '2nd Sem', color: '#38BDF8', dotColor: 'bg-sky-400' },
-    { sem: 3, label: '3rd Sem', color: '#06B6D4', dotColor: 'bg-cyan-500' },
-    { sem: 4, label: '4th Sem', color: '#10B981', dotColor: 'bg-emerald-500' },
-    { sem: 5, label: '5th Sem', color: '#F59E0B', dotColor: 'bg-amber-500' },
-    { sem: 6, label: '6th Sem', color: '#EC4899', dotColor: 'bg-pink-500' },
-    { sem: 7, label: '7th Sem', color: '#8B5CF6', dotColor: 'bg-purple-500' },
-    { sem: 8, label: '8th Sem', color: '#6366F1', dotColor: 'bg-indigo-500' },
+    { sem: 1, label: '1st Sem', color: '#4F46E5', barColor: '#4F46E5' },
+    { sem: 2, label: '2nd Sem', color: '#06B6D4', barColor: '#06B6D4' },
+    { sem: 3, label: '3rd Sem', color: '#F59E0B', barColor: '#F59E0B' },
+    { sem: 4, label: '4th Sem', color: '#F97316', barColor: '#F97316' },
+    { sem: 5, label: '5th Sem', color: '#EC4899', barColor: '#EC4899' },
+    { sem: 6, label: '6th Sem', color: '#8B5CF6', barColor: '#8B5CF6' },
+    { sem: 7, label: '7th Sem', color: '#10B981', barColor: '#10B981' },
+    { sem: 8, label: '8th Sem', color: '#2563EB', barColor: '#2563EB' },
   ];
 
   const semDistribution = semesterColors.map((sc) => {
@@ -274,7 +289,7 @@ export default function HodDashboard() {
     return { ...sc, count: realCount };
   });
 
-  const totalCohortStudents = semDistribution.reduce((acc, curr) => acc + curr.count, 0);
+  const totalCohortStudents = semDistribution.reduce((acc, curr) => acc + curr.count, 0) || students.length;
 
   const semDistributionWithPct = semDistribution.map((sc) => ({
     ...sc,
@@ -284,16 +299,12 @@ export default function HodDashboard() {
   // Calculate SVG donut slices strictly from active semester data with distinct colors
   const circumference = 2 * Math.PI * 38; // ≈ 238.761
   let runningOffset = 0;
-  const activeSlices = semDistributionWithPct.filter((item) => item.count > 0);
-  const donutSlices = activeSlices.map((item) => {
-    const fraction = item.count / (totalCohortStudents || 1);
+  const donutSlices = semDistributionWithPct.map((item) => {
+    const fraction = totalCohortStudents > 0 ? item.count / totalCohortStudents : 0;
     const sliceLength = fraction * circumference;
     const offset = -runningOffset;
     runningOffset += sliceLength;
-    const dashArray =
-      activeSlices.length === 1
-        ? `${circumference} 0`
-        : `${sliceLength} ${circumference - sliceLength}`;
+    const dashArray = `${sliceLength} ${circumference - sliceLength}`;
     return {
       ...item,
       dashArray,
@@ -319,440 +330,476 @@ export default function HodDashboard() {
   const tgRecommendedLeaves = pendingLeaves.filter(isTgRecommended);
   const totalTgRecommendations = tgRecommendedConsiderations.length + tgRecommendedLeaves.length;
 
+  const sectionsToDisplay = visibleSections;
+
   return (
-    <div className="flex flex-col gap-6 w-full min-w-0 font-sans">
-      {/* =======================================================================
-          TOP ROW: HOD Office Greeting & Hero Campus Banner (Side-by-Side on Desktop)
-          ======================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* Left: Office badge, Greeting & View Consideration button */}
-        <div className="lg:col-span-6 flex flex-col justify-between py-1 min-w-0">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-900 text-sky-300 text-xs font-extrabold tracking-wide mb-3 shadow-xs border border-blue-700/60">
-              <span>🏛️</span>
-              <span>HOD Office</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2 m-0">
-              <span>{getGreeting()}, {currentUser?.name || 'HOD'}!</span>
-              <span className="text-2xl">👋</span>
-            </h1>
-
-            <p className="text-sm text-slate-600 font-medium mt-1.5 mb-0">
-              Here's what's happening in your CSE department today.
-            </p>
-          </div>
-
-          {/* Date pill, View Consideration Button & Send Notice Button */}
-          <div className="flex flex-wrap items-center gap-3 mt-4">
-            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs">
-              <Calendar size={15} className="text-blue-600 shrink-0" />
-              <span>{currentDate}</span>
-              <span className="text-slate-300 font-light">|</span>
-              <Clock size={15} className="text-blue-600 shrink-0" />
-              <span>{currentTime}</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowLedgerModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-bold transition-all shadow-2xs cursor-pointer group"
-            >
-              <FileText size={15} className="text-emerald-600 group-hover:scale-110 transition-transform" />
-              <span>Attendance Clearances</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowSendNoticeModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-blue-600 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-bold transition-all shadow-sm hover:shadow cursor-pointer group"
-            >
-              <Send size={15} className="text-white group-hover:translate-x-0.5 transition-transform" />
-              <span>Send Notice</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Right: OIST Campus Hero Banner */}
-        <div className="lg:col-span-6 relative rounded-3xl overflow-hidden shadow-sm border border-slate-200 min-h-[160px] flex flex-col justify-between p-5 sm:p-6 bg-slate-900 text-white group">
-          {/* LCP High-Priority Banner Image */}
-          <img
-            src="/oriental.png"
-            alt="Oriental Institute of Science and Technology Campus"
-            fetchpriority="high"
-            decoding="async"
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
-            style={{ objectPosition: 'center 40%' }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-900/70 to-slate-950/30 pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4 w-full min-w-0">
-            <div className="max-w-xs">
-              <p className="text-sm sm:text-base font-serif italic text-white/95 leading-snug drop-shadow-xs m-0">
-                "Better systems, <br />
-                Better education."
-              </p>
-              <p className="text-xs sm:text-sm text-sky-300 font-semibold mt-1 drop-shadow-xs m-0">
-                — OIST CSE
+    <div data-appearance="light" className="w-full min-w-0">
+      <div className="flex flex-col gap-6 sm:gap-8 w-full max-w-7xl mx-auto font-sans">
+        {/* =======================================================================
+            TOP ROW: HOD Office Greeting & Hero Campus Banner (Side-by-Side on Desktop)
+            ======================================================================= */}
+        <section className="hod-hero-grid">
+          {/* Left Card: Office badge, Greeting & Action buttons */}
+          <div className="hod-card flex p-4 sm:p-8 flex-col justify-between gap-5 sm:gap-6 min-w-0 max-w-full">
+            <div>
+              <span className="font-bold rounded-md bg-[#EEF2FF] text-[#1D4ED8] text-xs inline-flex px-3 py-1.5 items-center gap-2 border border-[#DBEAFE]">
+                <Building2 className="size-3.5 text-[#2563EB]" />
+                <span>HOD Office</span>
+              </span>
+              <h1 className="font-black text-3xl sm:text-4xl tracking-tight mt-5 text-[#0F172A]">
+                {getGreeting()}, {currentUser?.name || 'Hod cse'}! 👋
+              </h1>
+              <p className="text-[#64748B] text-sm sm:text-base mt-2.5 font-normal">
+                Here's what's happening in your CSE department today.
               </p>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* =======================================================================
-          MIDDLE ROW: 6 Key Stat & Action Cards
-          ======================================================================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-        {/* 1. Pending Approvals - Opens Pending Approvals Queue Modal matching Image 1 */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setShowPendingModal(true)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowPendingModal(true)}
-          className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-rose-300 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between min-h-[140px] group focus:outline-none focus:ring-2 focus:ring-rose-500"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-800">Pending Approvals</span>
-            <div className="w-7 h-7 rounded-full bg-rose-50 text-rose-700 flex items-center justify-center shrink-0 border border-rose-200">
-              <AlertCircle size={15} />
-            </div>
-          </div>
-
-          <div className="my-2">
-            <span className={`text-3xl font-black block leading-tight ${totalPendingApprovals > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
-              {totalPendingApprovals}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
-            <span className={totalPendingApprovals > 0 ? "text-rose-700 font-semibold" : "text-emerald-700 font-semibold"}>
-              {totalPendingApprovals > 0 ? `${totalPendingApprovals} requires attention` : "All caught up"}
-            </span>
-            {totalPendingApprovals > 0 ? (
-              <svg
-                aria-hidden="true"
-                className="w-12 h-3 text-rose-500 overflow-visible"
-                viewBox="0 0 48 10"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M1 5 Q 12 -2, 24 5 T 47 5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            ) : (
-              <span className="text-[11px] font-bold text-emerald-600">✓ Clear</span>
-            )}
-          </div>
-        </div>
-
-        {/* 2. TG Recommendations */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setShowTgModal(true)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowTgModal(true)}
-          className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-indigo-300 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between min-h-[140px] group focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-800">Tg Recommendation</span>
-            <div className="w-7 h-7 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-200">
-              <ShieldCheck size={15} />
-            </div>
-          </div>
-
-          <div className="my-2">
-            <span className={`text-3xl font-black block leading-tight ${totalTgRecommendations > 0 ? 'text-indigo-600' : 'text-slate-900'}`}>
-              {totalTgRecommendations}
-            </span>
-          </div>
-
-          <div className="text-xs text-slate-600 font-medium">
-            <span className={totalTgRecommendations > 0 ? "text-indigo-700 font-semibold" : "text-emerald-700 font-semibold"}>
-              {totalTgRecommendations > 0
-                ? `${tgRecommendedConsiderations.length} Cons • ${tgRecommendedLeaves.length} Leaves`
-                : 'All clear'}
-            </span>
-          </div>
-        </div>
-
-        {/* 3. Add Faculty */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setShowAddFacultyModal(true)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowAddFacultyModal(true)}
-          className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-emerald-300 hover:shadow-xs transition-all cursor-pointer flex items-center gap-3.5 min-h-[140px] group focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        >
-          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-            <GraduationCap size={20} />
-          </div>
-          <div className="min-w-0">
-            <span className="block text-sm font-extrabold text-slate-900 leading-snug group-hover:text-emerald-700 transition-colors">
-              Add Faculty
-            </span>
-            <span className="block text-xs text-slate-600 font-medium truncate mt-0.5">
-              Add faculty member
-            </span>
-          </div>
-        </div>
-
-        {/* 4. Add Student */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setShowAddStudentModal(true)}
-          onKeyDown={(e) => e.key === 'Enter' && setShowAddStudentModal(true)}
-          className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-blue-300 hover:shadow-xs transition-all cursor-pointer flex items-center gap-3.5 min-h-[140px] group focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-            <UserPlus size={20} />
-          </div>
-          <div className="min-w-0">
-            <span className="block text-sm font-extrabold text-slate-900 leading-snug group-hover:text-blue-700 transition-colors">
-              Add Student
-            </span>
-            <span className="block text-xs text-slate-600 font-medium truncate mt-0.5">
-              Register new student
-            </span>
-          </div>
-        </div>
-
-        {/* 5. Manage TGs (matching user handwritten "manages tgs") */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => navigate('/hod/mentorship')}
-          onKeyDown={(e) => e.key === 'Enter' && navigate('/hod/mentorship')}
-          className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-indigo-300 hover:shadow-xs transition-all cursor-pointer flex items-center gap-3.5 min-h-[140px] group focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-800 border border-indigo-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-            <ShieldCheck size={20} />
-          </div>
-          <div className="min-w-0">
-            <span className="block text-sm font-extrabold text-slate-900 leading-snug group-hover:text-indigo-700 transition-colors">
-              Manage TGs
-            </span>
-            <span className="block text-xs text-slate-600 font-medium truncate mt-0.5">
-              Teacher Guardian allocations
-            </span>
-          </div>
-        </div>
-
-        {/* 6. Section Progression (Promote / Demote) */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => navigate('/hod/sections')}
-          onKeyDown={(e) => e.key === 'Enter' && navigate('/hod/sections')}
-          className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-purple-300 hover:shadow-xs transition-all cursor-pointer flex items-center gap-3.5 min-h-[140px] group focus:outline-none focus:ring-2 focus:ring-purple-500"
-        >
-          <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-            <Layers size={20} />
-          </div>
-          <div className="min-w-0">
-            <span className="block text-sm font-extrabold text-slate-900 leading-snug group-hover:text-purple-700 transition-colors">
-              Section Progression
-            </span>
-            <span className="block text-xs text-slate-600 font-medium truncate mt-0.5">
-              Promote or demote sections
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* =======================================================================
-          MIDDLE-BOTTOM: Semester Distribution & Section Overview (50-50 Split)
-          ======================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
-        {/* CARD 1: Semester Distribution with interactive Pie Chart and structured representation */}
-        <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <Calendar size={18} className="text-blue-600" />
-                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 m-0">
-                  Semester Distribution
-                </h2>
+            {/* Desktop Action Controls (Screen 9) */}
+            <div className="hidden sm:flex flex-wrap items-center gap-2.5 mt-auto pt-2">
+              <div className="font-medium rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs sm:text-sm text-[#64748B] flex px-3.5 py-2.5 items-center gap-2.5 shadow-2xs shrink-0">
+                <CalendarDays className="text-[#2563EB] size-4 shrink-0" />
+                <span>{currentDate}</span>
+                <span className="bg-[#E2E8F0] w-px h-3.5" />
+                <Clock3 className="text-[#2563EB] size-4 shrink-0" />
+                <span>{currentTime}</span>
               </div>
+
               <button
                 type="button"
-                onClick={() => setShowClassesModal(true)}
-                className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer transition-colors"
+                onClick={() => setShowLedgerModal(true)}
+                className="hod-btn-clearances-highlight"
+                title="View & Export Approved Attendance Clearances Ledger"
               >
-                <span>View all</span>
-                <ArrowRight size={14} />
+                <FileText className="size-4 shrink-0" />
+                <span>Attendance Clearances</span>
+                <span className="clearances-badge">
+                  Official Ledger
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowSendNoticeModal(true)}
+                className="hod-btn-send-notice"
+              >
+                <Send className="size-4 text-white shrink-0" />
+                <span>Send Notice</span>
               </button>
             </div>
 
-            {/* Split layout: Interactive Donut Chart (Left) & Rich Semester Metric Cards (Right) */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-4">
-              {/* Left 45%: Donut Pie Chart with interactive hover & center stats */}
-              <div className="w-full sm:w-[45%] flex items-center justify-center">
-                <div className="relative w-40 h-40 sm:w-44 sm:h-44 shrink-0 flex items-center justify-center">
-                  <svg
-                    role="img"
-                    aria-label="Semester enrollment distribution chart"
-                    className="w-full h-full transform -rotate-90 drop-shadow-xs"
-                    viewBox="0 0 100 100"
-                  >
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="38"
-                      fill="transparent"
-                      stroke="#F1F5F9"
-                      strokeWidth="12"
-                    />
-                    {donutSlices.map((slice) => {
-                      const isHovered = hoveredSem === slice.sem;
-                      return (
-                        <circle
-                          key={slice.sem}
-                          cx="50"
-                          cy="50"
-                          r="38"
-                          fill="transparent"
-                          stroke={slice.color}
-                          strokeWidth={isHovered ? 15 : 12}
-                          strokeDasharray={slice.dashArray}
-                          strokeDashoffset={slice.dashOffset}
-                          className="transition-all duration-200 cursor-pointer"
-                          onMouseEnter={() => setHoveredSem(slice.sem)}
-                          onMouseLeave={() => setHoveredSem(null)}
-                          onClick={() => setSelectedSemNumber(slice.sem)}
-                        />
-                      );
-                    })}
-                  </svg>
-
-                  {/* Inner center text: Dynamic hover feedback or Total enrolled */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-2">
-                    {hoveredSemData ? (
-                      <>
-                        <span className="text-xl sm:text-2xl font-black text-slate-900 leading-none">
-                          {hoveredSemData.count}
-                        </span>
-                        <span className="text-[11px] font-bold text-blue-600 mt-1 truncate max-w-full">
-                          {hoveredSemData.label}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400">
-                          {hoveredSemData.pct}% of cohort
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-2xl sm:text-3xl font-black text-slate-900 leading-none tracking-tight">
-                          {totalCohortStudents}
-                        </span>
-                        <span className="text-xs font-bold text-slate-500 mt-1">
-                          {totalCohortStudents === 1 ? 'Student' : 'Students'}
-                        </span>
-                        <span className="text-[10px] font-semibold text-slate-400">
-                          Total Enrolled
-                        </span>
-                      </>
-                    )}
-                  </div>
+            {/* Mobile Action Controls (Screen 10) */}
+            <div className="hod-mobile-action-bar sm:hidden">
+              <div className="hod-datetime-pill">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="text-[#2563EB] size-4" />
+                  <span>{currentDate}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock3 className="text-[#2563EB] size-4" />
+                  <span>{currentTime}</span>
                 </div>
               </div>
 
-              {/* Right 55%: Rich structured representation of all 8 semesters */}
-              <div className="w-full sm:w-[55%] grid grid-cols-2 gap-2 text-xs">
-                {semDistributionWithPct.map((item) => {
-                  const isHovered = hoveredSem === item.sem;
-                  const isSelected = selectedSemNumber === item.sem;
-                  return (
-                    <div
-                      key={item.sem}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setSelectedSemNumber(item.sem)}
-                      onKeyDown={(e) => e.key === 'Enter' && setSelectedSemNumber(item.sem)}
-                      onMouseEnter={() => setHoveredSem(item.sem)}
-                      onMouseLeave={() => setHoveredSem(null)}
-                      title={`Click to view ${item.label} in Section Overview`}
-                      className={`p-2 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
-                        isSelected
-                          ? 'bg-blue-50/70 border-blue-400 ring-1 ring-blue-400 shadow-2xs'
-                          : isHovered
-                          ? 'bg-slate-50 border-slate-300 shadow-2xs'
-                          : 'bg-white border-slate-100 hover:border-slate-200'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="flex items-center gap-1.5 font-bold text-slate-800 truncate text-[11px]">
-                          <span
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: item.color }}
-                          />
-                          {item.label}
-                        </span>
-                        <span className="px-1.5 py-0.2 rounded-md bg-slate-100 text-[10px] font-black text-slate-700">
-                          {item.pct}%
-                        </span>
-                      </div>
+              <button
+                type="button"
+                onClick={() => setShowLedgerModal(true)}
+                className="hod-btn-outline"
+              >
+                <FileText className="text-[#2563EB] size-4" />
+                <span>Attendance Clearances</span>
+              </button>
 
-                      <div className="flex items-baseline justify-between mt-1 text-[11px]">
-                        <span className="font-extrabold text-slate-900">
-                          {item.count}{' '}
-                          <span className="text-[10px] font-medium text-slate-400">
-                            {item.count === 1 ? 'std' : 'stds'}
-                          </span>
-                        </span>
-                      </div>
-
-                      {/* Mini visual proportional bar */}
-                      <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mt-1.5">
-                        <div
-                          className="h-full rounded-full transition-all duration-300"
-                          style={{
-                            width: `${Math.max(item.pct, item.count > 0 ? 5 : 0)}%`,
-                            backgroundColor: item.color,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowSendNoticeModal(true)}
+                className="hod-btn-primary"
+              >
+                <Send className="size-4 text-white" />
+                <span>Send Notice</span>
+              </button>
             </div>
 
-            <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-medium">
-              <span>💡 Click any semester to view active sections</span>
-              <span className="font-bold text-slate-600">8 Semesters Active</span>
+            {/* Mobile Campus Banner matching Screen 10 */}
+            <div className="hod-hero-image-box flex lg:hidden">
+              <img
+                src="https://images.unsplash.com/photo-1680084521816-cc1ad0433ceb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3ODc2NDd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBJbmRpYW4lMjBlbmdpbmVlcmluZyUyMGNvbGxlZ2UlMjBjYW1wdXMlMjBidWlsZGluZyUyMGV4dGVyaW9yfGVufDF8MHx8fDE3OTI4NTE3MTZ8MA&ixlib=rb-4.1.0&q=80&w=1080"
+                onError={(e) => { e.currentTarget.src = '/campus_building.jpg'; }}
+                alt="Oriental Institute of Science and Technology campus"
+              />
+              <div className="bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent flex absolute inset-0 p-4 items-end">
+                <p className="font-bold text-white text-sm leading-snug">
+                  Better systems, Better education. — OIST CSE
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* CARD 2: Section Overview matching user 'recreate as' design */}
-        <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <Users size={18} className="text-blue-600 shrink-0" />
-                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 m-0">
-                  Section Overview <span className="text-xs sm:text-sm text-slate-500 font-semibold">(CSE Only)</span>
-                </h2>
+          {/* Right Hero Banner Card - Desktop Gradient matching Screen 9 */}
+          <div className="hod-desktop-banner hidden lg:flex">
+            <div className="hod-banner-stripes">
+              <div className="stripe-purple" />
+              <div className="stripe-cyan" />
+              <div className="stripe-amber" />
+            </div>
+            <div className="flex relative p-8 flex-col justify-between h-full pt-10">
+              <div className="flex items-center gap-3">
+                <div className="size-11 rounded-xl bg-white/20 backdrop-blur-xs border border-white/30 flex justify-center items-center text-white">
+                  <Landmark className="size-6 text-white" />
+                </div>
+                <span className="font-extrabold uppercase text-white/95 text-xs tracking-widest">
+                  OIST CSE
+                </span>
+              </div>
+              <p className="font-bold text-white text-2xl lg:text-3xl leading-tight max-w-md drop-shadow-xs">
+                Better systems, Better education. — OIST CSE
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* =======================================================================
+            MIDDLE ROW: 6 Key Stat & Quick Action Cards (Screen 9 & 10)
+            ======================================================================= */}
+        <section className="hod-kpi-grid">
+          {/* 1. Pending Approvals */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setShowPendingModal(true)}
+            onKeyDown={(e) => e.key === 'Enter' && setShowPendingModal(true)}
+            className="hod-action-card p-4 sm:p-5 flex flex-col justify-between min-h-[135px] sm:min-h-[145px] cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          >
+            <div className="flex justify-between items-start">
+              <p className="font-bold text-sm text-[#0F172A]">Pending Approvals</p>
+              <div className="size-9 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-[#E11D48] shrink-0">
+                <AlertCircle className="size-5" />
+              </div>
+            </div>
+            <p className="font-black text-[#E11D48] text-3xl sm:text-4xl mt-3 sm:mt-4 leading-none">
+              {totalPendingApprovals}
+            </p>
+            <p className="text-[#64748B] text-xs mt-1.5 truncate">
+              {totalPendingApprovals} requires attention
+            </p>
+          </div>
+
+          {/* 2. TG Recommendation */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate('/hod/tg-recommendations')}
+            onKeyDown={(e) => e.key === 'Enter' && navigate('/hod/tg-recommendations')}
+            className="hod-action-card p-4 sm:p-5 flex flex-col justify-between min-h-[135px] sm:min-h-[145px] cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          >
+            <div className="flex justify-between items-start">
+              <p className="font-bold text-sm text-[#0F172A]">TG Recommendation</p>
+              <div className="size-9 rounded-lg bg-[#EEF2FF] border border-[#DBEAFE] flex items-center justify-center text-[#2563EB] shrink-0 group-hover:scale-105 transition-transform">
+                <ShieldCheck className="size-5" />
+              </div>
+            </div>
+            <p className="font-black text-[#2563EB] text-3xl sm:text-4xl mt-3 sm:mt-4 leading-none">
+              {totalTgRecommendations}
+            </p>
+            <p className="text-[#64748B] text-xs mt-1.5 truncate">
+              {tgRecommendedConsiderations.length} Cons • {tgRecommendedLeaves.length} Leaves
+            </p>
+          </div>
+
+          {/* 3. Add Faculty */}
+          <button
+            type="button"
+            onClick={() => setShowAddFacultyModal(true)}
+            className="hod-action-card text-left p-4 sm:p-5 flex flex-col justify-between items-start min-h-[135px] sm:min-h-[145px] cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          >
+            <div className="size-9 rounded-lg bg-[#CFF4FC] border border-[#A5F3FC] flex items-center justify-center text-[#0284C7] shrink-0 group-hover:scale-105 transition-transform">
+              <GraduationCap className="size-5" />
+            </div>
+            <div>
+              <p className="font-bold text-sm text-[#0F172A]">Add Faculty</p>
+              <p className="text-[#64748B] text-xs mt-1">Add faculty member</p>
+            </div>
+          </button>
+
+          {/* 4. Add Student */}
+          <button
+            type="button"
+            onClick={() => setShowAddStudentModal(true)}
+            className="hod-action-card text-left p-4 sm:p-5 flex flex-col justify-between items-start min-h-[135px] sm:min-h-[145px] cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          >
+            <div className="size-9 rounded-lg bg-[#CFF4FC] border border-[#A5F3FC] flex items-center justify-center text-[#0284C7] shrink-0 group-hover:scale-105 transition-transform">
+              <UserPlus className="size-5" />
+            </div>
+            <div>
+              <p className="font-bold text-sm text-[#0F172A]">Add Student</p>
+              <p className="text-[#64748B] text-xs mt-1">Register new student</p>
+            </div>
+          </button>
+
+          {/* 5. Manage TGs */}
+          <button
+            type="button"
+            onClick={() => navigate('/hod/mentorship')}
+            className="hod-action-card text-left p-4 sm:p-5 flex flex-col justify-between items-start min-h-[135px] sm:min-h-[145px] cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          >
+            <div className="size-9 rounded-lg bg-[#EEF2FF] border border-[#E0E7FF] flex items-center justify-center text-[#4F46E5] shrink-0 group-hover:scale-105 transition-transform">
+              <Shield className="size-5" />
+            </div>
+            <div>
+              <p className="font-bold text-sm text-[#0F172A]">Manage TGs</p>
+              <p className="text-[#64748B] text-xs mt-1">Teacher Guardian allocations</p>
+            </div>
+          </button>
+
+          {/* 6. Section Progression */}
+          <button
+            type="button"
+            onClick={() => navigate('/hod/sections')}
+            className="hod-action-card text-left p-4 sm:p-5 flex flex-col justify-between items-start min-h-[135px] sm:min-h-[145px] cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          >
+            <div className="size-9 rounded-lg bg-[#F3E8FF] border border-[#E9D5FF] flex items-center justify-center text-[#9333EA] shrink-0 group-hover:scale-105 transition-transform">
+              <Layers className="size-5" />
+            </div>
+            <div>
+              <p className="font-bold text-sm text-[#0F172A]">Section Progression</p>
+              <p className="text-[#64748B] text-xs mt-1">Promote or demote sections</p>
+            </div>
+          </button>
+        </section>
+
+        {/* =======================================================================
+            BOTTOM ROW: Semester Distribution & Section Overview (50-50 Split)
+            ======================================================================= */}
+        <section className="hod-bottom-grid">
+          {/* CARD 1: Semester Distribution */}
+          <div className="hod-card p-4 sm:p-6 flex flex-col justify-between min-w-0 max-w-full overflow-hidden">
+            <div>
+              <div className="flex justify-between items-center gap-4 pb-4 border-b border-[#E2E8F0]">
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="text-[#2563EB] size-5" />
+                  <h2 className="font-bold text-lg text-[#0F172A] m-0">Semester Distribution</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowClassesModal(true)}
+                  className="font-semibold text-[#2563EB] text-sm hover:underline cursor-pointer flex items-center gap-1"
+                >
+                  <span>View all →</span>
+                </button>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-xs text-slate-600 font-bold">
-                  <label htmlFor="hod-semester-select">Sem</label>
+              {/* Body: Donut Chart on Left, 8 Semester Cards on Right */}
+              <div className="hod-distribution-layout mt-6">
+                {/* Donut Chart */}
+                <div className="flex flex-col justify-center items-center">
+                  <div className="relative size-48 shrink-0 flex items-center justify-center">
+                    <svg
+                      role="img"
+                      aria-label="Semester enrollment distribution chart"
+                      className="w-full h-full transform -rotate-90 drop-shadow-xs"
+                      viewBox="0 0 100 100"
+                    >
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="38"
+                        fill="transparent"
+                        stroke="#F1F5F9"
+                        strokeWidth="11"
+                      />
+                      {donutSlices.map((slice) => {
+                        const isHovered = hoveredSem === slice.sem;
+                        return (
+                          <circle
+                            key={slice.sem}
+                            cx="50"
+                            cy="50"
+                            r="38"
+                            fill="transparent"
+                            stroke={slice.color}
+                            strokeWidth={isHovered ? 14 : 11}
+                            strokeDasharray={slice.dashArray}
+                            strokeDashoffset={slice.dashOffset}
+                            className="transition-all duration-200 cursor-pointer"
+                            onMouseEnter={() => setHoveredSem(slice.sem)}
+                            onMouseLeave={() => setHoveredSem(null)}
+                            onClick={() => setSelectedSemNumber(slice.sem)}
+                          />
+                        );
+                      })}
+                    </svg>
+
+                    {/* Donut Center */}
+                    <div className="hod-donut-center">
+                      <span className="hod-donut-count">
+                        {hoveredSemData ? hoveredSemData.count : totalCohortStudents}
+                      </span>
+                      <span className="hod-donut-label">
+                        {hoveredSemData ? `${hoveredSemData.label} Enrolled` : 'Total Students Enrolled'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 8 Semester Cards in 2 columns matching Screen 9 */}
+                <div className="grid gap-2.5 sm:gap-3 grid-cols-2 min-w-0">
+                  {semDistributionWithPct.map((item) => {
+                    const isSelected = selectedSemNumber === item.sem;
+                    const isHovered = hoveredSem === item.sem;
+                    return (
+                      <div
+                        key={item.sem}
+                        role="button"
+                        tabIndex={0}
+                        onMouseEnter={() => setHoveredSem(item.sem)}
+                        onMouseLeave={() => setHoveredSem(null)}
+                        onClick={() => setSelectedSemNumber(item.sem)}
+                        onKeyDown={(e) => e.key === 'Enter' && setSelectedSemNumber(item.sem)}
+                        className={`hod-sem-card p-3 cursor-pointer transition-all ${
+                          isSelected ? 'selected' : ''
+                        } ${isHovered ? 'ring-2 ring-[#2563EB]/40 bg-[#EEF2FF]' : ''}`}
+                      >
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {/* Color indicator dot representing which color in the chart belongs to this sem */}
+                            <span
+                              className="hod-sem-color-dot"
+                              style={{ backgroundColor: item.color }}
+                              title={`Chart color for ${item.label}`}
+                            />
+                            <p className="font-bold text-xs text-[#0F172A] truncate">{item.label}</p>
+                          </div>
+                          <span
+                            className="hod-sem-pct-pill"
+                            style={{
+                              backgroundColor: `${item.color}18`,
+                              color: item.color,
+                              border: `1px solid ${item.color}33`,
+                            }}
+                          >
+                            {item.pct ?? 0}%
+                          </span>
+                        </div>
+                        <p className="font-black text-lg mt-1 text-[#0F172A] leading-none">{item.count}</p>
+                        <div className="w-full bg-slate-200/60 rounded-full h-1 mt-2.5 overflow-hidden">
+                          <div
+                            className="h-1 rounded-full transition-all duration-300"
+                            style={{
+                              width: item.count > 0 ? `${Math.max(item.pct, 20)}%` : '15%',
+                              backgroundColor: item.color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CARD 2: Section Overview (CSE Only) matching Screen 9 */}
+          <div className="hod-card p-4 sm:p-6 flex flex-col justify-between min-w-0 max-w-full overflow-hidden">
+            <div>
+              <div className="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-[#E2E8F0]">
+                <div className="flex items-center gap-3">
+                  <Users className="text-[#2563EB] size-5" />
+                  <h2 className="font-bold text-lg text-[#0F172A] m-0">
+                    Section Overview (CSE Only)
+                  </h2>
+                </div>
+
+                {/* Desktop Controls (Screen 9) */}
+                <div className="hidden sm:flex items-center gap-2.5">
+                  <label htmlFor="hod-sem-select" className="font-semibold text-[#64748B] text-xs">
+                    Sem
+                  </label>
                   <select
-                    id="hod-semester-select"
-                    aria-label="Filter sections by semester"
-                    value={selectedSemNumber || ''}
-                    onChange={(e) => setSelectedSemNumber(Number(e.target.value))}
-                    className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 shadow-2xs focus:outline-none cursor-pointer"
+                    id="hod-sem-select"
+                    value={isAllSemesters ? 'All Semesters' : (selectedSemNumber ? `Sem ${selectedSemNumber}` : 'Sem 5')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === 'All Semesters' || val === 'ALL') {
+                        setSelectedSemNumber('ALL');
+                      } else {
+                        const semNum = Number(val.replace('Sem ', ''));
+                        setSelectedSemNumber(semNum);
+                      }
+                    }}
+                    className="font-bold rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-[#1D4ED8] shadow-2xs hover:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 cursor-pointer w-32"
                   >
-                    {availableSemesters.map((sem) => (
-                      <option key={sem} value={sem}>
-                        Sem {sem}
+                    <option value="All Semesters">All Semesters</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <option key={s} value={`Sem ${s}`}>
+                        Sem {s}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowClassesModal(true)}
+                    className="font-semibold rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-[#0F172A] hover:bg-slate-50 cursor-pointer transition-colors shadow-2xs"
+                  >
+                    Promote / Demote
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = visibleSections[0];
+                      if (target) openSectionDetails(target);
+                      else {
+                        setSectionModalTarget({ section: 'B', semester: Number(selectedSemNumber && selectedSemNumber !== 'ALL' ? selectedSemNumber : 5) });
+                        setShowSectionModal(true);
+                      }
+                    }}
+                    className="font-semibold text-[#2563EB] text-sm hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <span>View details →</span>
+                  </button>
+                </div>
+
+                {/* Mobile View Details Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = visibleSections[0];
+                    if (target) openSectionDetails(target);
+                    else {
+                      setSectionModalTarget({ section: 'B', semester: Number(selectedSemNumber && selectedSemNumber !== 'ALL' ? selectedSemNumber : 5) });
+                      setShowSectionModal(true);
+                    }
+                  }}
+                  className="sm:hidden font-semibold text-[#2563EB] text-sm hover:underline cursor-pointer"
+                >
+                  View details →
+                </button>
+              </div>
+
+              {/* Mobile Controls below header (Screen 10) */}
+              <div className="flex sm:hidden flex-col gap-2 mt-4">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="hod-sem-select-mobile" className="font-semibold text-[#64748B] text-xs shrink-0">
+                    Sem
+                  </label>
+                  <select
+                    id="hod-sem-select-mobile"
+                    value={isAllSemesters ? 'All Semesters' : (selectedSemNumber ? `Sem ${selectedSemNumber}` : 'Sem 5')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === 'All Semesters' || val === 'ALL') {
+                        setSelectedSemNumber('ALL');
+                      } else {
+                        const semNum = Number(val.replace('Sem ', ''));
+                        setSelectedSemNumber(semNum);
+                      }
+                    }}
+                    className="font-bold rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-[#1D4ED8] shadow-2xs hover:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 cursor-pointer w-full min-h-[44px]"
+                  >
+                    <option value="All Semesters">All Semesters</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <option key={s} value={`Sem ${s}`}>
+                        Sem {s}
                       </option>
                     ))}
                   </select>
@@ -760,235 +807,179 @@ export default function HodDashboard() {
 
                 <button
                   type="button"
-                  onClick={() => navigate('/hod/sections')}
-                  className="text-xs font-bold text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                  title="Open Section Progression management to promote or demote sections"
+                  onClick={() => setShowClassesModal(true)}
+                  className="font-semibold rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-[#0F172A] hover:bg-slate-50 cursor-pointer transition-colors shadow-2xs min-h-[44px] w-full"
                 >
-                  <Layers size={13} />
-                  <span>Promote / Demote</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const targetSec = visibleSections[0];
-                    if (targetSec) openSectionDetails(targetSec);
-                  }}
-                  disabled={visibleSections.length === 0}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
-                >
-                  <span>View details</span>
-                  <ArrowRight size={14} />
+                  Promote / Demote
                 </button>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-3.5 py-4">
-              {visibleSections.map((section, index) => {
-                const cardStyles = [
-                  'bg-[#EEF5FF] border-[#DCE8F9] text-blue-500',
-                  'bg-[#F5F0FF] border-[#EADBFF] text-purple-500',
-                  'bg-[#EFFAF3] border-[#D6F5E3] text-emerald-500',
-                  'bg-[#FFF6EA] border-[#FEE8CC] text-amber-500',
-                ][index % 4];
-                const secLetter = getSectionLetter(section);
-                const displaySecCode = secLetter ? `CSE-${secLetter}` : (section.code || section.name);
+              {/* Section Cards in 2-column Grid matching Screen 9 & Screen 10 */}
+              {sectionsToDisplay.length > 0 ? (
+                <div className="hod-section-grid mt-6">
+                  {sectionsToDisplay.map((section) => {
+                    const secLetter = getSectionLetter(section);
+                    const displaySecCode = secLetter ? `CSE-${secLetter}` : (section.code || section.name || 'CSE-A');
 
-                return (
-                  <div
-                    key={section._id}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`View section ${displaySecCode} details`}
-                    onClick={() => openSectionDetails(section)}
-                    onKeyDown={(e) => e.key === 'Enter' && openSectionDetails(section)}
-                    className={`py-4 px-3 rounded-2xl border hover:border-blue-300 hover:shadow-xs transition-all cursor-pointer flex flex-col items-center justify-between text-center min-h-[165px] ${cardStyles}`}
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-white/70 flex items-center justify-center">
-                      <Users size={17} />
-                    </div>
-                    <div className="my-1.5">
-                      <span className="block text-xs sm:text-sm font-bold text-slate-800">
-                        {displaySecCode}
-                      </span>
-                      <span className="block text-2xl font-black text-slate-900 leading-tight mt-1">
-                        {section.studentCount}
-                        <span className="text-xs font-bold text-slate-400"> / {section.capacity || 60}</span>
-                      </span>
-                      <span className="block text-[11px] text-slate-600 font-bold mt-0.5">Students (Quota)</span>
-                    </div>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white text-emerald-600 border border-slate-200/90 text-[11px] font-bold shadow-2xs">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span>Active</span>
-                    </span>
-
-                    {/* Quick Promote & Demote controls directly on section card */}
-                    <div
-                      className="w-full pt-2 mt-2 border-t border-slate-200/60 flex items-center justify-between gap-1"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        type="button"
-                        disabled={Number(section.semester || selectedSemNumber) <= 1}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setMoveModalData({ section, direction: 'prev' });
-                        }}
-                        className={`flex-1 py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-0.5 transition-all ${
-                          Number(section.semester || selectedSemNumber) <= 1
-                            ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'
-                            : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300 cursor-pointer shadow-2xs hover:border-slate-400'
-                        }`}
-                        title={Number(section.semester || selectedSemNumber) <= 1 ? 'Minimum semester' : `Demote to Semester ${Number(section.semester || selectedSemNumber) - 1}`}
+                    return (
+                      <div
+                        key={section._id || section.code}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openSectionDetails(section)}
+                        onKeyDown={(e) => e.key === 'Enter' && openSectionDetails(section)}
+                        className="hod-section-card p-4 sm:p-5 transition-all cursor-pointer shadow-2xs group"
                       >
-                        <span>◀ Sem {Number(section.semester || selectedSemNumber) - 1}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={Number(section.semester || selectedSemNumber) >= 8}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setMoveModalData({ section, direction: 'next' });
-                        }}
-                        className={`flex-1 py-1 px-1 rounded-lg text-[10px] font-bold border flex items-center justify-center gap-0.5 transition-all ${
-                          Number(section.semester || selectedSemNumber) >= 8
-                            ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white border-blue-700 cursor-pointer shadow-2xs'
-                        }`}
-                        title={Number(section.semester || selectedSemNumber) >= 8 ? 'Maximum semester' : `Promote to Semester ${Number(section.semester || selectedSemNumber) + 1}`}
-                      >
-                        <span>Sem {Number(section.semester || selectedSemNumber) + 1} ▶</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-              {visibleSections.length === 0 && (
-                <div className="col-span-full py-10 text-center text-sm text-slate-500">
-                  No sections are available for this semester.
+                        <div className="flex justify-between items-center">
+                          <p className="font-bold text-base text-[#0F172A] m-0">{displaySecCode}</p>
+                          <span className="hod-active-pill">
+                            <span className="hod-active-pill-dot animate-pulse" />
+                            <span>Active</span>
+                          </span>
+                        </div>
+                        <p className="font-black text-2xl mt-4 sm:mt-5 text-[#0F172A] m-0 leading-none">
+                          {section.studentCount}
+                          <span className="font-medium text-[#64748B] text-sm">
+                            {' '}/ {section.capacity || 60}
+                          </span>
+                        </p>
+                        <p className="text-[#64748B] text-xs mt-1.5 m-0 font-medium">
+                          Students (Quota)
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-6 py-10 flex flex-col items-center justify-center text-center p-6 rounded-lg bg-slate-50/50 border border-dashed border-[#E2E8F0]">
+                  <Users className="size-8 text-[#94A3B8] mb-2" />
+                  <p className="font-semibold text-sm text-[#0F172A] m-0">
+                    {isAllSemesters ? 'No sections found' : `No sections found for Semester ${selectedSemNumber}`}
+                  </p>
+                  <p className="text-[#64748B] text-xs mt-1 m-0">Create or allocate sections from the Section Progression panel.</p>
                 </div>
               )}
             </div>
           </div>
-        </div>
-      </div>
-      {/* =======================================================================
-          BOTTOM ROW: Notice Board (Full Width)
-          ======================================================================= */}
-      <div className="w-full">
-        <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <FileText size={18} className="text-rose-500" />
-                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 m-0">
-                  Notice Board
-                </h2>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-bold">
-                  Official Circulars ({notices.length})
-                </span>
+        </section>
+
+        {/* Notice Board Section (Always visible for HOD official circular management) */}
+        <section className="w-full">
+          <div className="hod-card p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3.5 border-b border-[#E2E8F0]">
+                <div className="flex items-center gap-2">
+                  <Megaphone size={18} className="text-[#2563EB]" />
+                  <h2 className="text-sm sm:text-base font-extrabold text-[#0F172A] m-0">
+                    Notice Board
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-md bg-[#EEF2FF] text-[#1D4ED8] text-[10px] font-bold">
+                    Official Circulars ({notices.length})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSendNoticeModal(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                  >
+                    <Send size={13} />
+                    <span>Send Notice</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSendNoticeModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
-                >
-                  <Send size={13} />
-                  <span>Send Notice</span>
-                </button>
-              </div>
-            </div>
-
-            {/* List of Notices or Empty State */}
-            {notices.length > 0 ? (
-              <div className="hod-notices-list mt-3.5 space-y-2">
-                {notices.map((notice) => {
-                  const isUrgent = notice.priority === 'URGENT';
-                  const isHigh = notice.priority === 'HIGH';
-                  return (
-                    <div
-                      key={notice._id}
-                      className="hod-notice-row flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-xs transition-all gap-3"
-                    >
-                      <div className="hod-notice-left flex items-center gap-3 min-w-0 flex-1">
-                        <div
-                          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
-                            isUrgent
-                              ? 'bg-rose-50 border-rose-200 text-rose-600'
-                              : isHigh
-                              ? 'bg-amber-50 border-amber-200 text-amber-600'
-                              : 'bg-blue-50 border-blue-200 text-blue-600'
-                          }`}
-                        >
-                          <Megaphone size={16} />
-                        </div>
-                        <div className="hod-notice-meta flex flex-col min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="hod-notice-title text-xs sm:text-sm font-bold text-slate-900 truncate">
-                              {notice.title}
-                            </span>
-                            {isUrgent && (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-rose-100 text-rose-700 uppercase">
-                                Urgent
-                              </span>
-                            )}
+              {notices.length > 0 ? (
+                <div className="hod-notices-list mt-3.5 space-y-2">
+                  {notices.map((notice) => {
+                    const isUrgent = notice.priority === 'URGENT';
+                    const isHigh = notice.priority === 'HIGH';
+                    return (
+                      <div
+                        key={notice._id}
+                        className="hod-notice-row flex items-center justify-between p-3 rounded-xl bg-[#F8FAFC] hover:bg-white border border-[#E2E8F0] hover:border-[#93C5FD] hover:shadow-xs transition-all gap-3"
+                      >
+                        <div className="hod-notice-left flex items-center gap-3 min-w-0 flex-1">
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                              isUrgent
+                                ? 'bg-rose-50 border-rose-200 text-rose-600'
+                                : isHigh
+                                ? 'bg-amber-50 border-amber-200 text-amber-600'
+                                : 'bg-blue-50 border-blue-200 text-[#2563EB]'
+                            }`}
+                          >
+                            <Megaphone size={16} />
                           </div>
-                          <span className="hod-notice-sub text-xs text-slate-600 font-medium truncate mt-0.5">
-                            {notice.content}
+                          <div className="hod-notice-meta flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="hod-notice-title text-xs sm:text-sm font-bold text-[#0F172A] truncate">
+                                {notice.title}
+                              </span>
+                              {isUrgent && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-rose-100 text-rose-700 uppercase">
+                                  Urgent
+                                </span>
+                              )}
+                            </div>
+                            <span className="hod-notice-sub text-xs text-[#64748B] font-medium truncate mt-0.5">
+                              {notice.content}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="hod-notice-right flex items-center gap-2 shrink-0">
+                          <span className="px-2.5 py-1 rounded-md bg-[#EEF2FF] text-[#1D4ED8] text-[10px] font-bold">
+                            {notice.category}
                           </span>
+                          <span className="hod-notice-date text-xs text-[#64748B] font-bold hidden sm:inline-block">
+                            {new Date(notice.createdAt).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteNotice(notice._id);
+                            }}
+                            title="Delete notice"
+                            aria-label="Delete notice"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </div>
-
-                      <div className="hod-notice-right flex items-center gap-2 shrink-0">
-                        <span className="px-2.5 py-1 rounded-lg bg-slate-200/70 text-slate-700 text-[10px] font-bold">
-                          {notice.category}
-                        </span>
-                        <span className="hod-notice-date text-xs text-slate-600 font-bold hidden sm:inline-block">
-                          {new Date(notice.createdAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteNotice(notice._id);
-                          }}
-                          title="Delete notice"
-                          aria-label="Delete notice"
-                          className="p-1.5 rounded-lg text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="py-10 text-center flex flex-col items-center justify-center">
-                <p className="text-sm font-extrabold text-slate-800 m-0">
-                  No official notices published yet
-                </p>
-                <p className="text-xs text-slate-600 font-medium m-0 mt-1 max-w-xs">
-                  Broadcast departmental circulars, exam schedules, and alerts directly to students and faculty.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShowSendNoticeModal(true)}
-                  className="mt-3.5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-all cursor-pointer border border-blue-200"
-                >
-                  <Send size={14} />
-                  <span>Send First Notice</span>
-                </button>
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-4 p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center flex flex-col items-center justify-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-2xs">
+                    <Megaphone size={22} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800">No official circulars published yet</h4>
+                    <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                      Notice board service is active. Broadcast notices and official announcements to department faculty, TGs, and students.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSendNoticeModal(true)}
+                    className="mt-1 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  >
+                    <Send size={14} />
+                    <span>Send Notice</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </section>
       </div>
 
       {/* =======================================================================

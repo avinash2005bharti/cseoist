@@ -108,6 +108,10 @@ export const masterDataApi = {
     return apiClient.get('/students', { params });
   },
 
+  getPeers: async (params = {}) => {
+    return apiClient.get('/students/search-peers', { params });
+  },
+
   getStudentById: async (id) => {
     return apiClient.get(`/students/${id}`);
   },

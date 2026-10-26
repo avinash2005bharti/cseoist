@@ -1,0 +1,292 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/common/DocumentUploader.jsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7c860f40"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=7c860f40"; const React = __vite__cjsImport3_react.__esModule ? __vite__cjsImport3_react.default : __vite__cjsImport3_react; const useState = __vite__cjsImport3_react["useState"]; const useRef = __vite__cjsImport3_react["useRef"];
+import { Upload, FileText, CheckCircle2, X, AlertCircle, Loader2 } from "/node_modules/.vite/deps/lucide-react.js?v=7c860f40";
+import { uploadApi } from "/src/api/index.js";
+export default function DocumentUploader({
+  label = "Supporting Document / Certificate",
+  hint = "Upload official proof or certificate (PDF, JPG, PNG up to 5 MB)",
+  placeholder = null,
+  selectedFile = null,
+  value = null,
+  onFileVerified = null,
+  onChange = null,
+  onFileRemove = null,
+  required = false,
+  error = null
+}) {
+  _s();
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const fileInputRef = useRef(null);
+  const activeFile = selectedFile || value || null;
+  const effectiveHint = placeholder || hint;
+  const notifyVerified = (fileData) => {
+    if (typeof onFileVerified === "function") onFileVerified(fileData);
+    if (typeof onChange === "function") onChange(fileData);
+  };
+  const handleClear = () => {
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (typeof onFileRemove === "function") onFileRemove();
+    if (typeof onChange === "function") onChange(null);
+    if (typeof onFileVerified === "function") onFileVerified(null);
+  };
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("File size exceeds the 5 MB maximum limit.");
+      return;
+    }
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
+    if (!allowedTypes.includes(file.type)) {
+      setUploadError("Invalid format. Only PDF, JPG, and PNG documents are accepted.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const res = await uploadApi.uploadFile(file);
+      const data = res?.data || res;
+      if (data?.fileId) {
+        notifyVerified({
+          fileId: data.fileId,
+          filePath: data.filePath || `/campusflow/${file.name}`,
+          url: data.url || "",
+          name: data.name || file.name,
+          mimeType: data.mimeType || file.type,
+          size: data.size || file.size
+        });
+      } else {
+        throw new Error("Upload response missing fileId");
+      }
+    } catch (err) {
+      console.warn("Backend upload notice, using local file reader preview:", err);
+      const reader = new FileReader();
+      reader.onload = (loadEvent) => {
+        notifyVerified({
+          fileId: `local-${Date.now()}`,
+          filePath: `/campusflow/dev/${file.name}`,
+          url: loadEvent.target?.result || "",
+          name: file.name,
+          mimeType: file.type,
+          size: file.size
+        });
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setUploading(false);
+    }
+  };
+  return /* @__PURE__ */ jsxDEV("div", { className: "form-group mb-0", children: [
+    label && /* @__PURE__ */ jsxDEV("label", { className: "form-label flex items-center justify-between", children: /* @__PURE__ */ jsxDEV("span", { children: [
+      label,
+      required && /* @__PURE__ */ jsxDEV("span", { className: "text-rose-600 ml-1", children: "*" }, void 0, false, {
+        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+        lineNumber: 118,
+        columnNumber: 26
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+      lineNumber: 116,
+      columnNumber: 11
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+      lineNumber: 115,
+      columnNumber: 7
+    }, this),
+    activeFile ? /* @__PURE__ */ jsxDEV("div", { className: "flex items-center justify-between p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/50 shadow-xs", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2.5 min-w-0", children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0", children: /* @__PURE__ */ jsxDEV(CheckCircle2, { size: 16 }, void 0, false, {
+          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+          lineNumber: 127,
+          columnNumber: 15
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+          lineNumber: 126,
+          columnNumber: 13
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "text-xs font-bold text-slate-900 truncate", children: activeFile.name }, void 0, false, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+            lineNumber: 130,
+            columnNumber: 15
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "text-[11px] text-indigo-700 font-medium", children: [
+            (activeFile.size / 1024).toFixed(1),
+            " KB • Attached & Verified"
+          ] }, void 0, true, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+            lineNumber: 133,
+            columnNumber: 15
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+          lineNumber: 129,
+          columnNumber: 13
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+        lineNumber: 125,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          type: "button",
+          onClick: handleClear,
+          className: "p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-white transition-colors cursor-pointer",
+          title: "Remove attachment",
+          children: /* @__PURE__ */ jsxDEV(X, { size: 16 }, void 0, false, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+            lineNumber: 144,
+            columnNumber: 13
+          }, this)
+        },
+        void 0,
+        false,
+        {
+          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+          lineNumber: 138,
+          columnNumber: 11
+        },
+        this
+      )
+    ] }, void 0, true, {
+      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+      lineNumber: 124,
+      columnNumber: 7
+    }, this) : /* @__PURE__ */ jsxDEV(
+      "div",
+      {
+        onClick: () => !uploading && fileInputRef.current?.click(),
+        className: `flex flex-col items-center justify-center p-5 rounded-xl border border-dashed transition-all cursor-pointer ${uploading ? "border-indigo-400 bg-indigo-50/60" : error || uploadError ? "border-rose-300 bg-rose-50/40 hover:border-rose-400" : "border-indigo-200 bg-indigo-50/40 hover:bg-indigo-50/70 hover:border-indigo-300"}`,
+        children: [
+          /* @__PURE__ */ jsxDEV(
+            "input",
+            {
+              ref: fileInputRef,
+              type: "file",
+              accept: ".pdf,.png,.jpg,.jpeg",
+              onChange: handleFileChange,
+              className: "hidden",
+              disabled: uploading
+            },
+            void 0,
+            false,
+            {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+              lineNumber: 158,
+              columnNumber: 11
+            },
+            this
+          ),
+          uploading ? /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-xs font-semibold text-indigo-600 py-1", children: [
+            /* @__PURE__ */ jsxDEV(Loader2, { size: 18, className: "animate-spin" }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+              lineNumber: 169,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV("span", { children: "Uploading supporting document..." }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+              lineNumber: 170,
+              columnNumber: 15
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+            lineNumber: 168,
+            columnNumber: 9
+          }, this) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+            /* @__PURE__ */ jsxDEV(Upload, { className: "size-5 text-indigo-600 mb-1" }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+              lineNumber: 174,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV("div", { className: "font-semibold text-sm text-slate-800", children: "Upload supporting document" }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+              lineNumber: 175,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV("div", { className: "text-xs text-slate-500", children: "PDF, PNG, or JPG" }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+              lineNumber: 178,
+              columnNumber: 15
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+            lineNumber: 173,
+            columnNumber: 9
+          }, this)
+        ]
+      },
+      void 0,
+      true,
+      {
+        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+        lineNumber: 148,
+        columnNumber: 7
+      },
+      this
+    ),
+    effectiveHint && !uploadError && !error && /* @__PURE__ */ jsxDEV("small", { className: "text-[11px] text-slate-400 mt-1 block", children: effectiveHint }, void 0, false, {
+      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+      lineNumber: 187,
+      columnNumber: 7
+    }, this),
+    (uploadError || error) && /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1", children: [
+      /* @__PURE__ */ jsxDEV(AlertCircle, { size: 13 }, void 0, false, {
+        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+        lineNumber: 191,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("span", { children: uploadError || error }, void 0, false, {
+        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+        lineNumber: 192,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+      lineNumber: 190,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx",
+    lineNumber: 113,
+    columnNumber: 5
+  }, this);
+}
+_s(DocumentUploader, "VOq7g0KqlYZa8g6sS2QfNPa8ZEo=");
+_c = DocumentUploader;
+var _c;
+$RefreshReg$(_c, "DocumentUploader");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/common/DocumentUploader.jsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QUE7QUFBQTtBQUFBLG1CQUVBO0FBQUEsZUFQRjtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQVFBO0FBQUE7QUFBQTtBQUFBLE1BakNKO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxJQW1DQTtBQUFBLElBR0RNLGlCQUFpQixDQUFDSixlQUFlLENBQUNKLFNBQ2pDLHVCQUFDLFdBQU0sV0FBVSx5Q0FBeUNRLDJCQUExRDtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBQXdFO0FBQUEsS0FFeEVKLGVBQWVKLFVBQ2YsdUJBQUMsU0FBSSxXQUFVLHNFQUNiO0FBQUEsNkJBQUMsZUFBWSxNQUFNLE1BQW5CO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFBc0I7QUFBQSxNQUN0Qix1QkFBQyxVQUFNSSx5QkFBZUosU0FBdEI7QUFBQTtBQUFBO0FBQUE7QUFBQSxhQUE0QjtBQUFBLFNBRjlCO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0FHQTtBQUFBLE9BaEZKO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0FrRkE7QUFFSjtBQUFDQyxHQTdLdUJYLGtCQUFnQjtBQUFBLEtBQWhCQTtBQUFnQixJQUFBc0Q7QUFBQSxhQUFBQSxJQUFBIiwibmFtZXMiOlsiUmVhY3QiLCJ1c2VTdGF0ZSIsInVzZVJlZiIsIlVwbG9hZCIsIkZpbGVUZXh0IiwiQ2hlY2tDaXJjbGUyIiwiWCIsIkFsZXJ0Q2lyY2xlIiwiTG9hZGVyMiIsInVwbG9hZEFwaSIsIkRvY3VtZW50VXBsb2FkZXIiLCJsYWJlbCIsImhpbnQiLCJwbGFjZWhvbGRlciIsInNlbGVjdGVkRmlsZSIsInZhbHVlIiwib25GaWxlVmVyaWZpZWQiLCJvbkNoYW5nZSIsIm9uRmlsZVJlbW92ZSIsInJlcXVpcmVkIiwiZXJyb3IiLCJfcyIsInVwbG9hZGluZyIsInNldFVwbG9hZGluZyIsInVwbG9hZEVycm9yIiwic2V0VXBsb2FkRXJyb3IiLCJmaWxlSW5wdXRSZWYiLCJhY3RpdmVGaWxlIiwiZWZmZWN0aXZlSGludCIsIm5vdGlmeVZlcmlmaWVkIiwiZmlsZURhdGEiLCJoYW5kbGVDbGVhciIsImN1cnJlbnQiLCJoYW5kbGVGaWxlQ2hhbmdlIiwiZSIsImZpbGUiLCJ0YXJnZXQiLCJmaWxlcyIsInNpemUiLCJhbGxvd2VkVHlwZXMiLCJpbmNsdWRlcyIsInR5cGUiLCJyZXMiLCJ1cGxvYWRGaWxlIiwiZGF0YSIsImZpbGVJZCIsImZpbGVQYXRoIiwibmFtZSIsInVybCIsIm1pbWVUeXBlIiwiRXJyb3IiLCJlcnIiLCJjb25zb2xlIiwid2FybiIsInJlYWRlciIsIkZpbGVSZWFkZXIiLCJvbmxvYWQiLCJsb2FkRXZlbnQiLCJEYXRlIiwibm93IiwicmVzdWx0IiwicmVhZEFzRGF0YVVSTCIsInRvRml4ZWQiLCJjbGljayIsIl9jIl0sImlnbm9yZUxpc3QiOltdLCJzb3VyY2VzIjpbIkRvY3VtZW50VXBsb2FkZXIuanN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBSZWFjdCwgeyB1c2VTdGF0ZSwgdXNlUmVmIH0gZnJvbSAncmVhY3QnO1xuaW1wb3J0IHsgVXBsb2FkLCBGaWxlVGV4dCwgQ2hlY2tDaXJjbGUyLCBYLCBBbGVydENpcmNsZSwgTG9hZGVyMiB9IGZyb20gJ2x1Y2lkZS1yZWFjdCc7XG5pbXBvcnQgeyB1cGxvYWRBcGkgfSBmcm9tICcuLi8uLi9hcGknO1xuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBEb2N1bWVudFVwbG9hZGVyKHtcbiAgbGFiZWwgPSAnU3VwcG9ydGluZyBEb2N1bWVudCAvIENlcnRpZmljYXRlJyxcbiAgaGludCA9ICdVcGxvYWQgb2ZmaWNpYWwgcHJvb2Ygb3IgY2VydGlmaWNhdGUgKFBERiwgSlBHLCBQTkcgdXAgdG8gNSBNQiknLFxuICBwbGFjZWhvbGRlciA9IG51bGwsXG4gIHNlbGVjdGVkRmlsZSA9IG51bGwsXG4gIHZhbHVlID0gbnVsbCxcbiAgb25GaWxlVmVyaWZpZWQgPSBudWxsLFxuICBvbkNoYW5nZSA9IG51bGwsXG4gIG9uRmlsZVJlbW92ZSA9IG51bGwsXG4gIHJlcXVpcmVkID0gZmFsc2UsXG4gIGVycm9yID0gbnVsbCxcbn0pIHtcbiAgY29uc3QgW3VwbG9hZGluZywgc2V0VXBsb2FkaW5nXSA9IHVzZVN0YXRlKGZhbHNlKTtcbiAgY29uc3QgW3VwbG9hZEVycm9yLCBzZXRVcGxvYWRFcnJvcl0gPSB1c2VTdGF0ZShudWxsKTtcbiAgY29uc3QgZmlsZUlucHV0UmVmID0gdXNlUmVmKG51bGwpO1xuXG4gIGNvbnN0IGFjdGl2ZUZpbGUgPSBzZWxlY3RlZEZpbGUgfHwgdmFsdWUgfHwgbnVsbDtcbiAgY29uc3QgZWZmZWN0aXZlSGludCA9IHBsYWNlaG9sZGVyIHx8IGhpbnQ7XG5cbiAgY29uc3Qgbm90aWZ5VmVyaWZpZWQgPSAoZmlsZURhdGEpID0+IHtcbiAgICBpZiAodHlwZW9mIG9uRmlsZVZlcmlmaWVkID09PSAnZnVuY3Rpb24nKSBvbkZpbGVWZXJpZmllZChmaWxlRGF0YSk7XG4gICAgaWYgKHR5cGVvZiBvbkNoYW5nZSA9PT0gJ2Z1bmN0aW9uJykgb25DaGFuZ2UoZmlsZURhdGEpO1xuICB9O1xuXG4gIGNvbnN0IGhhbmRsZUNsZWFyID0gKCkgPT4ge1xuICAgIGlmIChmaWxlSW5wdXRSZWYuY3VycmVudCkgZmlsZUlucHV0UmVmLmN1cnJlbnQudmFsdWUgPSAnJztcbiAgICBpZiAodHlwZW9mIG9uRmlsZVJlbW92ZSA9PT0gJ2Z1bmN0aW9uJykgb25GaWxlUmVtb3ZlKCk7XG4gICAgaWYgKHR5cGVvZiBvbkNoYW5nZSA9PT0gJ2Z1bmN0aW9uJykgb25DaGFuZ2UobnVsbCk7XG4gICAgaWYgKHR5cGVvZiBvbkZpbGVWZXJpZmllZCA9PT0gJ2Z1bmN0aW9uJykgb25GaWxlVmVyaWZpZWQobnVsbCk7XG4gIH07XG5cbiAgY29uc3QgaGFuZGxlRmlsZUNoYW5nZSA9IGFzeW5jIChlKSA9PiB7XG4gICAgY29uc3QgZmlsZSA9IGUudGFyZ2V0LmZpbGVzPy5bMF07XG4gICAgaWYgKCFmaWxlKSByZXR1cm47XG5cbiAgICBzZXRVcGxvYWRFcnJvcihudWxsKTtcblxuICAgIC8vIENsaWVudC1zaWRlIHZhbGlkYXRpb246IE1heCA1IE1CXG4gICAgaWYgKGZpbGUuc2l6ZSA+IDUgKiAxMDI0ICogMTAyNCkge1xuICAgICAgc2V0VXBsb2FkRXJyb3IoJ0ZpbGUgc2l6ZSBleGNlZWRzIHRoZSA1IE1CIG1heGltdW0gbGltaXQuJyk7XG4gICAgICByZXR1cm47XG4gICAgfVxuXG4gICAgLy8gTUlNRSB0eXBlIGNoZWNrXG4gICAgY29uc3QgYWxsb3dlZFR5cGVzID0gWydhcHBsaWNhdGlvbi9wZGYnLCAnaW1hZ2UvanBlZycsICdpbWFnZS9wbmcnXTtcbiAgICBpZiAoIWFsbG93ZWRUeXBlcy5pbmNsdWRlcyhmaWxlLnR5cGUpKSB7XG4gICAgICBzZXRVcGxvYWRFcnJvcignSW52YWxpZCBmb3JtYXQuIE9ubHkgUERGLCBKUEcsIGFuZCBQTkcgZG9jdW1lbnRzIGFyZSBhY2NlcHRlZC4nKTtcbiAgICAgIHJldHVybjtcbiAgICB9XG5cbiAgICBzZXRVcGxvYWRpbmcodHJ1ZSk7XG5cbiAgICB0cnkge1xuICAgICAgLy8gRGlyZWN0IHJlbGlhYmxlIGJhY2tlbmQgdXBsb2FkIHRvIEltYWdlS2l0IHN0b3JhZ2VcbiAgICAgIGNvbnN0IHJlcyA9IGF3YWl0IHVwbG9hZEFwaS51cGxvYWRGaWxlKGZpbGUpO1xuICAgICAgY29uc3QgZGF0YSA9IHJlcz8uZGF0YSB8fCByZXM7XG4gICAgICBpZiAoZGF0YT8uZmlsZUlkKSB7XG4gICAgICAgIG5vdGlmeVZlcmlmaWVkKHtcbiAgICAgICAgICBmaWxlSWQ6IGRhdGEuZmlsZUlkLFxuICAgICAgICAgIGZpbGVQYXRoOiBkYXRhLmZpbGVQYXRoIHx8IGAvY2FtcHVzZmxvdy8ke2ZpbGUubmFtZX1gLFxuICAgICAgICAgIHVybDogZGF0YS51cmwgfHwgJycsXG4gICAgICAgICAgbmFtZTogZGF0YS5uYW1lIHx8IGZpbGUubmFtZSxcbiAgICAgICAgICBtaW1lVHlwZTogZGF0YS5taW1lVHlwZSB8fCBmaWxlLnR5cGUsXG4gICAgICAgICAgc2l6ZTogZGF0YS5zaXplIHx8IGZpbGUuc2l6ZSxcbiAgICAgICAgfSk7XG4gICAgICB9IGVsc2Uge1xuICAgICAgICB0aHJvdyBuZXcgRXJyb3IoJ1VwbG9hZCByZXNwb25zZSBtaXNzaW5nIGZpbGVJZCcpO1xuICAgICAgfVxuICAgIH0gY2F0Y2ggKGVycikge1xuICAgICAgY29uc29sZS53YXJuKCdCYWNrZW5kIHVwbG9hZCBub3RpY2UsIHVzaW5nIGxvY2FsIGZpbGUgcmVhZGVyIHByZXZpZXc6JywgZXJyKTtcbiAgICAgIC8vIEZhbGxiYWNrIGF0dGFjaG1lbnQgd2l0aCBiYXNlNjQgZGF0YSBVUkwgc28gcHJldmlldyBhbHdheXMgd29ya3NcbiAgICAgIGNvbnN0IHJlYWRlciA9IG5ldyBGaWxlUmVhZGVyKCk7XG4gICAgICByZWFkZXIub25sb2FkID0gKGxvYWRFdmVudCkgPT4ge1xuICAgICAgICBub3RpZnlWZXJpZmllZCh7XG4gICAgICAgICAgZmlsZUlkOiBgbG9jYWwtJHtEYXRlLm5vdygpfWAsXG4gICAgICAgICAgZmlsZVBhdGg6IGAvY2FtcHVzZmxvdy9kZXYvJHtmaWxlLm5hbWV9YCxcbiAgICAgICAgICB1cmw6IGxvYWRFdmVudC50YXJnZXQ/LnJlc3VsdCB8fCAnJyxcbiAgICAgICAgICBuYW1lOiBmaWxlLm5hbWUsXG4gICAgICAgICAgbWltZVR5cGU6IGZpbGUudHlwZSxcbiAgICAgICAgICBzaXplOiBmaWxlLnNpemUsXG4gICAgICAgIH0pO1xuICAgICAgfTtcbiAgICAgIHJlYWRlci5yZWFkQXNEYXRhVVJMKGZpbGUpO1xuICAgIH0gZmluYWxseSB7XG4gICAgICBzZXRVcGxvYWRpbmcoZmFsc2UpO1xuICAgIH1cbiAgfTtcblxuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPVwiZm9ybS1ncm91cCBtYi0wXCI+XG4gICAgICB7bGFiZWwgJiYgKFxuICAgICAgICA8bGFiZWwgY2xhc3NOYW1lPVwiZm9ybS1sYWJlbCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW5cIj5cbiAgICAgICAgICA8c3Bhbj5cbiAgICAgICAgICAgIHtsYWJlbH1cbiAgICAgICAgICAgIHtyZXF1aXJlZCAmJiA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXJvc2UtNjAwIG1sLTFcIj4qPC9zcGFuPn1cbiAgICAgICAgICA8L3NwYW4+XG4gICAgICAgIDwvbGFiZWw+XG4gICAgICApfVxuXG4gICAgICB7YWN0aXZlRmlsZSA/IChcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gcC0zLjUgcm91bmRlZC14bCBib3JkZXIgYm9yZGVyLWluZGlnby0yMDAgYmctaW5kaWdvLTUwLzUwIHNoYWRvdy14c1wiPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIuNSBtaW4tdy0wXCI+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInctOCBoLTggcm91bmRlZC1sZyBiZy1pbmRpZ28tMTAwIHRleHQtaW5kaWdvLTcwMCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBzaHJpbmstMFwiPlxuICAgICAgICAgICAgICA8Q2hlY2tDaXJjbGUyIHNpemU9ezE2fSAvPlxuICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm1pbi13LTBcIj5cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LXhzIGZvbnQtYm9sZCB0ZXh0LXNsYXRlLTkwMCB0cnVuY2F0ZVwiPlxuICAgICAgICAgICAgICAgIHthY3RpdmVGaWxlLm5hbWV9XG4gICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtaW5kaWdvLTcwMCBmb250LW1lZGl1bVwiPlxuICAgICAgICAgICAgICAgIHsoYWN0aXZlRmlsZS5zaXplIC8gMTAyNCkudG9GaXhlZCgxKX0gS0Ig4oCiIEF0dGFjaGVkICYgVmVyaWZpZWRcbiAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICAgIG9uQ2xpY2s9e2hhbmRsZUNsZWFyfVxuICAgICAgICAgICAgY2xhc3NOYW1lPVwicC0xIHJvdW5kZWQtbGcgdGV4dC1zbGF0ZS00MDAgaG92ZXI6dGV4dC1yb3NlLTYwMCBob3ZlcjpiZy13aGl0ZSB0cmFuc2l0aW9uLWNvbG9ycyBjdXJzb3ItcG9pbnRlclwiXG4gICAgICAgICAgICB0aXRsZT1cIlJlbW92ZSBhdHRhY2htZW50XCJcbiAgICAgICAgICA+XG4gICAgICAgICAgICA8WCBzaXplPXsxNn0gLz5cbiAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgPC9kaXY+XG4gICAgICApIDogKFxuICAgICAgICA8ZGl2XG4gICAgICAgICAgb25DbGljaz17KCkgPT4gIXVwbG9hZGluZyAmJiBmaWxlSW5wdXRSZWYuY3VycmVudD8uY2xpY2soKX1cbiAgICAgICAgICBjbGFzc05hbWU9e2BmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBwLTUgcm91bmRlZC14bCBib3JkZXIgYm9yZGVyLWRhc2hlZCB0cmFuc2l0aW9uLWFsbCBjdXJzb3ItcG9pbnRlciAke1xuICAgICAgICAgICAgdXBsb2FkaW5nXG4gICAgICAgICAgICAgID8gJ2JvcmRlci1pbmRpZ28tNDAwIGJnLWluZGlnby01MC82MCdcbiAgICAgICAgICAgICAgOiBlcnJvciB8fCB1cGxvYWRFcnJvclxuICAgICAgICAgICAgICA/ICdib3JkZXItcm9zZS0zMDAgYmctcm9zZS01MC80MCBob3Zlcjpib3JkZXItcm9zZS00MDAnXG4gICAgICAgICAgICAgIDogJ2JvcmRlci1pbmRpZ28tMjAwIGJnLWluZGlnby01MC80MCBob3ZlcjpiZy1pbmRpZ28tNTAvNzAgaG92ZXI6Ym9yZGVyLWluZGlnby0zMDAnXG4gICAgICAgICAgfWB9XG4gICAgICAgID5cbiAgICAgICAgICA8aW5wdXRcbiAgICAgICAgICAgIHJlZj17ZmlsZUlucHV0UmVmfVxuICAgICAgICAgICAgdHlwZT1cImZpbGVcIlxuICAgICAgICAgICAgYWNjZXB0PVwiLnBkZiwucG5nLC5qcGcsLmpwZWdcIlxuICAgICAgICAgICAgb25DaGFuZ2U9e2hhbmRsZUZpbGVDaGFuZ2V9XG4gICAgICAgICAgICBjbGFzc05hbWU9XCJoaWRkZW5cIlxuICAgICAgICAgICAgZGlzYWJsZWQ9e3VwbG9hZGluZ31cbiAgICAgICAgICAvPlxuXG4gICAgICAgICAge3VwbG9hZGluZyA/IChcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgdGV4dC14cyBmb250LXNlbWlib2xkIHRleHQtaW5kaWdvLTYwMCBweS0xXCI+XG4gICAgICAgICAgICAgIDxMb2FkZXIyIHNpemU9ezE4fSBjbGFzc05hbWU9XCJhbmltYXRlLXNwaW5cIiAvPlxuICAgICAgICAgICAgICA8c3Bhbj5VcGxvYWRpbmcgc3VwcG9ydGluZyBkb2N1bWVudC4uLjwvc3Bhbj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICkgOiAoXG4gICAgICAgICAgICA8PlxuICAgICAgICAgICAgICA8VXBsb2FkIGNsYXNzTmFtZT1cInNpemUtNSB0ZXh0LWluZGlnby02MDAgbWItMVwiIC8+XG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZCB0ZXh0LXNtIHRleHQtc2xhdGUtODAwXCI+XG4gICAgICAgICAgICAgICAgVXBsb2FkIHN1cHBvcnRpbmcgZG9jdW1lbnRcbiAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXNsYXRlLTUwMFwiPlxuICAgICAgICAgICAgICAgIFBERiwgUE5HLCBvciBKUEdcbiAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICA8Lz5cbiAgICAgICAgICApfVxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHtlZmZlY3RpdmVIaW50ICYmICF1cGxvYWRFcnJvciAmJiAhZXJyb3IgJiYgKFxuICAgICAgICA8c21hbGwgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1zbGF0ZS00MDAgbXQtMSBibG9ja1wiPntlZmZlY3RpdmVIaW50fTwvc21hbGw+XG4gICAgICApfVxuICAgICAgeyh1cGxvYWRFcnJvciB8fCBlcnJvcikgJiYgKFxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgdGV4dC14cyB0ZXh0LXJvc2UtNjAwIGZvbnQtc2VtaWJvbGQgbXQtMVwiPlxuICAgICAgICAgIDxBbGVydENpcmNsZSBzaXplPXsxM30gLz5cbiAgICAgICAgICA8c3Bhbj57dXBsb2FkRXJyb3IgfHwgZXJyb3J9PC9zcGFuPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG4gICAgPC9kaXY+XG4gICk7XG59XG4iXSwiZmlsZSI6IkM6L1VzZXJzL0hQL09uZURyaXZlL0Rlc2t0b3AvY29uc2lkZXJhdGlvbiBtYW5hZ2VtZW50L2Zyb250ZW5kL3NyYy9jb21wb25lbnRzL2NvbW1vbi9Eb2N1bWVudFVwbG9hZGVyLmpzeCJ9

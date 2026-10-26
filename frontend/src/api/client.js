@@ -19,8 +19,9 @@ export const apiClient = axios.create({
 // Request interceptor to attach JWT
 apiClient.interceptors.request.use(
   (config) => {
-    if (currentToken) {
-      config.headers.Authorization = `Bearer ${currentToken}`;
+    const token = getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -94,7 +95,12 @@ apiClient.interceptors.response.use(
   }
 );
 
-export const getAuthToken = () => currentToken;
+export const getAuthToken = () => {
+  if (!currentToken) {
+    currentToken = localStorage.getItem('campusflow_token') || null;
+  }
+  return currentToken;
+};
 
 export const setAuthToken = (token) => {
   currentToken = token;

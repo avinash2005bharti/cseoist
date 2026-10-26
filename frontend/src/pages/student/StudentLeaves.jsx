@@ -47,7 +47,15 @@ export default function StudentLeaves() {
       const params = {};
       if (statusFilter) params.status = statusFilter;
       const res = await leaveApi.getMine(params);
-      setLeaves(res?.data || []);
+      const data = res?.data || [];
+      setLeaves(data);
+      if (data.length > 0) {
+        setSelectedLeave((prev) => {
+          if (!prev) return data[0];
+          const found = data.find((l) => l._id === prev._id);
+          return found || data[0];
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -134,8 +142,8 @@ export default function StudentLeaves() {
             }}
             className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold text-center transition-all cursor-pointer shadow-2xs ${
               statusFilter === tab.value
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'bg-card text-muted-foreground border border-border hover:bg-muted/50'
             }`}
           >
             {tab.label}
@@ -232,7 +240,12 @@ export default function StudentLeaves() {
                     </TableHeader>
                     <TableBody>
                       {leaves.map((l) => (
-                        <TableRow key={l._id} isSelected={selectedLeave?._id === l._id}>
+                        <TableRow
+                          key={l._id}
+                          isSelected={selectedLeave?._id === l._id}
+                          onClick={() => setSelectedLeave(l)}
+                          className="cursor-pointer hover:bg-slate-50/80 transition-colors"
+                        >
                           <TableCell>
                             <div className="font-extrabold text-slate-900">
                               {l.leaveType ? `${l.leaveType.replace(/_/g, ' ')} Leave` : 'Leave'}
@@ -251,7 +264,10 @@ export default function StudentLeaves() {
                           <TableCell>
                             <div className="flex items-center gap-1.5">
                               <button
-                                onClick={() => setSelectedLeave(l)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedLeave(l);
+                                }}
                                 className="btn btn-outline btn-xs p-1 cursor-pointer"
                                 title="View Details"
                               >
@@ -259,7 +275,10 @@ export default function StudentLeaves() {
                               </button>
                               {l.status === 'PENDING' && (
                                 <button
-                                  onClick={() => handleCancel(l._id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCancel(l._id);
+                                  }}
                                   disabled={cancellingId === l._id}
                                   className="btn btn-danger btn-xs p-1 cursor-pointer disabled:opacity-50"
                                   title="Cancel Application"

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useERP } from '../context/ERPContext.jsx';
-import { Bell, ShieldCheck, User, Menu, LogOut, CheckCheck, RefreshCw } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Bell, ShieldCheck, BadgeCheck, User, Menu, LogOut, CheckCheck, RefreshCw, GraduationCap, Landmark } from 'lucide-react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { notificationApi } from '../api';
 import { formatDateTimeIST } from '../utils/constants.js';
 
@@ -36,10 +36,15 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
   } = useERP();
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [expandedNotifId, setExpandedNotifId] = useState(null);
   const notifRef = useRef(null);
-
-  const isFaculty = currentUser?.role === 'TEACHER' || currentUser?.role === 'HOD';
+  const [expandedNotifId, setExpandedNotifId] = useState(null);
+  const location = useLocation();
+  const roleStr = (currentUser?.role || currentRole || '').toLowerCase();
+  const isFaculty = roleStr === 'teacher' || roleStr === 'hod';
+  const isTg = roleStr === 'tg' || location.pathname.startsWith('/tg');
+  const isStudent = roleStr === 'student' || location.pathname.startsWith('/student');
+  const isHod = roleStr === 'hod' || location.pathname.startsWith('/hod');
+  const isHodDashboard = location.pathname === '/hod';
 
   // Close notifications on outside click or Escape key
   useEffect(() => {
@@ -85,63 +90,204 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
     }
   };
 
+  const handleLogoClick = (path) => (e) => {
+    e.preventDefault();
+    navigate(path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-      <div className="flex items-center justify-between gap-3 px-4 md:px-6 h-16 w-full">
-        {/* Left: Menu Trigger & Branding */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors"
-            title={isSidebarOpen ? 'Close Menu' : 'Open Menu'}
-            aria-label="Toggle Navigation Menu"
-          >
-            <Menu size={18} />
-          </button>
+      <div className={`flex items-center justify-between gap-3 px-4 md:px-6 h-16 w-full ${isHodDashboard ? 'max-w-7xl mx-auto px-4 sm:px-8' : ''}`}>
+        {/* Left: Desktop Menu Trigger & Branding or Mobile Dynamic Role Header (Screen 4 & Screen 6) */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+          {/* Menu Trigger: Visible in header ONLY when sidebar is closed/off. When sidebar is open, toggle button is inside sidebar */}
+          {!isSidebarOpen && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer flex items-center justify-center"
+              title="Open Menu"
+              aria-label="Toggle Navigation Menu"
+            >
+              <Menu size={18} />
+            </button>
+          )}
 
-          <Link
-            to={`/${currentRole}`}
-            className="flex items-center gap-2.5 no-underline cursor-pointer group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-white p-0.5 flex items-center justify-center border border-slate-200 shadow-xs group-hover:scale-105 transition-transform overflow-hidden">
-              <img
-                src="/iit.png"
-                alt="IIT Logo"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-heading text-base font-extrabold text-slate-900 leading-tight">
-                OIST CSE
+          {/* Desktop Branding Link (Screen 5, Screen 7, Screen 9) */}
+          {isHod ? (
+            <Link
+              to="/hod"
+              onClick={handleLogoClick('/hod')}
+              className="hidden sm:flex items-center gap-3 no-underline cursor-pointer group select-none"
+              title="Return to HOD Dashboard"
+            >
+              <span className="font-bold text-lg tracking-tight text-foreground">
+                CampusFlow Lite
               </span>
-              <span className="text-xs text-blue-700 font-bold leading-none">
-                CampusFlow ERP
+              <span className="font-semibold uppercase rounded-md bg-secondary text-secondary-foreground text-xs tracking-wider px-3 py-1">
+                HOD WORKSPACE
               </span>
-            </div>
-          </Link>
+            </Link>
+          ) : isTg ? (
+            <Link
+              to="/tg"
+              onClick={handleLogoClick('/tg')}
+              className="hidden sm:flex items-center gap-4 no-underline cursor-pointer group select-none"
+              title="Return to TG Dashboard"
+            >
+              <div className="rounded-lg bg-primary text-primary-foreground flex justify-center items-center size-10 shadow-xs group-hover:opacity-90 transition-opacity">
+                <ShieldCheck className="size-5" />
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-lg tracking-tight text-foreground">
+                  CampusFlow Lite
+                </span>
+                <span className="font-semibold uppercase rounded-full bg-primary/10 text-primary text-xs tracking-wider border border-primary/20 px-3 py-1">
+                  TG WORKSPACE
+                </span>
+              </div>
+            </Link>
+          ) : isStudent ? (
+            <Link
+              to="/student"
+              onClick={handleLogoClick('/student')}
+              className="hidden sm:flex items-center gap-2.5 no-underline cursor-pointer group select-none"
+              title="Return to Student Dashboard"
+            >
+              <div className="rounded-lg bg-primary text-primary-foreground flex justify-center items-center size-8 shadow-xs group-hover:opacity-90 transition-opacity">
+                <GraduationCap className="size-4" />
+              </div>
+              <span className="font-heading text-sm font-bold text-foreground">CampusFlow Lite</span>
+            </Link>
+          ) : (
+            <Link
+              to={`/${roleStr || 'student'}`}
+              onClick={handleLogoClick(`/${roleStr || 'student'}`)}
+              className="flex items-center gap-2.5 no-underline cursor-pointer group select-none"
+              title="Return to Dashboard"
+            >
+              <div className="w-9 h-9 rounded-xl bg-white p-0.5 flex items-center justify-center border border-slate-200 shadow-xs group-hover:scale-105 transition-transform overflow-hidden">
+                <img
+                  src="/iit.png"
+                  alt="IIT Logo"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-heading text-base font-extrabold text-slate-900 leading-tight">
+                  OIST CSE
+                </span>
+                <span className="text-xs text-blue-700 font-bold leading-none">
+                  CampusFlow ERP
+                </span>
+              </div>
+            </Link>
+          )}
+
+          {/* HOD Mobile Header (Screen 10: Squircle Landmark + CampusFlow Lite / HOD WORKSPACE) */}
+          {isHod && (
+            <Link
+              to="/hod"
+              onClick={handleLogoClick('/hod')}
+              className="flex sm:hidden items-center gap-2 min-w-0 no-underline cursor-pointer select-none"
+              title="Return to HOD Dashboard"
+            >
+              <div className="rounded-lg bg-primary text-primary-foreground flex justify-center items-center shrink-0 size-9 shadow-xs">
+                <Landmark className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="font-bold text-ellipsis whitespace-nowrap text-sm text-foreground overflow-hidden">
+                  CampusFlow Lite
+                </div>
+                <div className="text-ellipsis whitespace-nowrap text-muted-foreground text-xs overflow-hidden">
+                  HOD WORKSPACE
+                </div>
+              </div>
+            </Link>
+          )}
+
+          {/* Student Mobile Header (Screen 4: Squircle GraduationCap + CampusFlow Lite / STUDENT WORKSPACE) */}
+          {isStudent && (
+            <Link
+              to="/student"
+              onClick={handleLogoClick('/student')}
+              className="flex sm:hidden items-center gap-2 min-w-0 no-underline cursor-pointer select-none"
+              title="Return to Student Dashboard"
+            >
+              <div className="rounded-md bg-primary text-primary-foreground flex justify-center items-center shrink-0 size-9 shadow-xs">
+                <GraduationCap className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-foreground text-sm leading-tight truncate m-0">
+                  CampusFlow Lite
+                </p>
+                <p className="font-semibold uppercase text-primary text-[11px] tracking-wide m-0">
+                  Student Workspace
+                </p>
+              </div>
+            </Link>
+          )}
+
+          {/* TG Mobile Header (Screen 6 / Screen 8: Squircle ShieldCheck + Tutor Guardian / TG Dashboard) */}
+          {isTg && (
+            <Link
+              to="/tg"
+              onClick={handleLogoClick('/tg')}
+              className="flex sm:hidden items-center gap-2 min-w-0 no-underline cursor-pointer select-none"
+              title="Return to TG Dashboard"
+            >
+              <div className="rounded-lg bg-primary text-primary-foreground flex justify-center items-center shrink-0 size-9 shadow-xs">
+                <ShieldCheck className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold text-base text-foreground leading-tight truncate m-0">
+                  Tutor Guardian
+                </p>
+                <p className="text-muted-foreground text-xs leading-none m-0 mt-0.5">
+                  TG Dashboard
+                </p>
+              </div>
+            </Link>
+          )}
         </div>
 
-        {/* Center: Role Badge */}
+        {/* Center: Role Badge or Student / TG / HOD Portal Pill (Screen 7, Screen 3, Screen 9) */}
         <div className="hidden md:flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-xs">
-            <span className="text-sm shrink-0">{roleEmojiMap[currentRole] || '🎓'}</span>
-            <div className="flex flex-col text-left">
-              <span className="text-sm font-bold text-slate-900 leading-tight">
-                {roleTitleMap[currentRole] || 'Academic Portal'}
-              </span>
-              <span className="text-xs text-slate-600 leading-none mt-0.5">
-                {currentUser?.name || 'Verified User'}
+          {isHod ? (
+            <div className="font-semibold rounded-md bg-accent text-accent-foreground text-sm hidden px-4 py-2 items-center gap-2 lg:flex">
+              <BadgeCheck className="size-4" />
+              <span>HOD Dashboard</span>
+            </div>
+          ) : isTg ? (
+            <div className="font-semibold rounded-full bg-muted text-foreground text-sm border border-border px-4 py-2 hidden md:flex items-center gap-2 shadow-2xs">
+              <BadgeCheck className="text-primary size-4" />
+              <span>TG Dashboard</span>
+            </div>
+          ) : isStudent ? (
+            <div className="font-medium rounded-full bg-muted text-muted-foreground text-sm border border-border px-4 py-1.5 shadow-2xs">
+              Student Portal
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-xs">
+              <span className="text-sm shrink-0">{roleEmojiMap[currentRole] || '🎓'}</span>
+              <div className="flex flex-col text-left">
+                <span className="text-sm font-bold text-slate-900 leading-tight">
+                  {roleTitleMap[currentRole] || 'Academic Portal'}
+                </span>
+                <span className="text-xs text-slate-600 leading-none mt-0.5">
+                  {currentUser?.name || 'Verified User'}
+                </span>
+              </div>
+              <span className="badge badge-indigo text-xs ml-1 py-0.5 px-2 font-bold">
+                <ShieldCheck size={11} className="mr-0.5 inline" />
+                Verified
               </span>
             </div>
-            <span className="badge badge-indigo text-xs ml-1 py-0.5 px-2 font-bold">
-              <ShieldCheck size={11} className="mr-0.5 inline" />
-              Verified
-            </span>
-          </div>
+          )}
         </div>
 
         {/* Right: Actions, Notification Bell & Profile */}
@@ -152,13 +298,26 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
             <button
               type="button"
               onClick={() => setShowNotifications((prev) => !prev)}
-              className="relative p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer"
+              className={
+                isHod
+                  ? "notif-bell-btn cursor-pointer"
+                  : isTg
+                  ? "relative p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer flex items-center justify-center w-10 h-10 shrink-0 shadow-2xs"
+                  : "relative p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer"
+              }
               title="Notifications"
               aria-label="View notifications"
             >
-              <Bell size={18} />
+              <Bell className={isHod ? "w-5 h-5 text-slate-600 shrink-0" : isTg ? "w-5 h-5 text-slate-600 shrink-0" : "w-[18px] h-[18px]"} />
               {unreadNotifCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center animate-pulse">
+                <span
+                  className={
+                    isHod || isTg
+                      ? "notif-badge-count"
+                      : `absolute w-4 h-4 rounded-full ${isStudent ? 'bg-primary' : 'bg-rose-600'} text-white text-[10px] font-bold flex items-center justify-center pointer-events-none ${isStudent ? '' : 'animate-pulse'}`
+                  }
+                  style={{ position: 'absolute', top: '-4px', right: '-4px' }}
+                >
                   {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
                 </span>
               )}
@@ -175,20 +334,26 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
                 <div className="notification-dropdown-panel shadow-2xl">
                   <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-extrabold text-slate-900">Notifications</span>
+                      <span className="text-sm font-extrabold text-slate-900">Notification Centre</span>
                       {unreadNotifCount > 0 && (
                         <span className="badge badge-rose text-[11px] py-0.5 px-2 font-black rounded-full shadow-2xs">
-                          {unreadNotifCount}
+                          {unreadNotifCount} new
                         </span>
                       )}
                     </div>
-                    {unreadNotifCount > 0 && (
+                    {notifications && notifications.length > 0 && (
                       <button
+                        type="button"
                         onClick={handleMarkAllRead}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1.5 cursor-pointer hover:underline"
+                        className={`text-xs font-bold flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-md transition-all ${
+                          unreadNotifCount > 0
+                            ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
+                            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                        }`}
+                        title="Mark all notifications as read"
                       >
-                        <CheckCheck size={14} />
-                        <span>Mark all read</span>
+                        <CheckCheck size={14} className={unreadNotifCount > 0 ? "text-blue-600" : "text-slate-400"} />
+                        <span>Mark all as read</span>
                       </button>
                     )}
                   </div>
@@ -245,9 +410,8 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
                           <div
                             key={n._id}
                             onClick={() => handleNotificationClick(n)}
-                            className={`p-3.5 sm:p-4 text-xs transition-colors hover:bg-slate-50 cursor-pointer ${
-                              !n.isRead ? 'bg-blue-50/60' : 'text-slate-700'
-                            }`}
+                            className={`p-3.5 sm:p-4 text-xs transition-colors hover:bg-slate-50 cursor-pointer ${!n.isRead ? 'bg-blue-50/60' : 'text-slate-700'
+                              }`}
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="font-extrabold text-slate-900 flex items-start gap-2 min-w-0 flex-1">
@@ -297,9 +461,57 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
             )}
           </div>
 
-          {/* User Name & Logout */}
-          <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-            <div className="hidden sm:flex flex-col text-right max-w-[160px]">
+          {/* User Name & Role (Desktop only) */}
+          {isHod ? (
+            <div className="border-l hidden pl-4 items-center gap-3 sm:flex">
+              <div className="font-bold rounded-full bg-secondary text-secondary-foreground text-sm flex justify-center items-center size-9 shrink-0">
+                {currentUser?.name
+                  ? currentUser.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+                  : 'HC'}
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-sm text-foreground m-0 leading-tight">
+                  {currentUser?.name || 'Hod cse'}
+                </p>
+                <p className="text-muted-foreground text-xs m-0 mt-0.5">
+                  HOD
+                </p>
+              </div>
+            </div>
+          ) : isStudent ? (
+            <div className="hidden sm:flex rounded-lg bg-card border border-border px-3 py-1.5 items-center gap-3 shadow-2xs">
+              <div className="font-semibold rounded-full bg-secondary text-secondary-foreground text-sm flex justify-center items-center size-8 shrink-0">
+                {currentUser?.name
+                  ? currentUser.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+                  : 'AM'}
+              </div>
+              <div className="text-left">
+                <div className="font-semibold text-sm text-foreground leading-tight truncate max-w-[140px]">
+                  {currentUser?.name || 'Ayush Mishra'}
+                </div>
+                <div className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mt-0.5">
+                  STUDENT
+                </div>
+              </div>
+            </div>
+          ) : isTg ? (
+            <div className="rounded-lg bg-card border border-border hidden sm:flex px-3 py-2 items-center gap-3">
+              <div className="font-bold rounded-full bg-secondary text-secondary-foreground text-sm flex justify-center items-center w-9 h-9 shrink-0">
+                {currentUser?.name
+                  ? currentUser.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+                  : 'TT'}
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-foreground m-0 leading-tight">
+                  {currentUser?.name || 'Test Teacher'}
+                </p>
+                <p className="uppercase text-muted-foreground text-xs tracking-wider m-0 mt-0.5">
+                  {currentUser?.role === 'TEACHER' ? 'Teacher' : (currentUser?.role || 'Teacher')}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="hidden sm:flex flex-col text-right max-w-[160px] pl-2 border-l border-slate-200">
               <span
                 className="text-sm font-bold text-slate-900 leading-tight truncate"
                 title={currentUser?.name || currentUser?.designation || 'User'}
@@ -310,18 +522,25 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
                 {currentUser?.designation || currentUser?.role || currentRole}
               </span>
             </div>
+          )}
 
-            <button
-              onClick={() => {
-                logout();
-                navigate('/login');
-              }}
-              className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 text-slate-600 transition-colors"
-              title="Logout"
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
+          {/* Logout Button */}
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              navigate('/login');
+            }}
+            className={
+              isHod
+                ? "rounded-md bg-card text-muted-foreground border flex justify-center items-center size-10 hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors shadow-2xs"
+                : `rounded-lg bg-card text-muted-foreground border border-border flex justify-center items-center w-10 h-10 shrink-0 hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors shadow-2xs ${isTg ? 'hidden sm:flex' : 'flex'}`
+            }
+            title="Logout"
+            aria-label="Logout"
+          >
+            <LogOut className={isHod ? "size-4 text-muted-foreground shrink-0" : "w-5 h-5 text-muted-foreground shrink-0"} />
+          </button>
         </div>
       </div>
     </header>

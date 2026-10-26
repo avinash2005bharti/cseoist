@@ -7,11 +7,11 @@ import { sendSuccess } from '../../utils/response.js';
 
 const router = Router();
 
-// HOD, Admin, and TG can list full student directory (STUDENT is restricted)
+// HOD, Admin, TG, and Students can list student directory (e.g., for group applications)
 router.get(
   '/',
   auth,
-  authorize('HOD', 'ADMIN', 'TG'),
+  authorize('HOD', 'ADMIN', 'TG', 'STUDENT'),
   asyncHandler(async (req, res) => {
     const result = await studentsService.listStudents(req.query);
     return sendSuccess(res, result.students, result.meta);

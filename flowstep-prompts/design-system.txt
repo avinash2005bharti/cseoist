@@ -1,0 +1,132 @@
+================================================================================
+FLOWSTEP UI GENERATION PROMPT: MASTER DESIGN SYSTEM & COMPONENT LIBRARY
+APPLICATION: CampusFlow Lite (Academic Consideration & ERP Management System)
+TARGET CLIENT: Oriental Institute of Science & Technology (OIST CSE)
+================================================================================
+
+[SYSTEM / DESIGN ROLE]
+You are a Principal Design Systems Architect and Creative Director establishing the Master Design System, Component Library, and Style Guide for CampusFlow Lite across Web (1440px / 1024px) and Mobile (768px / 375px) form factors.
+
+[CORE DESIGN PRINCIPLES]
+1. Visual Hierarchy: Distinguishable titles, section headers, supporting metadata, and button weights.
+2. Layout & Spacing: Strict 4px/8px modular spacing grid (p-2, p-3, p-4, p-5, p-6).
+3. Modern SaaS Aesthetic: Layered micro-elevations, crisp borders, and clean typography.
+4. Strict Color Rules:
+   - ZERO Green or Red in Action Buttons!
+   - Primary Buttons: Solid SaaS Royal Blue (#2563EB) with subtle vertical gradient.
+   - Secondary / Outline Buttons: Neutral slate/white (#FFFFFF, border #CBD5E1, text #475569).
+   - Destructive / Reject Buttons: Neutral slate outline (#FFFFFF, border #CBD5E1) or dark slate (#334155).
+   - Option Selections (Tabs, Filter Pills, Select Inputs, Radio Chips): Must look distinctly like selectable option controls, NOT bulky buttons. Active state uses SaaS Blue (#2563EB / #EFF6FF); Inactive state has rich Blue Hover (#EFF6FF, border #BFDBFE, text #1D4ED8).
+5. Accessibility: Strict WCAG AA contrast (minimum 4.5:1 ratio for text and badges).
+6. Mobile First-Class: Zero horizontal page overflow (overflow-x: hidden) and minimum 44px touch targets.
+
+--------------------------------------------------------------------------------
+1. DESIGN TOKENS SPECIFICATIONS
+--------------------------------------------------------------------------------
+
+A. COLOR PALETTE:
+   - Primary Brand Blue:
+     * 50:  #EFF6FF (Hover backgrounds, active option pill tints)
+     * 100: #DBEAFE (Card accents, selected borders)
+     * 200: #BFDBFE (Interactive hover borders)
+     * 400: #60A5FA (Focus ring highlights)
+     * 500: #3B82F6 (Interactive borders, icons)
+     * 600: #2563EB (Primary button base, active tab fills)
+     * 700: #1D4ED8 (Primary button hover, selected text)
+     * 800: #1E40AF (Active button pressed state)
+     * 900: #1E3A8A (Dark brand headers)
+
+   - Neutrals (Slate):
+     * Surface Canvas: #F8FAFC (Slate 50)
+     * Card Surface: #FFFFFF (Pure White)
+     * Subtle Borders: rgba(226, 232, 240, 0.85) (#E2E8F0)
+     * Input Borders: #CBD5E1 (Slate 300)
+     * Secondary Text: #64748B (Slate 500)
+     * Primary Text: #0F172A (Slate 900)
+
+   - Status Pills (WCAG AA Compliant Tinted Badges):
+     * Approved / Success: #065F46 text on #ECFDF5 background, #A7F3D0 border
+     * Pending / Warning:  #92400E text on #FFFBEB background, #FDE68A border
+     * Rejected / Error:   #9F1239 text on #FFF1F2 background, #FECDD3 border
+     * Info / Verified:    #1E40AF text on #EFF6FF background, #BFDBFE border
+
+B. TYPOGRAPHY (Inter / System Font):
+   - Page Titles (H1): 28px / 32px (font-black, letter-spacing: -0.025em, line-height: 1.2)
+   - Section Headings (H2): 18px / 20px (font-extrabold, letter-spacing: -0.015em)
+   - Card Titles (H3): 15px / 16px (font-bold, letter-spacing: -0.01em)
+   - Body Text: 14px (font-normal / font-medium, line-height: 1.5)
+   - Small / Metadata Text: 12px / 13px (font-semibold, line-height: 1.4)
+   - Micro Labels / Tags: 10px / 11px (font-bold, uppercase, letter-spacing: 0.05em)
+   - Numerical Metrics: Tabular Numerals (font-feature-settings: 'tnum')
+
+C. SHADOWS & ELEVATION:
+   - 2xs / Flat Border: 0 1px 2px 0 rgba(0, 0, 0, 0.02)
+   - Card Default: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04)
+   - Interactive Card Hover: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.04)
+   - Modal Dialog: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)
+
+--------------------------------------------------------------------------------
+2. COMPONENT SPECIFICATIONS
+--------------------------------------------------------------------------------
+
+A. BUTTONS:
+   1) Primary Button (.btn-primary):
+      - Height: 40px (Desktop), 44px (Mobile).
+      - Radius: 8px.
+      - Fill: linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%).
+      - Text: #FFFFFF, 14px font-bold.
+      - Hover: linear-gradient(180deg, #1D4ED8 0%, #1E40AF 100%), subtle lift.
+      - Active: translateY(1px), scale(0.99).
+   
+   2) Secondary / Neutral Card Button (.btn-secondary):
+      - Height: 38px–40px, Radius: 8px.
+      - Fill: #FFFFFF, Border: 1px solid #CBD5E1.
+      - Text: #475569 font-semibold.
+      - Hover: #F1F5F9 background, #0F172A text.
+   
+   3) Ghost / Link Button (.btn-ghost):
+      - Height: auto, Fill: transparent.
+      - Text: #2563EB font-bold, Hover: #1D4ED8 with underline or background tint.
+   
+   4) Destructive Button (.btn-danger):
+      - Styled in Dark Slate (#334155, border #1E293B, text #FFFFFF) or Neutral Outline, NEVER RED.
+
+B. OPTION SELECTIONS & FILTER CONTROLS:
+   1) Segmented Option Pills (e.g. Status filters, View tabs):
+      - Active: Solid Blue #2563EB, text #FFFFFF, 9999px pill or 8px rounded corners.
+      - Inactive: White/transparent, text #475569.
+      - Hover: #EFF6FF background, #BFDBFE border, #1D4ED8 text.
+   
+   2) Form Select Dropdowns (e.g. Semester & Section filters):
+      - Must look like distinct rectangular form inputs, NOT pill buttons!
+      - Height: 36px–40px, Radius: 8px, Border: 1px solid #CBD5E1, Background: #FFFFFF.
+      - Text: #1D4ED8 font-bold.
+      - Focus: 0 0 0 3px rgba(37, 99, 235, 0.12), border-color: #2563EB.
+      - Dropdown Options: White background, 8px padding, blue highlight on hover (#EFF6FF, text #1D4ED8).
+
+C. FORM INPUTS:
+   - Text Inputs & Textareas: Height 40px (inputs), Radius 8px, Border 1px #CBD5E1, Background #FFFFFF, Text #0F172A, Placeholder #94A3B8.
+   - Focus Ring: 0 0 0 3px rgba(37, 99, 235, 0.12) with border-color #3B82F6.
+
+D. CARDS & PANELS:
+   - Radius: 12px to 16px.
+   - Background: #FFFFFF.
+   - Border: 1px solid rgba(226, 232, 240, 0.85).
+   - Padding: 20px (Desktop), 16px (Mobile).
+
+E. APPLICATION SHELL & HEADERS:
+   - Sticky Frosted Glass: Background rgba(255, 255, 255, 0.92) with backdrop-filter: blur(12px).
+   - Sidebar Navigation: Width 260px (Desktop), active item styled with #EFF6FF background, #1D4ED8 text, 8px radius. Collapses to bottom bar or hamburger drawer on mobile.
+
+--------------------------------------------------------------------------------
+3. RESPONSIVE BREAKPOINT RULES
+--------------------------------------------------------------------------------
+- 1440px (Desktop): Max-width 1280px or full-bleed grid, multi-column cards, sticky sidebar.
+- 1024px (Laptop): 3-column or 4-column cards with adjusted margins, compact icon buttons.
+- 768px (Tablet): 2-column grids, collapsible sidebar, horizontal scrollable filter tabs.
+- 375px (Mobile): Strict single-column stack, zero horizontal page scrolling (overflow-x: hidden), 44px minimum touch targets, modal width: calc(100vw - 24px).
+
+--------------------------------------------------------------------------------
+4. COPY-PASTE READY FLOWSTEP PROMPT
+--------------------------------------------------------------------------------
+"Generate a comprehensive SaaS Design System and UI Component Library for 'CampusFlow Lite' academic management application across both 1440px desktop and 375px mobile viewports. Establish: (1) Color tokens based on Slate neutrals (#F8FAFC canvas, #FFFFFF card surface, #E2E8F0 borders), Royal SaaS Blue (#2563EB primary fill, #EFF6FF option hover tint), and WCAG AA high-contrast status pills (Approved emerald #065F46 on #ECFDF5, Pending amber #92400E on #FFFBEB, Rejected rose #9F1239 on #FFF1F2); (2) Typography using 'Inter' font with tabular numerals for metrics; (3) Strict button guidelines where all primary action buttons are royal blue (#2563EB), secondary buttons are neutral slate/white (#FFFFFF, border #CBD5E1), and zero green or red colors are used in buttons; (4) Option selection controls (segmented filter chips, tabs, and select dropdowns) styled distinctly from buttons, featuring 8px border radius, blue text (#1D4ED8), and rich blue hover state (#EFF6FF, border #BFDBFE); (5) Clean card elevation with layered micro-shadows (0 1px 3px rgba(0,0,0,0.04)); (6) Full responsive layout specs for 1440px desktop and 375px mobile with zero horizontal page scroll and 44px minimum touch targets."

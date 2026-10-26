@@ -31,15 +31,7 @@ export const createConsiderationSchema = z.object({
 export const tgReviewSchema = z.object({
   decision: z.enum(['RECOMMEND', 'REJECT']),
   remarks: z.string().optional().default(''),
-}).refine(
-  (data) => {
-    if (data.decision === 'REJECT') {
-      return (data.remarks || '').trim().length >= 5;
-    }
-    return true;
-  },
-  { message: 'Remarks of at least 5 characters are required when rejecting', path: ['remarks'] }
-);
+});
 
 export const hodReviewSchema = z.object({
   decision: z.preprocess((val) => {
@@ -53,14 +45,6 @@ export const hodReviewSchema = z.object({
   remarks: z.string().optional().default(''),
   approvedPeriods: z.number().int().min(1).optional(),
 }).refine(
-  (data) => {
-    if (data.decision === 'REJECT') {
-      return (data.remarks || '').trim().length >= 5;
-    }
-    return true;
-  },
-  { message: 'Remarks of at least 5 characters are required when rejecting', path: ['remarks'] }
-).refine(
   (data) => {
     if (data.decision === 'APPROVE') {
       return data.approvedPeriods !== undefined && data.approvedPeriods > 0;

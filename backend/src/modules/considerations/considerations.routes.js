@@ -44,6 +44,13 @@ router.get(
   considerationsController.getHODQueue
 );
 
+// HOD / Admin / TG recommendations history
+router.get(
+  '/tg-history',
+  authorize('HOD', 'ADMIN', 'TG'),
+  considerationsController.getTGHistory
+);
+
 // View single request
 router.get(
   '/:id',

@@ -107,6 +107,8 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
       setNewSectionCapacity(60);
       setIsProvisioning(false);
       await fetchSections();
+      window.dispatchEvent(new CustomEvent('campusflow_sections_changed', { detail: { semester: semNum } }));
+      window.dispatchEvent(new Event('campusflow_queue_changed'));
       if (onUpdated) onUpdated();
     } catch (err) {
       addToast(
@@ -132,6 +134,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
       addToast('Capacity Updated', `Section capacity updated to ${capNum} students.`, 'success');
       setEditingSecId(null);
       await fetchSections();
+      window.dispatchEvent(new Event('campusflow_sections_changed'));
       if (onUpdated) onUpdated();
     } catch (err) {
       addToast(
@@ -162,6 +165,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
       await masterDataApi.deleteSection(sec._id);
       addToast('Section Deleted', `${sec.name} was removed from the institutional database.`, 'info');
       await fetchSections();
+      window.dispatchEvent(new Event('campusflow_sections_changed'));
       if (onUpdated) onUpdated();
     } catch (err) {
       addToast(
@@ -183,14 +187,14 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
         className="modal-container max-w-4xl w-[96%] max-h-[92vh] overflow-y-auto bg-white p-6 sm:p-8 rounded-3xl text-slate-900 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Header matching Screen 25.png */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-lg sm:text-xl font-black text-slate-900 m-0">
                 Classes, Sections & Curriculum Management
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
+              <span className="px-2.5 py-0.5 rounded-full bg-[#CFFAFE] text-[#0891B2] text-xs font-bold">
                 CSE Department
               </span>
             </div>
@@ -208,7 +212,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                 setNewSectionCapacity(60);
                 setIsProvisioning(true);
               }}
-              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              className="hod-btn-primary-blue px-3.5 py-2 rounded-xl text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
             >
               <Plus size={15} />
               <span>+ Provision Section</span>
@@ -244,7 +248,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
               <button
                 type="button"
                 onClick={() => setIsProvisioning(false)}
-                className="text-xs text-slate-500 hover:text-slate-800 font-bold"
+                className="text-xs text-slate-500 hover:text-slate-800 font-bold cursor-pointer"
               >
                 Close
               </button>
@@ -335,7 +339,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                 <button
                   type="button"
                   onClick={() => setIsProvisioning(false)}
-                  className="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -361,49 +365,51 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
           </form>
         )}
 
-        {/* Academic Year Tabs (All 4 Years) */}
-        <div className="mt-4 flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
-          {['1st Year', '2nd Year', '3rd Year', '4th Year'].map((yr) => (
-            <button
-              key={yr}
-              onClick={() => handleYearChange(yr)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
-                activeYear === yr
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {yr}
-            </button>
-          ))}
+        {/* Academic Year Tabs (All 4 Years) matching Screen 25.png */}
+        <div className="mt-4 flex items-center gap-3 flex-wrap">
+          {['1st Year', '2nd Year', '3rd Year', '4th Year'].map((yr) => {
+            const isSelected = activeYear === yr;
+            return (
+              <button
+                key={yr}
+                onClick={() => handleYearChange(yr)}
+                className={`hod-pill-indigo px-5 py-2 rounded-full text-xs font-bold cursor-pointer shrink-0 ${
+                  isSelected ? 'is-active ring-2 ring-white/60' : 'opacity-90 hover:opacity-100'
+                }`}
+              >
+                {yr}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Semester Tabs for Current Year */}
-        <div className="mt-3 flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-bold text-slate-500 mr-1">Semesters:</span>
-          {(yearSemesterMap[activeYear] || [1, 2]).map((sem) => (
-            <button
-              key={sem}
-              onClick={() => handleSemesterChange(sem)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
-                activeSemester === sem
-                  ? 'bg-blue-50 text-blue-700 border-blue-400 ring-1 ring-blue-300'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              Semester {sem}
-            </button>
-          ))}
+        {/* Semester Tabs for Current Year matching Screen 25.png */}
+        <div className="mt-3.5 flex items-center gap-2.5 flex-wrap">
+          <span className="text-xs font-bold text-slate-700 mr-0.5">Semesters:</span>
+          {(yearSemesterMap[activeYear] || [1, 2]).map((sem) => {
+            const isSelected = activeSemester === sem;
+            return (
+              <button
+                key={sem}
+                onClick={() => handleSemesterChange(sem)}
+                className={`hod-pill-indigo px-4 py-1.5 rounded-full text-xs font-bold cursor-pointer ${
+                  isSelected ? 'is-active ring-2 ring-white/60' : 'opacity-90 hover:opacity-100'
+                }`}
+              >
+                Semester {sem}
+              </button>
+            );
+          })}
 
-          {/* Quick jump to all 8 Semesters */}
-          <div className="ml-auto flex items-center gap-1 text-[11px] text-slate-400 font-semibold">
-            <span>Quick jump:</span>
+          {/* Quick jump to all 8 Semesters matching Screen 25.png */}
+          <div className="ml-auto flex items-center gap-1.5 text-xs text-slate-600 font-semibold">
+            <span className="mr-0.5">Quick jump:</span>
             {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
               <button
                 key={s}
                 onClick={() => handleSemesterChange(s)}
-                className={`w-6 h-6 rounded-md text-[10px] font-bold flex items-center justify-center transition-colors ${
-                  activeSemester === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                className={`hod-pill-indigo hod-jump-circle text-[11px] font-bold flex items-center justify-center cursor-pointer ${
+                  activeSemester === s ? 'is-active ring-1 ring-white/60' : 'opacity-90 hover:opacity-100'
                 }`}
               >
                 S{s}
@@ -412,13 +418,13 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
           </div>
         </div>
 
-        {/* Active Sections List */}
+        {/* Active Sections List matching Screen 25.png */}
         <div className="mt-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider m-0">
-              Active Sections ({activeYear} - Semester {activeSemester})
+            <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider m-0">
+              ACTIVE SECTIONS ({activeYear.toUpperCase()} · SEMESTER {activeSemester})
             </h3>
-            <span className="text-xs font-bold text-slate-600">
+            <span className="text-xs font-bold text-slate-800">
               {filteredSections.length} {filteredSections.length === 1 ? 'Section' : 'Sections'} Available
             </span>
           </div>
@@ -459,64 +465,35 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                 const fillPct = Math.min(100, Math.round((enrolled / capacity) * 100));
                 const isEditing = editingSecId === sec._id;
 
-                const barColor =
-                  fillPct >= 95
-                    ? 'bg-rose-500'
-                    : fillPct >= 80
-                    ? 'bg-amber-500'
-                    : 'bg-emerald-500';
-
                 return (
                   <div
                     key={sec._id}
-                    className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-blue-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    className="p-4 sm:p-4.5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
-                    <div className="space-y-1.5 min-w-0">
+                    <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-base font-black text-slate-900">{sec.name}</span>
-                        <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-xs font-mono font-bold border border-blue-200">
+                        <span className="px-2 py-0.5 rounded-md bg-[#EFF6FF] text-[#1D4ED8] text-xs font-mono font-bold">
                           {sec.code}
                         </span>
-                        <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-bold">
-                          Sem {sec.semester} • Year {sec.year}
+                        <span className="px-2 py-0.5 rounded-md bg-[#EFF6FF] text-[#1D4ED8] text-xs font-bold">
+                          Sem {sec.semester} · Year {sec.year}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
-                        <span>
-                          TG:{' '}
-                          <strong className="text-slate-700 font-bold">
-                            {sec.tgName || 'Not Assigned'}
-                          </strong>
-                        </span>
-                        <span>•</span>
-                        <span>
-                          Department:{' '}
-                          <strong className="text-slate-700 font-bold">
-                            {sec.department?.code || 'CSE'}
-                          </strong>
-                        </span>
+                      <div className="text-xs text-slate-700 font-medium">
+                        TG:{sec.tgName || 'Not Assigned'} · Department:{sec.department?.code || 'CSE'}
                       </div>
 
-                      {/* Capacity & Enrollment Progress Bar */}
-                      <div className="pt-2 max-w-md">
-                        <div className="flex items-center justify-between text-xs font-bold mb-1">
-                          <span className="text-slate-600">
-                            Enrolled: <strong className="text-slate-900">{enrolled}</strong> / {capacity} Students
-                          </span>
-                          <span className="text-slate-400 font-mono text-[11px]">{fillPct}% Quota</span>
-                        </div>
-                        <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${barColor}`}
-                            style={{ width: `${Math.max(fillPct, 4)}%` }}
-                          />
-                        </div>
+                      {/* Enrolled Quota Text matching Screen 25.png */}
+                      <div className="text-xs font-medium text-slate-700 pt-0.5">
+                        Enrolled: <strong className="font-bold text-slate-900">{enrolled} / {capacity} Students</strong>
+                        <span className="ml-6 text-slate-700">{fillPct}% Quota</span>
                       </div>
                     </div>
 
-                    {/* Right Action Controls: Capacity Editing & Delete */}
-                    <div className="flex items-center gap-2.5 shrink-0">
+                    {/* Right Action Controls matching Screen 25.png */}
+                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
                       {isEditing ? (
                         <div className="flex items-center gap-1.5 bg-blue-50 p-1.5 rounded-xl border border-blue-200">
                           <label className="text-[11px] font-bold text-blue-900 pl-1">Quota:</label>
@@ -533,7 +510,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                             type="button"
                             onClick={() => handleSaveCapacity(sec._id)}
                             disabled={updatingCapacity}
-                            className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
                             title="Save new capacity"
                           >
                             <Check size={14} />
@@ -541,7 +518,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                           <button
                             type="button"
                             onClick={() => setEditingSecId(null)}
-                            className="p-1.5 bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+                            className="p-1.5 bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                             title="Cancel"
                           >
                             <X size={14} />
@@ -554,10 +531,10 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                             setEditingSecId(sec._id);
                             setEditingCapacity(sec.capacity || 60);
                           }}
-                          className="px-3 py-1.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          className="px-3.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                           title="HOD/Admin: Set or update section capacity"
                         >
-                          <Edit2 size={13} className="text-blue-600" />
+                          <Edit2 size={13} className="text-slate-600" />
                           <span>Set Capacity ({capacity})</span>
                         </button>
                       )}
@@ -565,37 +542,35 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                       <button
                         onClick={() => handleDeleteSection(sec)}
                         disabled={enrolled > 0}
-                        className={`p-2 rounded-xl transition-colors cursor-pointer ${
+                        className={`p-2 rounded-xl transition-colors cursor-pointer border ${
                           enrolled > 0
-                            ? 'text-slate-300 border border-slate-100 cursor-not-allowed opacity-50'
-                            : 'text-rose-500 hover:bg-rose-50 border border-rose-200'
+                            ? 'text-slate-300 border-slate-200 cursor-not-allowed opacity-50'
+                            : 'text-slate-600 hover:text-rose-600 border-slate-300 hover:bg-rose-50'
                         }`}
                         title={enrolled > 0 ? `Cannot delete: ${enrolled} students enrolled` : 'Delete empty section'}
                       >
                         <Trash2 size={15} />
                       </button>
 
-                      {/* Promote & Demote controls */}
-                      <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
-                        <button
-                          type="button"
-                          disabled={sec.semester <= 1}
-                          onClick={() => setMoveTarget({ section: sec, direction: 'prev' })}
-                          className="px-2 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors shadow-2xs"
-                          title={sec.semester <= 1 ? 'Min semester' : `Demote to Semester ${sec.semester - 1}`}
-                        >
-                          ◀ Sem {sec.semester - 1}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={sec.semester >= 8}
-                          onClick={() => setMoveTarget({ section: sec, direction: 'next' })}
-                          className="px-2 py-1.5 rounded-xl border border-blue-600 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors shadow-2xs"
-                          title={sec.semester >= 8 ? 'Max semester' : `Promote to Semester ${sec.semester + 1}`}
-                        >
-                          Sem {sec.semester + 1} ▶
-                        </button>
-                      </div>
+                      {/* Promote & Demote controls matching Screen 25.png */}
+                      <button
+                        type="button"
+                        disabled={sec.semester <= 1}
+                        onClick={() => setMoveTarget({ section: sec, direction: 'prev' })}
+                        className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors shadow-2xs"
+                        title={sec.semester <= 1 ? 'Min semester' : `Demote to Semester ${sec.semester - 1}`}
+                      >
+                        ◀ Sem {sec.semester - 1}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={sec.semester >= 8}
+                        onClick={() => setMoveTarget({ section: sec, direction: 'next' })}
+                        className="hod-btn-promote px-3.5 py-1.5 rounded-xl text-white text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors shadow-xs"
+                        title={sec.semester >= 8 ? 'Max semester' : `Promote to Semester ${sec.semester + 1}`}
+                      >
+                        Sem {sec.semester + 1} ▶
+                      </button>
                     </div>
                   </div>
                 );
@@ -604,17 +579,11 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer matching Screen 25.png */}
         <div className="mt-6 pt-4 border-t border-slate-200 flex items-center justify-between">
-          <span className="text-xs text-slate-500 font-medium">
+          <span className="text-xs text-slate-600 font-medium">
             💡 Sections created here are instantly active in HOD, TG, Admin, and Student portals.
           </span>
-          <button
-            onClick={onClose}
-            className="px-6 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-black text-white transition-colors cursor-pointer shadow-xs"
-          >
-            Done
-          </button>
         </div>
         {/* Move Semester Confirmation Modal */}
         {moveTarget && (

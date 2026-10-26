@@ -1,0 +1,605 @@
+/* ==========================================================================
+   CampusFlow Lite – Screen 21 (Desktop) & Screen 22 (Mobile) HOD Considerations
+   & Screen 7 (Desktop Review Drawer) / Screen 8 (Mobile Review Bottom Sheet) CSS
+   Design Source: new_ui/Screen 21.png, Screen 22.png, Screen 7.png, Screen 8.png
+   Color theme: SaaS Royal Blue (#2563EB), Slate Surface (#FFFFFF, #F8FAFC),
+                Neutral Outline (#CBD5E1), Cyan Accent (#E0F2FE, #0369A1)
+   ========================================================================== */
+
+/* Page layout container */
+.hod-page-container {
+  width: 100%;
+  max-width: 80rem; /* 1280px */
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  font-family: inherit;
+}
+
+/* Category Filter Tabs Bar (Screen 21 & 22) */
+.hod-tabs-track {
+  background-color: #F1F5F9;
+  border-radius: 1rem; /* rounded-2xl */
+  padding: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hod-tabs-track::-webkit-scrollbar {
+  display: none;
+}
+
+.hod-tab-btn {
+  padding: 0.625rem 1.125rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.hod-tab-btn:hover {
+  color: #0F172A;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.hod-tab-btn.active {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Filter & Action Toolbar (Screen 21) */
+.hod-toolbar-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.hod-filter-select-box {
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 0.5rem; /* 8px radius */
+  padding: 0.5rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #475569;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hod-filter-select-box:focus-within {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.hod-filter-select {
+  background: transparent;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #2563EB;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+@media (max-width: 639px) {
+  .hod-filter-select-box {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Search input in toolbar */
+.hod-search-input {
+  width: 100%;
+  border: 1px solid #CBD5E1;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  font-size: 0.8125rem;
+  color: #0F172A;
+  background-color: #FFFFFF;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.hod-search-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.hod-toolbar-btn {
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.hod-toolbar-btn:hover {
+  background-color: #F8FAFC;
+  border-color: #94A3B8;
+  color: #0F172A;
+}
+
+/* Application Card (Screen 21 & Screen 22) */
+.hod-app-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.hod-app-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+}
+
+/* Card Header Icon Squircle */
+.hod-icon-squircle {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background-color: #EFF6FF;
+  border: 1px solid #DBEAFE;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 3-Box Information Grid (Screen 21 desktop 3-col & Screen 22 mobile 2-col + full-width stepper) */
+.hod-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+@media (max-width: 767px) {
+  .hod-info-grid > div:nth-child(3) {
+    grid-column: span 2;
+  }
+}
+
+@media (min-width: 768px) {
+  .hod-info-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.hod-info-box {
+  background-color: #F8FAFC;
+  border: 1px solid #F1F5F9;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hod-info-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
+}
+
+.hod-info-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0F172A;
+  line-height: 1.25;
+}
+
+.hod-info-subtext {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748B;
+  margin-top: 0.25rem;
+}
+
+/* Justification Box */
+.hod-justification-box {
+  background-color: #F8FAFC;
+  border: 1px solid #F1F5F9;
+  border-radius: 0.75rem;
+  padding: 1rem 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+/* Sanctioned Lectures Stepper */
+.hod-stepper-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.hod-stepper-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.375rem;
+  border: none;
+  background-color: #F1F5F9;
+  color: #334155;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hod-stepper-btn:hover:not(:disabled) {
+  background-color: #E2E8F0;
+  color: #0F172A;
+}
+
+.hod-stepper-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hod-stepper-count {
+  min-width: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+/* Action Buttons (Strict Rule: NO GREEN, NO RED!) */
+/* Primary Royal Blue Approve Button */
+.hod-btn-approve {
+  background-color: #2563EB;
+  color: #FFFFFF;
+  border: 1px solid #2563EB;
+  border-radius: 0.5rem;
+  padding: 0.5625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.hod-btn-approve:hover:not(:disabled) {
+  background-color: #1D4ED8;
+  border-color: #1D4ED8;
+}
+
+.hod-btn-approve:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Neutral Slate Outline Reject Button */
+.hod-btn-reject {
+  background-color: #FFFFFF;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+  border-radius: 0.5rem;
+  padding: 0.5625rem 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.hod-btn-reject:hover:not(:disabled) {
+  background-color: #F8FAFC;
+  border-color: #94A3B8;
+  color: #0F172A;
+}
+
+.hod-btn-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Neutral Review Button */
+.hod-btn-review {
+  background-color: #FFFFFF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+  border-radius: 0.5rem;
+  padding: 0.5625rem 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.hod-btn-review:hover {
+  background-color: #EFF6FF;
+  border-color: #93C5FD;
+}
+
+/* Action Button Row Container (Screen 21 & Screen 22) */
+.hod-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .hod-card-actions {
+    width: auto;
+  }
+}
+
+@media (max-width: 639px) {
+  .hod-card-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .hod-card-actions button {
+    width: 100% !important;
+    min-height: 2.75rem !important; /* 44px touch target */
+    justify-content: center !important;
+  }
+}
+
+/* ==========================================================================
+   Screen 7: Desktop Slide-Over Review Drawer (>= 768px)
+   Screen 8: Mobile Bottom Sheet (< 768px)
+   ========================================================================== */
+
+.hod-drawer-backdrop,
+.hod-review-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9999;
+}
+
+/* Desktop Drawer (Screen 7) */
+@media (min-width: 768px) {
+  .hod-review-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 36rem; /* 576px / max-w-xl */
+    background-color: #FFFFFF;
+    border-left: 1px solid #E2E8F0;
+    box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1), -8px 0 10px -6px rgba(0, 0, 0, 0.05);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    animation: hodSlideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+/* Mobile Bottom Sheet (Screen 8) */
+@media (max-width: 767px) {
+  .hod-review-drawer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    background-color: #FFFFFF;
+    border-top: 1px solid #E2E8F0;
+    border-left: none;
+    border-right: none;
+    border-top-left-radius: 1.25rem;
+    border-top-right-radius: 1.25rem;
+    box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.18);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    max-height: 92vh;
+    animation: hodSlideInBottom 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes hodSlideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes hodSlideInBottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Drawer Header */
+.hod-drawer-header {
+  padding: 1.25rem 1.75rem;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  background-color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+/* Drawer Body */
+.hod-drawer-body {
+  padding: 1.5rem 1.75rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  flex: 1 1 0%;
+}
+
+/* Drawer Footer */
+.hod-drawer-footer {
+  padding: 1rem 1.75rem;
+  border-top: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background-color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+/* Option Radio/Card in Drawer */
+.hod-decision-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 0.625rem;
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background-color: #FFFFFF;
+}
+
+.hod-decision-card:hover {
+  background-color: #F8FAFC;
+}
+
+.hod-decision-card.selected-approve {
+  border-color: #2563EB;
+  background-color: #EFF6FF;
+  box-shadow: 0 0 0 1px #2563EB;
+}
+
+.hod-decision-card.selected-reject {
+  border-color: #475569;
+  background-color: #F8FAFC;
+  box-shadow: 0 0 0 1px #475569;
+}
+
+/* Textarea in Drawer */
+.hod-drawer-textarea {
+  width: 100%;
+  min-height: 7rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #CBD5E1;
+  background-color: #FFFFFF;
+  font-size: 0.875rem;
+  color: #0F172A;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.hod-drawer-textarea:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Status Badges */
+.hod-badge-pending {
+  background-color: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid #BAE6FD;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.hod-badge-approved {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.hod-badge-rejected {
+  background-color: #F1F5F9;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}

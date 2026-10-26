@@ -21,15 +21,7 @@ export const createLeaveSchema = z.object({
 export const tgReviewLeaveSchema = z.object({
   decision: z.enum(['RECOMMEND', 'REJECT']),
   remarks: z.string().optional().default(''),
-}).refine(
-  (data) => {
-    if (data.decision === 'REJECT') {
-      return (data.remarks || '').trim().length >= 5;
-    }
-    return true;
-  },
-  { message: 'Remarks of at least 5 characters are required when rejecting', path: ['remarks'] }
-);
+});
 
 export const finalReviewLeaveSchema = z.object({
   decision: z.preprocess((val) => {
@@ -41,15 +33,7 @@ export const finalReviewLeaveSchema = z.object({
     return val;
   }, z.enum(['APPROVE', 'REJECT'])),
   remarks: z.string().optional().default(''),
-}).refine(
-  (data) => {
-    if (data.decision === 'REJECT') {
-      return (data.remarks || '').trim().length >= 5;
-    }
-    return true;
-  },
-  { message: 'Remarks of at least 5 characters are required when rejecting', path: ['remarks'] }
-);
+});
 
 export default {
   createLeaveSchema,

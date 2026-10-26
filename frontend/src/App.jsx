@@ -25,6 +25,7 @@ const TgMyStudents = lazy(() => import('./pages/tg/TgMyStudents.jsx'));
 // HOD Pages (Lazy with auto-retry)
 const HodDashboard = lazy(() => import('./pages/hod/HodDashboard.jsx'));
 const HodConsiderations = lazy(() => import('./pages/hod/HodConsiderations.jsx'));
+const HodTgRecommendations = lazy(() => import('./pages/hod/HodTgRecommendations.jsx'));
 const HodLeaves = lazy(() => import('./pages/hod/HodLeaves.jsx'));
 const HodMentorship = lazy(() => import('./pages/hod/HodMentorship.jsx'));
 const HodStudents = lazy(() => import('./pages/hod/HodStudents.jsx'));
@@ -269,6 +270,14 @@ export default function App() {
           element={
             <RoleRouteGuard role="hod">
               <HodConsiderations />
+            </RoleRouteGuard>
+          }
+        />
+        <Route
+          path="hod/tg-recommendations"
+          element={
+            <RoleRouteGuard role="hod">
+              <HodTgRecommendations />
             </RoleRouteGuard>
           }
         />

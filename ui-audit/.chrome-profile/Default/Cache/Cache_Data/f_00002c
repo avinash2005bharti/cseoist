@@ -1,0 +1,1224 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/modals/ClassesCurriculumModal.jsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7c860f40"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=7c860f40"; const React = __vite__cjsImport3_react.__esModule ? __vite__cjsImport3_react.default : __vite__cjsImport3_react; const useState = __vite__cjsImport3_react["useState"]; const useEffect = __vite__cjsImport3_react["useEffect"];
+import {
+  X,
+  Plus,
+  Trash2,
+  Building2,
+  Layers,
+  CheckCircle2,
+  Users,
+  Edit2,
+  Check,
+  AlertCircle,
+  ShieldCheck,
+  RefreshCw
+} from "/node_modules/.vite/deps/lucide-react.js?v=7c860f40";
+import { useERP } from "/src/context/ERPContext.jsx";
+import { masterDataApi } from "/src/api/index.js";
+import MoveSemesterModal from "/src/components/modals/MoveSemesterModal.jsx";
+export default function ClassesCurriculumModal({ onClose, onUpdated }) {
+  _s();
+  const { addToast } = useERP();
+  const [activeYear, setActiveYear] = useState("3rd Year");
+  const [activeSemester, setActiveSemester] = useState(5);
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [moveTarget, setMoveTarget] = useState(null);
+  const [isProvisioning, setIsProvisioning] = useState(false);
+  const [newSectionName, setNewSectionName] = useState("");
+  const [newSectionCode, setNewSectionCode] = useState("");
+  const [newSectionSemester, setNewSectionSemester] = useState(5);
+  const [newSectionCapacity, setNewSectionCapacity] = useState(60);
+  const [submitting, setSubmitting] = useState(false);
+  const [editingSecId, setEditingSecId] = useState(null);
+  const [editingCapacity, setEditingCapacity] = useState(60);
+  const [updatingCapacity, setUpdatingCapacity] = useState(false);
+  const yearSemesterMap = {
+    "1st Year": [1, 2],
+    "2nd Year": [3, 4],
+    "3rd Year": [5, 6],
+    "4th Year": [7, 8]
+  };
+  const fetchSections = async () => {
+    setLoading(true);
+    try {
+      const res = await masterDataApi.getSections();
+      setSections(res?.data || []);
+    } catch (err) {
+      addToast("Error", "Failed to fetch academic sections from database.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchSections();
+  }, []);
+  const handleYearChange = (yr) => {
+    setActiveYear(yr);
+    const validSems = yearSemesterMap[yr] || [1, 2];
+    if (!validSems.includes(activeSemester)) {
+      setActiveSemester(validSems[0]);
+    }
+  };
+  const handleSemesterChange = (sem) => {
+    setActiveSemester(sem);
+    const yr = Object.keys(yearSemesterMap).find((k) => yearSemesterMap[k].includes(sem));
+    if (yr) setActiveYear(yr);
+  };
+  const handleAddSection = async (e) => {
+    e.preventDefault();
+    if (!newSectionName.trim()) return;
+    setSubmitting(true);
+    try {
+      const cleanName = newSectionName.replace(/^Section\s*/i, "").trim().toUpperCase();
+      const semNum = Number(newSectionSemester);
+      const codeToUse = (newSectionCode || `CSE-${cleanName}-S${semNum}`).toUpperCase().trim();
+      const capNum = Number(newSectionCapacity) || 60;
+      await masterDataApi.createSection({
+        name: `Section ${cleanName}`,
+        code: codeToUse,
+        semester: semNum,
+        year: Math.ceil(semNum / 2),
+        capacity: capNum
+      });
+      addToast(
+        "Section Created",
+        `Section ${cleanName} provisioned with capacity ${capNum} students for Semester ${semNum}.`,
+        "success"
+      );
+      setNewSectionName("");
+      setNewSectionCode("");
+      setNewSectionCapacity(60);
+      setIsProvisioning(false);
+      await fetchSections();
+      if (onUpdated) onUpdated();
+    } catch (err) {
+      addToast(
+        "Creation Failed",
+        err.response?.data?.error?.message || err.response?.data?.message || err.message || "Failed to create section.",
+        "error"
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  const handleSaveCapacity = async (secId) => {
+    const capNum = Number(editingCapacity);
+    if (!capNum || capNum < 1 || capNum > 500) {
+      addToast("Invalid Capacity", "Please provide a valid capacity between 1 and 500.", "error");
+      return;
+    }
+    setUpdatingCapacity(true);
+    try {
+      await masterDataApi.updateSection(secId, { capacity: capNum });
+      addToast("Capacity Updated", `Section capacity updated to ${capNum} students.`, "success");
+      setEditingSecId(null);
+      await fetchSections();
+      if (onUpdated) onUpdated();
+    } catch (err) {
+      addToast(
+        "Update Failed",
+        err.response?.data?.error?.message || err.message || "Failed to update section capacity.",
+        "error"
+      );
+    } finally {
+      setUpdatingCapacity(false);
+    }
+  };
+  const handleDeleteSection = async (sec) => {
+    if (sec.studentCount > 0) {
+      addToast(
+        "Cannot Delete Section",
+        `Cannot delete ${sec.name}: ${sec.studentCount} student(s) currently enrolled. Reassign them first.`,
+        "error"
+      );
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to delete ${sec.name} (${sec.code})? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      await masterDataApi.deleteSection(sec._id);
+      addToast("Section Deleted", `${sec.name} was removed from the institutional database.`, "info");
+      await fetchSections();
+      if (onUpdated) onUpdated();
+    } catch (err) {
+      addToast(
+        "Deletion Failed",
+        err.response?.data?.error?.message || err.message || "Failed to delete section.",
+        "error"
+      );
+    }
+  };
+  const filteredSections = sections.filter(
+    (sec) => Number(sec.semester) === Number(activeSemester)
+  );
+  return /* @__PURE__ */ jsxDEV("div", { className: "modal-backdrop", onClick: onClose, children: /* @__PURE__ */ jsxDEV(
+    "div",
+    {
+      className: "modal-container max-w-4xl w-[96%] max-h-[92vh] overflow-y-auto bg-white p-6 sm:p-8 rounded-3xl text-slate-900 shadow-2xl",
+      onClick: (e) => e.stopPropagation(),
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200", children: [
+          /* @__PURE__ */ jsxDEV("div", { children: [
+            /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 flex-wrap", children: [
+              /* @__PURE__ */ jsxDEV("h2", { className: "text-lg sm:text-xl font-black text-slate-900 m-0", children: "Classes, Sections & Curriculum Management" }, void 0, false, {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 209,
+                columnNumber: 15
+              }, this),
+              /* @__PURE__ */ jsxDEV("span", { className: "px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold", children: "CSE Department" }, void 0, false, {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 212,
+                columnNumber: 15
+              }, this)
+            ] }, void 0, true, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 208,
+              columnNumber: 13
+            }, this),
+            /* @__PURE__ */ jsxDEV("p", { className: "text-xs text-slate-500 font-medium m-0 mt-1", children: "Master academic hierarchy across 4 undergraduate years (8 Semesters) with live database persistence and capacity quota controls." }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 216,
+              columnNumber: 13
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 207,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 shrink-0", children: [
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                onClick: () => {
+                  setNewSectionName("E");
+                  setNewSectionSemester(activeSemester);
+                  setNewSectionCode(`CSE-E-S${activeSemester}`);
+                  setNewSectionCapacity(60);
+                  setIsProvisioning(true);
+                },
+                className: "px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs",
+                children: [
+                  /* @__PURE__ */ jsxDEV(Plus, { size: 15 }, void 0, false, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 232,
+                    columnNumber: 15
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("span", { children: "+ Provision Section" }, void 0, false, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 233,
+                    columnNumber: 15
+                  }, this)
+                ]
+              },
+              void 0,
+              true,
+              {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 222,
+                columnNumber: 13
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                onClick: fetchSections,
+                title: "Refresh sections",
+                className: "p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer",
+                children: /* @__PURE__ */ jsxDEV(RefreshCw, { size: 15, className: loading ? "animate-spin" : "" }, void 0, false, {
+                  fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                  lineNumber: 240,
+                  columnNumber: 15
+                }, this)
+              },
+              void 0,
+              false,
+              {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 235,
+                columnNumber: 13
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                onClick: onClose,
+                className: "p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer",
+                "aria-label": "Close",
+                children: /* @__PURE__ */ jsxDEV(X, { size: 18 }, void 0, false, {
+                  fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                  lineNumber: 247,
+                  columnNumber: 15
+                }, this)
+              },
+              void 0,
+              false,
+              {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 242,
+                columnNumber: 13
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 221,
+            columnNumber: 11
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+          lineNumber: 206,
+          columnNumber: 9
+        }, this),
+        isProvisioning && /* @__PURE__ */ jsxDEV(
+          "form",
+          {
+            onSubmit: handleAddSection,
+            className: "my-4 p-5 rounded-2xl bg-blue-50/80 border border-blue-200 space-y-3.5",
+            children: [
+              /* @__PURE__ */ jsxDEV("div", { className: "flex items-center justify-between", children: [
+                /* @__PURE__ */ jsxDEV("span", { className: "text-xs font-extrabold uppercase tracking-wider text-blue-900 flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ jsxDEV(Layers, { size: 14, className: "text-blue-600" }, void 0, false, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 260,
+                    columnNumber: 17
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("span", { children: [
+                    "Create New Section Under Semester ",
+                    newSectionSemester
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 261,
+                    columnNumber: 17
+                  }, this)
+                ] }, void 0, true, {
+                  fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                  lineNumber: 259,
+                  columnNumber: 15
+                }, this),
+                /* @__PURE__ */ jsxDEV(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => setIsProvisioning(false),
+                    className: "text-xs text-slate-500 hover:text-slate-800 font-bold",
+                    children: "Close"
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 263,
+                    columnNumber: 15
+                  },
+                  this
+                )
+              ] }, void 0, true, {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 258,
+                columnNumber: 13
+              }, this),
+              /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs", children: [
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { className: "font-bold text-slate-700 block mb-1", children: [
+                    "Section Name ",
+                    /* @__PURE__ */ jsxDEV("span", { className: "text-rose-500", children: "*" }, void 0, false, {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 276,
+                      columnNumber: 32
+                    }, this)
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 275,
+                    columnNumber: 17
+                  }, this),
+                  /* @__PURE__ */ jsxDEV(
+                    "input",
+                    {
+                      type: "text",
+                      value: newSectionName,
+                      onChange: (e) => {
+                        const val = e.target.value;
+                        setNewSectionName(val);
+                        const clean = val.replace(/^Section\s*/i, "").trim().toUpperCase();
+                        setNewSectionCode(`CSE-${clean || "X"}-S${newSectionSemester}`);
+                      },
+                      placeholder: "e.g. E (for Section E)",
+                      required: true,
+                      className: "w-full px-3 py-2 rounded-xl border border-blue-300 bg-white text-xs text-slate-800 font-bold focus:outline-none uppercase"
+                    },
+                    void 0,
+                    false,
+                    {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 278,
+                      columnNumber: 17
+                    },
+                    this
+                  )
+                ] }, void 0, true, {
+                  fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                  lineNumber: 274,
+                  columnNumber: 15
+                }, this),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { className: "font-bold text-slate-700 block mb-1", children: [
+                    "Target Semester ",
+                    /* @__PURE__ */ jsxDEV("span", { className: "text-rose-500", children: "*" }, void 0, false, {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 296,
+                      columnNumber: 35
+                    }, this)
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 295,
+                    columnNumber: 17
+                  }, this),
+                  /* @__PURE__ */ jsxDEV(
+                    "select",
+                    {
+                      value: newSectionSemester,
+                      onChange: (e) => {
+                        const sem = Number(e.target.value);
+                        setNewSectionSemester(sem);
+                        const clean = newSectionName.replace(/^Section\s*/i, "").trim().toUpperCase();
+                        setNewSectionCode(`CSE-${clean || "X"}-S${sem}`);
+                      },
+                      className: "w-full px-3 py-2 rounded-xl border border-blue-300 bg-white text-xs text-slate-800 font-bold focus:outline-none",
+                      children: [1, 2, 3, 4, 5, 6, 7, 8].map(
+                        (s) => /* @__PURE__ */ jsxDEV("option", { value: s, children: [
+                          "Semester ",
+                          s,
+                          " (Year ",
+                          Math.ceil(s / 2),
+                          ")"
+                        ] }, s, true, {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 309,
+                          columnNumber: 17
+                        }, this)
+                      )
+                    },
+                    void 0,
+                    false,
+                    {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 298,
+                      columnNumber: 17
+                    },
+                    this
+                  )
+                ] }, void 0, true, {
+                  fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                  lineNumber: 294,
+                  columnNumber: 15
+                }, this),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { className: "font-bold text-slate-700 block mb-1", children: [
+                    "Section Code ",
+                    /* @__PURE__ */ jsxDEV("span", { className: "text-rose-500", children: "*" }, void 0, false, {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 319,
+                      columnNumber: 32
+                    }, this)
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 318,
+                    columnNumber: 17
+                  }, this),
+                  /* @__PURE__ */ jsxDEV(
+                    "input",
+                    {
+                      type: "text",
+                      value: newSectionCode,
+                      onChange: (e) => setNewSectionCode(e.target.value.toUpperCase()),
+                      placeholder: "e.g. CSE-E-S5",
+                      required: true,
+                      className: "w-full px-3 py-2 rounded-xl border border-blue-300 bg-white text-xs font-mono font-bold text-slate-800 uppercase focus:outline-none"
+                    },
+                    void 0,
+                    false,
+                    {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 321,
+                      columnNumber: 17
+                    },
+                    this
+                  )
+                ] }, void 0, true, {
+                  fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                  lineNumber: 317,
+                  columnNumber: 15
+                }, this),
+                /* @__PURE__ */ jsxDEV("div", { children: [
+                  /* @__PURE__ */ jsxDEV("label", { className: "font-bold text-slate-700 block mb-1", children: [
+                    "Capacity (Max Students) ",
+                    /* @__PURE__ */ jsxDEV("span", { className: "text-rose-500", children: "*" }, void 0, false, {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 334,
+                      columnNumber: 43
+                    }, this)
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 333,
+                    columnNumber: 17
+                  }, this),
+                  /* @__PURE__ */ jsxDEV(
+                    "input",
+                    {
+                      type: "number",
+                      min: "1",
+                      max: "500",
+                      value: newSectionCapacity,
+                      onChange: (e) => setNewSectionCapacity(Number(e.target.value)),
+                      placeholder: "e.g. 60",
+                      required: true,
+                      className: "w-full px-3 py-2 rounded-xl border border-blue-300 bg-white text-xs font-bold text-slate-800 focus:outline-none"
+                    },
+                    void 0,
+                    false,
+                    {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 336,
+                      columnNumber: 17
+                    },
+                    this
+                  )
+                ] }, void 0, true, {
+                  fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                  lineNumber: 332,
+                  columnNumber: 15
+                }, this)
+              ] }, void 0, true, {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 272,
+                columnNumber: 13
+              }, this),
+              /* @__PURE__ */ jsxDEV("div", { className: "flex items-center justify-between pt-1", children: [
+                /* @__PURE__ */ jsxDEV("span", { className: "text-[11px] text-blue-700 font-medium", children: "Both HOD and Admin permissions are enabled to set and adjust student capacity." }, void 0, false, {
+                  fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                  lineNumber: 350,
+                  columnNumber: 15
+                }, this),
+                /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => setIsProvisioning(false),
+                      className: "px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors",
+                      children: "Cancel"
+                    },
+                    void 0,
+                    false,
+                    {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 354,
+                      columnNumber: 17
+                    },
+                    this
+                  ),
+                  /* @__PURE__ */ jsxDEV(
+                    "button",
+                    {
+                      type: "submit",
+                      disabled: submitting,
+                      className: "px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer",
+                      children: submitting ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                        /* @__PURE__ */ jsxDEV("div", { className: "w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" }, void 0, false, {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 368,
+                          columnNumber: 23
+                        }, this),
+                        /* @__PURE__ */ jsxDEV("span", { children: "Provisioning..." }, void 0, false, {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 369,
+                          columnNumber: 23
+                        }, this)
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 367,
+                        columnNumber: 17
+                      }, this) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                        /* @__PURE__ */ jsxDEV(Plus, { size: 14 }, void 0, false, {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 373,
+                          columnNumber: 23
+                        }, this),
+                        /* @__PURE__ */ jsxDEV("span", { children: "Save Section to Database" }, void 0, false, {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 374,
+                          columnNumber: 23
+                        }, this)
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 372,
+                        columnNumber: 17
+                      }, this)
+                    },
+                    void 0,
+                    false,
+                    {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 361,
+                      columnNumber: 17
+                    },
+                    this
+                  )
+                ] }, void 0, true, {
+                  fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                  lineNumber: 353,
+                  columnNumber: 15
+                }, this)
+              ] }, void 0, true, {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 349,
+                columnNumber: 13
+              }, this)
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 254,
+            columnNumber: 9
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV("div", { className: "mt-4 flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto", children: ["1st Year", "2nd Year", "3rd Year", "4th Year"].map(
+          (yr) => /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              onClick: () => handleYearChange(yr),
+              className: `px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${activeYear === yr ? "bg-blue-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`,
+              children: yr
+            },
+            yr,
+            false,
+            {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 386,
+              columnNumber: 11
+            },
+            this
+          )
+        ) }, void 0, false, {
+          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+          lineNumber: 384,
+          columnNumber: 9
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "mt-3 flex items-center gap-2 flex-wrap", children: [
+          /* @__PURE__ */ jsxDEV("span", { className: "text-xs font-bold text-slate-500 mr-1", children: "Semesters:" }, void 0, false, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 402,
+            columnNumber: 11
+          }, this),
+          (yearSemesterMap[activeYear] || [1, 2]).map(
+            (sem) => /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                onClick: () => handleSemesterChange(sem),
+                className: `px-3 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${activeSemester === sem ? "bg-blue-50 text-blue-700 border-blue-400 ring-1 ring-blue-300" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"}`,
+                children: [
+                  "Semester ",
+                  sem
+                ]
+              },
+              sem,
+              true,
+              {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 404,
+                columnNumber: 11
+              },
+              this
+            )
+          ),
+          /* @__PURE__ */ jsxDEV("div", { className: "ml-auto flex items-center gap-1 text-[11px] text-slate-400 font-semibold", children: [
+            /* @__PURE__ */ jsxDEV("span", { children: "Quick jump:" }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 419,
+              columnNumber: 13
+            }, this),
+            [1, 2, 3, 4, 5, 6, 7, 8].map(
+              (s) => /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  onClick: () => handleSemesterChange(s),
+                  className: `w-6 h-6 rounded-md text-[10px] font-bold flex items-center justify-center transition-colors ${activeSemester === s ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`,
+                  children: [
+                    "S",
+                    s
+                  ]
+                },
+                s,
+                true,
+                {
+                  fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                  lineNumber: 421,
+                  columnNumber: 13
+                },
+                this
+              )
+            )
+          ] }, void 0, true, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 418,
+            columnNumber: 11
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+          lineNumber: 401,
+          columnNumber: 9
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "mt-5", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "flex items-center justify-between mb-3", children: [
+            /* @__PURE__ */ jsxDEV("h3", { className: "text-xs font-extrabold text-slate-500 uppercase tracking-wider m-0", children: [
+              "Active Sections (",
+              activeYear,
+              " - Semester ",
+              activeSemester,
+              ")"
+            ] }, void 0, true, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 437,
+              columnNumber: 13
+            }, this),
+            /* @__PURE__ */ jsxDEV("span", { className: "text-xs font-bold text-slate-600", children: [
+              filteredSections.length,
+              " ",
+              filteredSections.length === 1 ? "Section" : "Sections",
+              " Available"
+            ] }, void 0, true, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 440,
+              columnNumber: 13
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 436,
+            columnNumber: 11
+          }, this),
+          loading ? /* @__PURE__ */ jsxDEV("div", { className: "py-12 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200", children: [
+            /* @__PURE__ */ jsxDEV(RefreshCw, { size: 20, className: "animate-spin mx-auto text-blue-500 mb-2" }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 447,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV("span", { children: "Loading institutional section directory..." }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 448,
+              columnNumber: 15
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 446,
+            columnNumber: 11
+          }, this) : filteredSections.length === 0 ? /* @__PURE__ */ jsxDEV("div", { className: "p-8 text-center bg-slate-50 rounded-2xl border border-slate-200", children: [
+            /* @__PURE__ */ jsxDEV(Layers, { size: 28, className: "mx-auto text-slate-300 mb-2" }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 452,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV("p", { className: "text-sm font-extrabold text-slate-800 m-0", children: [
+              "No sections provisioned for Semester ",
+              activeSemester
+            ] }, void 0, true, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 453,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV("p", { className: "text-xs text-slate-500 font-medium mt-1 mb-3", children: "Create Section A or any custom section under this semester to allow student registration and TG assignment." }, void 0, false, {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 456,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                onClick: () => {
+                  setNewSectionName("A");
+                  setNewSectionSemester(activeSemester);
+                  setNewSectionCode(`CSE-A-S${activeSemester}`);
+                  setNewSectionCapacity(60);
+                  setIsProvisioning(true);
+                },
+                className: "inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs",
+                children: [
+                  /* @__PURE__ */ jsxDEV(Plus, { size: 14 }, void 0, false, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 469,
+                    columnNumber: 17
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("span", { children: "+ Provision First Section" }, void 0, false, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 470,
+                    columnNumber: 17
+                  }, this)
+                ]
+              },
+              void 0,
+              true,
+              {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 459,
+                columnNumber: 15
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 451,
+            columnNumber: 11
+          }, this) : /* @__PURE__ */ jsxDEV("div", { className: "space-y-3", children: filteredSections.map((sec) => {
+            const enrolled = sec.studentCount || 0;
+            const capacity = sec.capacity || 60;
+            const fillPct = Math.min(100, Math.round(enrolled / capacity * 100));
+            const isEditing = editingSecId === sec._id;
+            const barColor = fillPct >= 95 ? "bg-rose-500" : fillPct >= 80 ? "bg-amber-500" : "bg-emerald-500";
+            return /* @__PURE__ */ jsxDEV(
+              "div",
+              {
+                className: "p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:border-blue-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4",
+                children: [
+                  /* @__PURE__ */ jsxDEV("div", { className: "space-y-1.5 min-w-0", children: [
+                    /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 flex-wrap", children: [
+                      /* @__PURE__ */ jsxDEV("span", { className: "text-base font-black text-slate-900", children: sec.name }, void 0, false, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 495,
+                        columnNumber: 25
+                      }, this),
+                      /* @__PURE__ */ jsxDEV("span", { className: "px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-xs font-mono font-bold border border-blue-200", children: sec.code }, void 0, false, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 496,
+                        columnNumber: 25
+                      }, this),
+                      /* @__PURE__ */ jsxDEV("span", { className: "px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-bold", children: [
+                        "Sem ",
+                        sec.semester,
+                        " • Year ",
+                        sec.year
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 499,
+                        columnNumber: 25
+                      }, this)
+                    ] }, void 0, true, {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 494,
+                      columnNumber: 23
+                    }, this),
+                    /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-3 text-xs text-slate-500 font-medium", children: [
+                      /* @__PURE__ */ jsxDEV("span", { children: [
+                        "TG:",
+                        " ",
+                        /* @__PURE__ */ jsxDEV("strong", { className: "text-slate-700 font-bold", children: sec.tgName || "Not Assigned" }, void 0, false, {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 507,
+                          columnNumber: 27
+                        }, this)
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 505,
+                        columnNumber: 25
+                      }, this),
+                      /* @__PURE__ */ jsxDEV("span", { children: "•" }, void 0, false, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 511,
+                        columnNumber: 25
+                      }, this),
+                      /* @__PURE__ */ jsxDEV("span", { children: [
+                        "Department:",
+                        " ",
+                        /* @__PURE__ */ jsxDEV("strong", { className: "text-slate-700 font-bold", children: sec.department?.code || "CSE" }, void 0, false, {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 514,
+                          columnNumber: 27
+                        }, this)
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 512,
+                        columnNumber: 25
+                      }, this)
+                    ] }, void 0, true, {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 504,
+                      columnNumber: 23
+                    }, this),
+                    /* @__PURE__ */ jsxDEV("div", { className: "pt-2 max-w-md", children: [
+                      /* @__PURE__ */ jsxDEV("div", { className: "flex items-center justify-between text-xs font-bold mb-1", children: [
+                        /* @__PURE__ */ jsxDEV("span", { className: "text-slate-600", children: [
+                          "Enrolled: ",
+                          /* @__PURE__ */ jsxDEV("strong", { className: "text-slate-900", children: enrolled }, void 0, false, {
+                            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                            lineNumber: 524,
+                            columnNumber: 39
+                          }, this),
+                          " / ",
+                          capacity,
+                          " Students"
+                        ] }, void 0, true, {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 523,
+                          columnNumber: 27
+                        }, this),
+                        /* @__PURE__ */ jsxDEV("span", { className: "text-slate-400 font-mono text-[11px]", children: [
+                          fillPct,
+                          "% Quota"
+                        ] }, void 0, true, {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 526,
+                          columnNumber: 27
+                        }, this)
+                      ] }, void 0, true, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 522,
+                        columnNumber: 25
+                      }, this),
+                      /* @__PURE__ */ jsxDEV("div", { className: "w-full h-2 rounded-full bg-slate-100 overflow-hidden", children: /* @__PURE__ */ jsxDEV(
+                        "div",
+                        {
+                          className: `h-full rounded-full transition-all duration-300 ${barColor}`,
+                          style: { width: `${Math.max(fillPct, 4)}%` }
+                        },
+                        void 0,
+                        false,
+                        {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 529,
+                          columnNumber: 27
+                        },
+                        this
+                      ) }, void 0, false, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 528,
+                        columnNumber: 25
+                      }, this)
+                    ] }, void 0, true, {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 521,
+                      columnNumber: 23
+                    }, this)
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 493,
+                    columnNumber: 21
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2.5 shrink-0", children: [
+                    isEditing ? /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-1.5 bg-blue-50 p-1.5 rounded-xl border border-blue-200", children: [
+                      /* @__PURE__ */ jsxDEV("label", { className: "text-[11px] font-bold text-blue-900 pl-1", children: "Quota:" }, void 0, false, {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 541,
+                        columnNumber: 27
+                      }, this),
+                      /* @__PURE__ */ jsxDEV(
+                        "input",
+                        {
+                          type: "number",
+                          min: "1",
+                          max: "500",
+                          value: editingCapacity,
+                          onChange: (e) => setEditingCapacity(e.target.value),
+                          className: "w-16 px-2 py-1 bg-white border border-blue-300 rounded-lg text-xs font-black text-slate-900 focus:outline-none",
+                          autoFocus: true
+                        },
+                        void 0,
+                        false,
+                        {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 542,
+                          columnNumber: 27
+                        },
+                        this
+                      ),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => handleSaveCapacity(sec._id),
+                          disabled: updatingCapacity,
+                          className: "p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors",
+                          title: "Save new capacity",
+                          children: /* @__PURE__ */ jsxDEV(Check, { size: 14 }, void 0, false, {
+                            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                            lineNumber: 558,
+                            columnNumber: 29
+                          }, this)
+                        },
+                        void 0,
+                        false,
+                        {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 551,
+                          columnNumber: 27
+                        },
+                        this
+                      ),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => setEditingSecId(null),
+                          className: "p-1.5 bg-white text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors",
+                          title: "Cancel",
+                          children: /* @__PURE__ */ jsxDEV(X, { size: 14 }, void 0, false, {
+                            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                            lineNumber: 566,
+                            columnNumber: 29
+                          }, this)
+                        },
+                        void 0,
+                        false,
+                        {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 560,
+                          columnNumber: 27
+                        },
+                        this
+                      )
+                    ] }, void 0, true, {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 540,
+                      columnNumber: 21
+                    }, this) : /* @__PURE__ */ jsxDEV(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: () => {
+                          setEditingSecId(sec._id);
+                          setEditingCapacity(sec.capacity || 60);
+                        },
+                        className: "px-3 py-1.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer",
+                        title: "HOD/Admin: Set or update section capacity",
+                        children: [
+                          /* @__PURE__ */ jsxDEV(Edit2, { size: 13, className: "text-blue-600" }, void 0, false, {
+                            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                            lineNumber: 579,
+                            columnNumber: 27
+                          }, this),
+                          /* @__PURE__ */ jsxDEV("span", { children: [
+                            "Set Capacity (",
+                            capacity,
+                            ")"
+                          ] }, void 0, true, {
+                            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                            lineNumber: 580,
+                            columnNumber: 27
+                          }, this)
+                        ]
+                      },
+                      void 0,
+                      true,
+                      {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 570,
+                        columnNumber: 21
+                      },
+                      this
+                    ),
+                    /* @__PURE__ */ jsxDEV(
+                      "button",
+                      {
+                        onClick: () => handleDeleteSection(sec),
+                        disabled: enrolled > 0,
+                        className: `p-2 rounded-xl transition-colors cursor-pointer ${enrolled > 0 ? "text-slate-300 border border-slate-100 cursor-not-allowed opacity-50" : "text-rose-500 hover:bg-rose-50 border border-rose-200"}`,
+                        title: enrolled > 0 ? `Cannot delete: ${enrolled} students enrolled` : "Delete empty section",
+                        children: /* @__PURE__ */ jsxDEV(Trash2, { size: 15 }, void 0, false, {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 594,
+                          columnNumber: 25
+                        }, this)
+                      },
+                      void 0,
+                      false,
+                      {
+                        fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                        lineNumber: 584,
+                        columnNumber: 23
+                      },
+                      this
+                    ),
+                    /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-1 border-l border-slate-200 pl-2", children: [
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          type: "button",
+                          disabled: sec.semester <= 1,
+                          onClick: () => setMoveTarget({ section: sec, direction: "prev" }),
+                          className: "px-2 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors shadow-2xs",
+                          title: sec.semester <= 1 ? "Min semester" : `Demote to Semester ${sec.semester - 1}`,
+                          children: [
+                            "◀ Sem ",
+                            sec.semester - 1
+                          ]
+                        },
+                        void 0,
+                        true,
+                        {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 599,
+                          columnNumber: 25
+                        },
+                        this
+                      ),
+                      /* @__PURE__ */ jsxDEV(
+                        "button",
+                        {
+                          type: "button",
+                          disabled: sec.semester >= 8,
+                          onClick: () => setMoveTarget({ section: sec, direction: "next" }),
+                          className: "px-2 py-1.5 rounded-xl border border-blue-600 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors shadow-2xs",
+                          title: sec.semester >= 8 ? "Max semester" : `Promote to Semester ${sec.semester + 1}`,
+                          children: [
+                            "Sem ",
+                            sec.semester + 1,
+                            " ▶"
+                          ]
+                        },
+                        void 0,
+                        true,
+                        {
+                          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                          lineNumber: 608,
+                          columnNumber: 25
+                        },
+                        this
+                      )
+                    ] }, void 0, true, {
+                      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                      lineNumber: 598,
+                      columnNumber: 23
+                    }, this)
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                    lineNumber: 538,
+                    columnNumber: 21
+                  }, this)
+                ]
+              },
+              sec._id,
+              true,
+              {
+                fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+                lineNumber: 489,
+                columnNumber: 17
+              },
+              this
+            );
+          }) }, void 0, false, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 474,
+            columnNumber: 11
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+          lineNumber: 435,
+          columnNumber: 9
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "mt-6 pt-4 border-t border-slate-200 flex items-center justify-between", children: [
+          /* @__PURE__ */ jsxDEV("span", { className: "text-xs text-slate-500 font-medium", children: "💡 Sections created here are instantly active in HOD, TG, Admin, and Student portals." }, void 0, false, {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 628,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              onClick: onClose,
+              className: "px-6 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-black text-white transition-colors cursor-pointer shadow-xs",
+              children: "Done"
+            },
+            void 0,
+            false,
+            {
+              fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+              lineNumber: 631,
+              columnNumber: 11
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+          lineNumber: 627,
+          columnNumber: 9
+        }, this),
+        moveTarget && /* @__PURE__ */ jsxDEV(
+          MoveSemesterModal,
+          {
+            section: moveTarget.section,
+            direction: moveTarget.direction,
+            onClose: () => setMoveTarget(null),
+            onSuccess: () => {
+              setMoveTarget(null);
+              fetchSections();
+              if (onUpdated) onUpdated();
+            }
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+            lineNumber: 640,
+            columnNumber: 9
+          },
+          this
+        )
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+      lineNumber: 201,
+      columnNumber: 7
+    },
+    this
+  ) }, void 0, false, {
+    fileName: "C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx",
+    lineNumber: 200,
+    columnNumber: 5
+  }, this);
+}
+_s(ClassesCurriculumModal, "HB8FIySlKvi7J7TTeMVqEQncpxo=", false, function() {
+  return [useERP];
+});
+_c = ClassesCurriculumModal;
+var _c;
+$RefreshReg$(_c, "ClassesCurriculumModal");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/HP/OneDrive/Desktop/consideration management/frontend/src/components/modals/ClassesCurriculumModal.jsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QUE7QUFBQSxVQVJGO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxRQVFJO0FBQUE7QUFBQTtBQUFBLElBL2JSO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxFQWtjQSxLQW5jRjtBQUFBO0FBQUE7QUFBQTtBQUFBLFNBb2NBO0FBRUo7QUFBQ0MsR0F2bUJ1Qkgsd0JBQXNCO0FBQUEsVUFDdkJILE1BQU07QUFBQTtBQUFBLEtBRExHO0FBQXNCLElBQUF1RztBQUFBLGFBQUFBLElBQUEiLCJuYW1lcyI6WyJSZWFjdCIsInVzZVN0YXRlIiwidXNlRWZmZWN0IiwiWCIsIlBsdXMiLCJUcmFzaDIiLCJCdWlsZGluZzIiLCJMYXllcnMiLCJDaGVja0NpcmNsZTIiLCJVc2VycyIsIkVkaXQyIiwiQ2hlY2siLCJBbGVydENpcmNsZSIsIlNoaWVsZENoZWNrIiwiUmVmcmVzaEN3IiwidXNlRVJQIiwibWFzdGVyRGF0YUFwaSIsIk1vdmVTZW1lc3Rlck1vZGFsIiwiQ2xhc3Nlc0N1cnJpY3VsdW1Nb2RhbCIsIm9uQ2xvc2UiLCJvblVwZGF0ZWQiLCJfcyIsImFkZFRvYXN0IiwiYWN0aXZlWWVhciIsInNldEFjdGl2ZVllYXIiLCJhY3RpdmVTZW1lc3RlciIsInNldEFjdGl2ZVNlbWVzdGVyIiwic2VjdGlvbnMiLCJzZXRTZWN0aW9ucyIsImxvYWRpbmciLCJzZXRMb2FkaW5nIiwibW92ZVRhcmdldCIsInNldE1vdmVUYXJnZXQiLCJpc1Byb3Zpc2lvbmluZyIsInNldElzUHJvdmlzaW9uaW5nIiwibmV3U2VjdGlvbk5hbWUiLCJzZXROZXdTZWN0aW9uTmFtZSIsIm5ld1NlY3Rpb25Db2RlIiwic2V0TmV3U2VjdGlvbkNvZGUiLCJuZXdTZWN0aW9uU2VtZXN0ZXIiLCJzZXROZXdTZWN0aW9uU2VtZXN0ZXIiLCJuZXdTZWN0aW9uQ2FwYWNpdHkiLCJzZXROZXdTZWN0aW9uQ2FwYWNpdHkiLCJzdWJtaXR0aW5nIiwic2V0U3VibWl0dGluZyIsImVkaXRpbmdTZWNJZCIsInNldEVkaXRpbmdTZWNJZCIsImVkaXRpbmdDYXBhY2l0eSIsInNldEVkaXRpbmdDYXBhY2l0eSIsInVwZGF0aW5nQ2FwYWNpdHkiLCJzZXRVcGRhdGluZ0NhcGFjaXR5IiwieWVhclNlbWVzdGVyTWFwIiwiZmV0Y2hTZWN0aW9ucyIsInJlcyIsImdldFNlY3Rpb25zIiwiZGF0YSIsImVyciIsImhhbmRsZVllYXJDaGFuZ2UiLCJ5ciIsInZhbGlkU2VtcyIsImluY2x1ZGVzIiwiaGFuZGxlU2VtZXN0ZXJDaGFuZ2UiLCJzZW0iLCJPYmplY3QiLCJrZXlzIiwiZmluZCIsImsiLCJoYW5kbGVBZGRTZWN0aW9uIiwiZSIsInByZXZlbnREZWZhdWx0IiwidHJpbSIsImNsZWFuTmFtZSIsInJlcGxhY2UiLCJ0b1VwcGVyQ2FzZSIsInNlbU51bSIsIk51bWJlciIsImNvZGVUb1VzZSIsImNhcE51bSIsImNyZWF0ZVNlY3Rpb24iLCJuYW1lIiwiY29kZSIsInNlbWVzdGVyIiwieWVhciIsIk1hdGgiLCJjZWlsIiwiY2FwYWNpdHkiLCJyZXNwb25zZSIsImVycm9yIiwibWVzc2FnZSIsImhhbmRsZVNhdmVDYXBhY2l0eSIsInNlY0lkIiwidXBkYXRlU2VjdGlvbiIsImhhbmRsZURlbGV0ZVNlY3Rpb24iLCJzZWMiLCJzdHVkZW50Q291bnQiLCJ3aW5kb3ciLCJjb25maXJtIiwiZGVsZXRlU2VjdGlvbiIsIl9pZCIsImZpbHRlcmVkU2VjdGlvbnMiLCJmaWx0ZXIiLCJzdG9wUHJvcGFnYXRpb24iLCJ2YWwiLCJ0YXJnZXQiLCJ2YWx1ZSIsImNsZWFuIiwibWFwIiwicyIsImxlbmd0aCIsImVucm9sbGVkIiwiZmlsbFBjdCIsIm1pbiIsInJvdW5kIiwiaXNFZGl0aW5nIiwiYmFyQ29sb3IiLCJ0Z05hbWUiLCJkZXBhcnRtZW50Iiwid2lkdGgiLCJtYXgiLCJzZWN0aW9uIiwiZGlyZWN0aW9uIiwiX2MiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiQ2xhc3Nlc0N1cnJpY3VsdW1Nb2RhbC5qc3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IFJlYWN0LCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QgfSBmcm9tICdyZWFjdCc7XG5pbXBvcnQge1xuICBYLFxuICBQbHVzLFxuICBUcmFzaDIsXG4gIEJ1aWxkaW5nMixcbiAgTGF5ZXJzLFxuICBDaGVja0NpcmNsZTIsXG4gIFVzZXJzLFxuICBFZGl0MixcbiAgQ2hlY2ssXG4gIEFsZXJ0Q2lyY2xlLFxuICBTaGllbGRDaGVjayxcbiAgUmVmcmVzaEN3LFxufSBmcm9tICdsdWNpZGUtcmVhY3QnO1xuaW1wb3J0IHsgdXNlRVJQIH0gZnJvbSAnLi4vLi4vY29udGV4dC9FUlBDb250ZXh0LmpzeCc7XG5pbXBvcnQgeyBtYXN0ZXJEYXRhQXBpIH0gZnJvbSAnLi4vLi4vYXBpJztcbmltcG9ydCBNb3ZlU2VtZXN0ZXJNb2RhbCBmcm9tICcuL01vdmVTZW1lc3Rlck1vZGFsLmpzeCc7XG5cbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIENsYXNzZXNDdXJyaWN1bHVtTW9kYWwoeyBvbkNsb3NlLCBvblVwZGF0ZWQgfSkge1xuICBjb25zdCB7IGFkZFRvYXN0IH0gPSB1c2VFUlAoKTtcblxuICBjb25zdCBbYWN0aXZlWWVhciwgc2V0QWN0aXZlWWVhcl0gPSB1c2VTdGF0ZSgnM3JkIFllYXInKTtcbiAgY29uc3QgW2FjdGl2ZVNlbWVzdGVyLCBzZXRBY3RpdmVTZW1lc3Rlcl0gPSB1c2VTdGF0ZSg1KTtcblxuICBjb25zdCBbc2VjdGlvbnMsIHNldFNlY3Rpb25zXSA9IHVzZVN0YXRlKFtdKTtcbiAgY29uc3QgW2xvYWRpbmcsIHNldExvYWRpbmddID0gdXNlU3RhdGUodHJ1ZSk7XG4gIGNvbnN0IFttb3ZlVGFyZ2V0LCBzZXRNb3ZlVGFyZ2V0XSA9IHVzZVN0YXRlKG51bGwpO1xuXG4gIC8vIFNlY3Rpb24gUHJvdmlzaW9uaW5nIEZvcm0gU3RhdGVcbiAgY29uc3QgW2lzUHJvdmlzaW9uaW5nLCBzZXRJc1Byb3Zpc2lvbmluZ10gPSB1c2VTdGF0ZShmYWxzZSk7XG4gIGNvbnN0IFtuZXdTZWN0aW9uTmFtZSwgc2V0TmV3U2VjdGlvbk5hbWVdID0gdXNlU3RhdGUoJycpO1xuICBjb25zdCBbbmV3U2VjdGlvbkNvZGUsIHNldE5ld1NlY3Rpb25Db2RlXSA9IHVzZVN0YXRlKCcnKTtcbiAgY29uc3QgW25ld1NlY3Rpb25TZW1lc3Rlciwgc2V0TmV3U2VjdGlvblNlbWVzdGVyXSA9IHVzZVN0YXRlKDUpO1xuICBjb25zdCBbbmV3U2VjdGlvbkNhcGFjaXR5LCBzZXROZXdTZWN0aW9uQ2FwYWNpdHldID0gdXNlU3RhdGUoNjApO1xuICBjb25zdCBbc3VibWl0dGluZywgc2V0U3VibWl0dGluZ10gPSB1c2VTdGF0ZShmYWxzZSk7XG5cbiAgLy8gSW5saW5lIENhcGFjaXR5IEVkaXRpbmcgU3RhdGVcbiAgY29uc3QgW2VkaXRpbmdTZWNJZCwgc2V0RWRpdGluZ1NlY0lkXSA9IHVzZVN0YXRlKG51bGwpO1xuICBjb25zdCBbZWRpdGluZ0NhcGFjaXR5LCBzZXRFZGl0aW5nQ2FwYWNpdHldID0gdXNlU3RhdGUoNjApO1xuICBjb25zdCBbdXBkYXRpbmdDYXBhY2l0eSwgc2V0VXBkYXRpbmdDYXBhY2l0eV0gPSB1c2VTdGF0ZShmYWxzZSk7XG5cbiAgY29uc3QgeWVhclNlbWVzdGVyTWFwID0ge1xuICAgICcxc3QgWWVhcic6IFsxLCAyXSxcbiAgICAnMm5kIFllYXInOiBbMywgNF0sXG4gICAgJzNyZCBZZWFyJzogWzUsIDZdLFxuICAgICc0dGggWWVhcic6IFs3LCA4XSxcbiAgfTtcblxuICBjb25zdCBmZXRjaFNlY3Rpb25zID0gYXN5bmMgKCkgPT4ge1xuICAgIHNldExvYWRpbmcodHJ1ZSk7XG4gICAgdHJ5IHtcbiAgICAgIGNvbnN0IHJlcyA9IGF3YWl0IG1hc3RlckRhdGFBcGkuZ2V0U2VjdGlvbnMoKTtcbiAgICAgIHNldFNlY3Rpb25zKHJlcz8uZGF0YSB8fCBbXSk7XG4gICAgfSBjYXRjaCAoZXJyKSB7XG4gICAgICBhZGRUb2FzdCgnRXJyb3InLCAnRmFpbGVkIHRvIGZldGNoIGFjYWRlbWljIHNlY3Rpb25zIGZyb20gZGF0YWJhc2UuJywgJ2Vycm9yJyk7XG4gICAgfSBmaW5hbGx5IHtcbiAgICAgIHNldExvYWRpbmcoZmFsc2UpO1xuICAgIH1cbiAgfTtcblxuICB1c2VFZmZlY3QoKCkgPT4ge1xuICAgIGZldGNoU2VjdGlvbnMoKTtcbiAgfSwgW10pO1xuXG4gIGNvbnN0IGhhbmRsZVllYXJDaGFuZ2UgPSAoeXIpID0+IHtcbiAgICBzZXRBY3RpdmVZZWFyKHlyKTtcbiAgICBjb25zdCB2YWxpZFNlbXMgPSB5ZWFyU2VtZXN0ZXJNYXBbeXJdIHx8IFsxLCAyXTtcbiAgICBpZiAoIXZhbGlkU2Vtcy5pbmNsdWRlcyhhY3RpdmVTZW1lc3RlcikpIHtcbiAgICAgIHNldEFjdGl2ZVNlbWVzdGVyKHZhbGlkU2Vtc1swXSk7XG4gICAgfVxuICB9O1xuXG4gIGNvbnN0IGhhbmRsZVNlbWVzdGVyQ2hhbmdlID0gKHNlbSkgPT4ge1xuICAgIHNldEFjdGl2ZVNlbWVzdGVyKHNlbSk7XG4gICAgY29uc3QgeXIgPSBPYmplY3Qua2V5cyh5ZWFyU2VtZXN0ZXJNYXApLmZpbmQoKGspID0+IHllYXJTZW1lc3Rlck1hcFtrXS5pbmNsdWRlcyhzZW0pKTtcbiAgICBpZiAoeXIpIHNldEFjdGl2ZVllYXIoeXIpO1xuICB9O1xuXG4gIGNvbnN0IGhhbmRsZUFkZFNlY3Rpb24gPSBhc3luYyAoZSkgPT4ge1xuICAgIGUucHJldmVudERlZmF1bHQoKTtcbiAgICBpZiAoIW5ld1NlY3Rpb25OYW1lLnRyaW0oKSkgcmV0dXJuO1xuXG4gICAgc2V0U3VibWl0dGluZyh0cnVlKTtcbiAgICB0cnkge1xuICAgICAgY29uc3QgY2xlYW5OYW1lID0gbmV3U2VjdGlvbk5hbWUucmVwbGFjZSgvXlNlY3Rpb25cXHMqL2ksICcnKS50cmltKCkudG9VcHBlckNhc2UoKTtcbiAgICAgIGNvbnN0IHNlbU51bSA9IE51bWJlcihuZXdTZWN0aW9uU2VtZXN0ZXIpO1xuICAgICAgY29uc3QgY29kZVRvVXNlID0gKG5ld1NlY3Rpb25Db2RlIHx8IGBDU0UtJHtjbGVhbk5hbWV9LVMke3NlbU51bX1gKS50b1VwcGVyQ2FzZSgpLnRyaW0oKTtcbiAgICAgIGNvbnN0IGNhcE51bSA9IE51bWJlcihuZXdTZWN0aW9uQ2FwYWNpdHkpIHx8IDYwO1xuXG4gICAgICBhd2FpdCBtYXN0ZXJEYXRhQXBpLmNyZWF0ZVNlY3Rpb24oe1xuICAgICAgICBuYW1lOiBgU2VjdGlvbiAke2NsZWFuTmFtZX1gLFxuICAgICAgICBjb2RlOiBjb2RlVG9Vc2UsXG4gICAgICAgIHNlbWVzdGVyOiBzZW1OdW0sXG4gICAgICAgIHllYXI6IE1hdGguY2VpbChzZW1OdW0gLyAyKSxcbiAgICAgICAgY2FwYWNpdHk6IGNhcE51bSxcbiAgICAgIH0pO1xuXG4gICAgICBhZGRUb2FzdChcbiAgICAgICAgJ1NlY3Rpb24gQ3JlYXRlZCcsXG4gICAgICAgIGBTZWN0aW9uICR7Y2xlYW5OYW1lfSBwcm92aXNpb25lZCB3aXRoIGNhcGFjaXR5ICR7Y2FwTnVtfSBzdHVkZW50cyBmb3IgU2VtZXN0ZXIgJHtzZW1OdW19LmAsXG4gICAgICAgICdzdWNjZXNzJ1xuICAgICAgKTtcblxuICAgICAgc2V0TmV3U2VjdGlvbk5hbWUoJycpO1xuICAgICAgc2V0TmV3U2VjdGlvbkNvZGUoJycpO1xuICAgICAgc2V0TmV3U2VjdGlvbkNhcGFjaXR5KDYwKTtcbiAgICAgIHNldElzUHJvdmlzaW9uaW5nKGZhbHNlKTtcbiAgICAgIGF3YWl0IGZldGNoU2VjdGlvbnMoKTtcbiAgICAgIGlmIChvblVwZGF0ZWQpIG9uVXBkYXRlZCgpO1xuICAgIH0gY2F0Y2ggKGVycikge1xuICAgICAgYWRkVG9hc3QoXG4gICAgICAgICdDcmVhdGlvbiBGYWlsZWQnLFxuICAgICAgICBlcnIucmVzcG9uc2U/LmRhdGE/LmVycm9yPy5tZXNzYWdlIHx8IGVyci5yZXNwb25zZT8uZGF0YT8ubWVzc2FnZSB8fCBlcnIubWVzc2FnZSB8fCAnRmFpbGVkIHRvIGNyZWF0ZSBzZWN0aW9uLicsXG4gICAgICAgICdlcnJvcidcbiAgICAgICk7XG4gICAgfSBmaW5hbGx5IHtcbiAgICAgIHNldFN1Ym1pdHRpbmcoZmFsc2UpO1xuICAgIH1cbiAgfTtcblxuICBjb25zdCBoYW5kbGVTYXZlQ2FwYWNpdHkgPSBhc3luYyAoc2VjSWQpID0+IHtcbiAgICBjb25zdCBjYXBOdW0gPSBOdW1iZXIoZWRpdGluZ0NhcGFjaXR5KTtcbiAgICBpZiAoIWNhcE51bSB8fCBjYXBOdW0gPCAxIHx8IGNhcE51bSA+IDUwMCkge1xuICAgICAgYWRkVG9hc3QoJ0ludmFsaWQgQ2FwYWNpdHknLCAnUGxlYXNlIHByb3ZpZGUgYSB2YWxpZCBjYXBhY2l0eSBiZXR3ZWVuIDEgYW5kIDUwMC4nLCAnZXJyb3InKTtcbiAgICAgIHJldHVybjtcbiAgICB9XG5cbiAgICBzZXRVcGRhdGluZ0NhcGFjaXR5KHRydWUpO1xuICAgIHRyeSB7XG4gICAgICBhd2FpdCBtYXN0ZXJEYXRhQXBpLnVwZGF0ZVNlY3Rpb24oc2VjSWQsIHsgY2FwYWNpdHk6IGNhcE51bSB9KTtcbiAgICAgIGFkZFRvYXN0KCdDYXBhY2l0eSBVcGRhdGVkJywgYFNlY3Rpb24gY2FwYWNpdHkgdXBkYXRlZCB0byAke2NhcE51bX0gc3R1ZGVudHMuYCwgJ3N1Y2Nlc3MnKTtcbiAgICAgIHNldEVkaXRpbmdTZWNJZChudWxsKTtcbiAgICAgIGF3YWl0IGZldGNoU2VjdGlvbnMoKTtcbiAgICAgIGlmIChvblVwZGF0ZWQpIG9uVXBkYXRlZCgpO1xuICAgIH0gY2F0Y2ggKGVycikge1xuICAgICAgYWRkVG9hc3QoXG4gICAgICAgICdVcGRhdGUgRmFpbGVkJyxcbiAgICAgICAgZXJyLnJlc3BvbnNlPy5kYXRhPy5lcnJvcj8ubWVzc2FnZSB8fCBlcnIubWVzc2FnZSB8fCAnRmFpbGVkIHRvIHVwZGF0ZSBzZWN0aW9uIGNhcGFjaXR5LicsXG4gICAgICAgICdlcnJvcidcbiAgICAgICk7XG4gICAgfSBmaW5hbGx5IHtcbiAgICAgIHNldFVwZGF0aW5nQ2FwYWNpdHkoZmFsc2UpO1xuICAgIH1cbiAgfTtcblxuICBjb25zdCBoYW5kbGVEZWxldGVTZWN0aW9uID0gYXN5bmMgKHNlYykgPT4ge1xuICAgIGlmIChzZWMuc3R1ZGVudENvdW50ID4gMCkge1xuICAgICAgYWRkVG9hc3QoXG4gICAgICAgICdDYW5ub3QgRGVsZXRlIFNlY3Rpb24nLFxuICAgICAgICBgQ2Fubm90IGRlbGV0ZSAke3NlYy5uYW1lfTogJHtzZWMuc3R1ZGVudENvdW50fSBzdHVkZW50KHMpIGN1cnJlbnRseSBlbnJvbGxlZC4gUmVhc3NpZ24gdGhlbSBmaXJzdC5gLFxuICAgICAgICAnZXJyb3InXG4gICAgICApO1xuICAgICAgcmV0dXJuO1xuICAgIH1cblxuICAgIGlmICghd2luZG93LmNvbmZpcm0oYEFyZSB5b3Ugc3VyZSB5b3Ugd2FudCB0byBkZWxldGUgJHtzZWMubmFtZX0gKCR7c2VjLmNvZGV9KT8gVGhpcyBhY3Rpb24gY2Fubm90IGJlIHVuZG9uZS5gKSkge1xuICAgICAgcmV0dXJuO1xuICAgIH1cblxuICAgIHRyeSB7XG4gICAgICBhd2FpdCBtYXN0ZXJEYXRhQXBpLmRlbGV0ZVNlY3Rpb24oc2VjLl9pZCk7XG4gICAgICBhZGRUb2FzdCgnU2VjdGlvbiBEZWxldGVkJywgYCR7c2VjLm5hbWV9IHdhcyByZW1vdmVkIGZyb20gdGhlIGluc3RpdHV0aW9uYWwgZGF0YWJhc2UuYCwgJ2luZm8nKTtcbiAgICAgIGF3YWl0IGZldGNoU2VjdGlvbnMoKTtcbiAgICAgIGlmIChvblVwZGF0ZWQpIG9uVXBkYXRlZCgpO1xuICAgIH0gY2F0Y2ggKGVycikge1xuICAgICAgYWRkVG9hc3QoXG4gICAgICAgICdEZWxldGlvbiBGYWlsZWQnLFxuICAgICAgICBlcnIucmVzcG9uc2U/LmRhdGE/LmVycm9yPy5tZXNzYWdlIHx8IGVyci5tZXNzYWdlIHx8ICdGYWlsZWQgdG8gZGVsZXRlIHNlY3Rpb24uJyxcbiAgICAgICAgJ2Vycm9yJ1xuICAgICAgKTtcbiAgICB9XG4gIH07XG5cbiAgLy8gRmlsdGVyIHNlY3Rpb25zIGZvciB0aGUgYWN0aXZlIHNlbWVzdGVyXG4gIGNvbnN0IGZpbHRlcmVkU2VjdGlvbnMgPSBzZWN0aW9ucy5maWx0ZXIoXG4gICAgKHNlYykgPT4gTnVtYmVyKHNlYy5zZW1lc3RlcikgPT09IE51bWJlcihhY3RpdmVTZW1lc3RlcilcbiAgKTtcblxuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPVwibW9kYWwtYmFja2Ryb3BcIiBvbkNsaWNrPXtvbkNsb3NlfT5cbiAgICAgIDxkaXZcbiAgICAgICAgY2xhc3NOYW1lPVwibW9kYWwtY29udGFpbmVyIG1heC13LTR4bCB3LVs5NiVdIG1heC1oLVs5MnZoXSBvdmVyZmxvdy15LWF1dG8gYmctd2hpdGUgcC02IHNtOnAtOCByb3VuZGVkLTN4bCB0ZXh0LXNsYXRlLTkwMCBzaGFkb3ctMnhsXCJcbiAgICAgICAgb25DbGljaz17KGUpID0+IGUuc3RvcFByb3BhZ2F0aW9uKCl9XG4gICAgICA+XG4gICAgICAgIHsvKiBIZWFkZXIgKi99XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LWNvbCBzbTpmbGV4LXJvdyBzbTppdGVtcy1zdGFydCBqdXN0aWZ5LWJldHdlZW4gZ2FwLTQgcGItNCBib3JkZXItYiBib3JkZXItc2xhdGUtMjAwXCI+XG4gICAgICAgICAgPGRpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgZmxleC13cmFwXCI+XG4gICAgICAgICAgICAgIDxoMiBjbGFzc05hbWU9XCJ0ZXh0LWxnIHNtOnRleHQteGwgZm9udC1ibGFjayB0ZXh0LXNsYXRlLTkwMCBtLTBcIj5cbiAgICAgICAgICAgICAgICBDbGFzc2VzLCBTZWN0aW9ucyAmIEN1cnJpY3VsdW0gTWFuYWdlbWVudFxuICAgICAgICAgICAgICA8L2gyPlxuICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJweC0yLjUgcHktMC41IHJvdW5kZWQtZnVsbCBiZy1lbWVyYWxkLTUwIHRleHQtZW1lcmFsZC03MDAgYm9yZGVyIGJvcmRlci1lbWVyYWxkLTIwMCB0ZXh0LXhzIGZvbnQtYm9sZFwiPlxuICAgICAgICAgICAgICAgIENTRSBEZXBhcnRtZW50XG4gICAgICAgICAgICAgIDwvc3Bhbj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXNsYXRlLTUwMCBmb250LW1lZGl1bSBtLTAgbXQtMVwiPlxuICAgICAgICAgICAgICBNYXN0ZXIgYWNhZGVtaWMgaGllcmFyY2h5IGFjcm9zcyA0IHVuZGVyZ3JhZHVhdGUgeWVhcnMgKDggU2VtZXN0ZXJzKSB3aXRoIGxpdmUgZGF0YWJhc2UgcGVyc2lzdGVuY2UgYW5kIGNhcGFjaXR5IHF1b3RhIGNvbnRyb2xzLlxuICAgICAgICAgICAgPC9wPlxuICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiBzaHJpbmstMFwiPlxuICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7XG4gICAgICAgICAgICAgICAgc2V0TmV3U2VjdGlvbk5hbWUoJ0UnKTtcbiAgICAgICAgICAgICAgICBzZXROZXdTZWN0aW9uU2VtZXN0ZXIoYWN0aXZlU2VtZXN0ZXIpO1xuICAgICAgICAgICAgICAgIHNldE5ld1NlY3Rpb25Db2RlKGBDU0UtRS1TJHthY3RpdmVTZW1lc3Rlcn1gKTtcbiAgICAgICAgICAgICAgICBzZXROZXdTZWN0aW9uQ2FwYWNpdHkoNjApO1xuICAgICAgICAgICAgICAgIHNldElzUHJvdmlzaW9uaW5nKHRydWUpO1xuICAgICAgICAgICAgICB9fVxuICAgICAgICAgICAgICBjbGFzc05hbWU9XCJweC0zLjUgcHktMiByb3VuZGVkLXhsIGJnLWJsdWUtNjAwIGhvdmVyOmJnLWJsdWUtNzAwIHRleHQtd2hpdGUgdGV4dC14cyBmb250LWJvbGQgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSB0cmFuc2l0aW9uLWNvbG9ycyBjdXJzb3ItcG9pbnRlciBzaGFkb3cteHNcIlxuICAgICAgICAgICAgPlxuICAgICAgICAgICAgICA8UGx1cyBzaXplPXsxNX0gLz5cbiAgICAgICAgICAgICAgPHNwYW4+KyBQcm92aXNpb24gU2VjdGlvbjwvc3Bhbj5cbiAgICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICBvbkNsaWNrPXtmZXRjaFNlY3Rpb25zfVxuICAgICAgICAgICAgICB0aXRsZT1cIlJlZnJlc2ggc2VjdGlvbnNcIlxuICAgICAgICAgICAgICBjbGFzc05hbWU9XCJwLTIgcm91bmRlZC14bCBib3JkZXIgYm9yZGVyLXNsYXRlLTIwMCBob3ZlcjpiZy1zbGF0ZS01MCB0ZXh0LXNsYXRlLTYwMCB0cmFuc2l0aW9uLWNvbG9ycyBjdXJzb3ItcG9pbnRlclwiXG4gICAgICAgICAgICA+XG4gICAgICAgICAgICAgIDxSZWZyZXNoQ3cgc2l6ZT17MTV9IGNsYXNzTmFtZT17bG9hZGluZyA/ICdhbmltYXRlLXNwaW4nIDogJyd9IC8+XG4gICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgICAgb25DbGljaz17b25DbG9zZX1cbiAgICAgICAgICAgICAgY2xhc3NOYW1lPVwicC0yIHJvdW5kZWQteGwgdGV4dC1zbGF0ZS00MDAgaG92ZXI6dGV4dC1zbGF0ZS03MDAgaG92ZXI6Ymctc2xhdGUtMTAwIHRyYW5zaXRpb24tY29sb3JzIGN1cnNvci1wb2ludGVyXCJcbiAgICAgICAgICAgICAgYXJpYS1sYWJlbD1cIkNsb3NlXCJcbiAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgPFggc2l6ZT17MTh9IC8+XG4gICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgPC9kaXY+XG5cbiAgICAgICAgey8qIFByb3Zpc2lvbiBGb3JtIERyYXdlciBpZiBvcGVuICovfVxuICAgICAgICB7aXNQcm92aXNpb25pbmcgJiYgKFxuICAgICAgICAgIDxmb3JtXG4gICAgICAgICAgICBvblN1Ym1pdD17aGFuZGxlQWRkU2VjdGlvbn1cbiAgICAgICAgICAgIGNsYXNzTmFtZT1cIm15LTQgcC01IHJvdW5kZWQtMnhsIGJnLWJsdWUtNTAvODAgYm9yZGVyIGJvcmRlci1ibHVlLTIwMCBzcGFjZS15LTMuNVwiXG4gICAgICAgICAgPlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW5cIj5cbiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC14cyBmb250LWV4dHJhYm9sZCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgdGV4dC1ibHVlLTkwMCBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41XCI+XG4gICAgICAgICAgICAgICAgPExheWVycyBzaXplPXsxNH0gY2xhc3NOYW1lPVwidGV4dC1ibHVlLTYwMFwiIC8+XG4gICAgICAgICAgICAgICAgPHNwYW4+Q3JlYXRlIE5ldyBTZWN0aW9uIFVuZGVyIFNlbWVzdGVyIHtuZXdTZWN0aW9uU2VtZXN0ZXJ9PC9zcGFuPlxuICAgICAgICAgICAgICA8L3NwYW4+XG4gICAgICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBzZXRJc1Byb3Zpc2lvbmluZyhmYWxzZSl9XG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXNsYXRlLTUwMCBob3Zlcjp0ZXh0LXNsYXRlLTgwMCBmb250LWJvbGRcIlxuICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAgQ2xvc2VcbiAgICAgICAgICAgICAgPC9idXR0b24+XG4gICAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0xIHNtOmdyaWQtY29scy00IGdhcC0zIHRleHQteHNcIj5cbiAgICAgICAgICAgICAgey8qIFNlY3Rpb24gTmFtZSAqL31cbiAgICAgICAgICAgICAgPGRpdj5cbiAgICAgICAgICAgICAgICA8bGFiZWwgY2xhc3NOYW1lPVwiZm9udC1ib2xkIHRleHQtc2xhdGUtNzAwIGJsb2NrIG1iLTFcIj5cbiAgICAgICAgICAgICAgICAgIFNlY3Rpb24gTmFtZSA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXJvc2UtNTAwXCI+Kjwvc3Bhbj5cbiAgICAgICAgICAgICAgICA8L2xhYmVsPlxuICAgICAgICAgICAgICAgIDxpbnB1dFxuICAgICAgICAgICAgICAgICAgdHlwZT1cInRleHRcIlxuICAgICAgICAgICAgICAgICAgdmFsdWU9e25ld1NlY3Rpb25OYW1lfVxuICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiB7XG4gICAgICAgICAgICAgICAgICAgIGNvbnN0IHZhbCA9IGUudGFyZ2V0LnZhbHVlO1xuICAgICAgICAgICAgICAgICAgICBzZXROZXdTZWN0aW9uTmFtZSh2YWwpO1xuICAgICAgICAgICAgICAgICAgICBjb25zdCBjbGVhbiA9IHZhbC5yZXBsYWNlKC9eU2VjdGlvblxccyovaSwgJycpLnRyaW0oKS50b1VwcGVyQ2FzZSgpO1xuICAgICAgICAgICAgICAgICAgICBzZXROZXdTZWN0aW9uQ29kZShgQ1NFLSR7Y2xlYW4gfHwgJ1gnfS1TJHtuZXdTZWN0aW9uU2VtZXN0ZXJ9YCk7XG4gICAgICAgICAgICAgICAgICB9fVxuICAgICAgICAgICAgICAgICAgcGxhY2Vob2xkZXI9XCJlLmcuIEUgKGZvciBTZWN0aW9uIEUpXCJcbiAgICAgICAgICAgICAgICAgIHJlcXVpcmVkXG4gICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgcHgtMyBweS0yIHJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ibHVlLTMwMCBiZy13aGl0ZSB0ZXh0LXhzIHRleHQtc2xhdGUtODAwIGZvbnQtYm9sZCBmb2N1czpvdXRsaW5lLW5vbmUgdXBwZXJjYXNlXCJcbiAgICAgICAgICAgICAgICAvPlxuICAgICAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgICAgICB7LyogU2VtZXN0ZXIgKi99XG4gICAgICAgICAgICAgIDxkaXY+XG4gICAgICAgICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT1cImZvbnQtYm9sZCB0ZXh0LXNsYXRlLTcwMCBibG9jayBtYi0xXCI+XG4gICAgICAgICAgICAgICAgICBUYXJnZXQgU2VtZXN0ZXIgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1yb3NlLTUwMFwiPio8L3NwYW4+XG4gICAgICAgICAgICAgICAgPC9sYWJlbD5cbiAgICAgICAgICAgICAgICA8c2VsZWN0XG4gICAgICAgICAgICAgICAgICB2YWx1ZT17bmV3U2VjdGlvblNlbWVzdGVyfVxuICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiB7XG4gICAgICAgICAgICAgICAgICAgIGNvbnN0IHNlbSA9IE51bWJlcihlLnRhcmdldC52YWx1ZSk7XG4gICAgICAgICAgICAgICAgICAgIHNldE5ld1NlY3Rpb25TZW1lc3RlcihzZW0pO1xuICAgICAgICAgICAgICAgICAgICBjb25zdCBjbGVhbiA9IG5ld1NlY3Rpb25OYW1lLnJlcGxhY2UoL15TZWN0aW9uXFxzKi9pLCAnJykudHJpbSgpLnRvVXBwZXJDYXNlKCk7XG4gICAgICAgICAgICAgICAgICAgIHNldE5ld1NlY3Rpb25Db2RlKGBDU0UtJHtjbGVhbiB8fCAnWCd9LVMke3NlbX1gKTtcbiAgICAgICAgICAgICAgICAgIH19XG4gICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgcHgtMyBweS0yIHJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ibHVlLTMwMCBiZy13aGl0ZSB0ZXh0LXhzIHRleHQtc2xhdGUtODAwIGZvbnQtYm9sZCBmb2N1czpvdXRsaW5lLW5vbmVcIlxuICAgICAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgICAgIHtbMSwgMiwgMywgNCwgNSwgNiwgNywgOF0ubWFwKChzKSA9PiAoXG4gICAgICAgICAgICAgICAgICAgIDxvcHRpb24ga2V5PXtzfSB2YWx1ZT17c30+XG4gICAgICAgICAgICAgICAgICAgICAgU2VtZXN0ZXIge3N9IChZZWFyIHtNYXRoLmNlaWwocyAvIDIpfSlcbiAgICAgICAgICAgICAgICAgICAgPC9vcHRpb24+XG4gICAgICAgICAgICAgICAgICApKX1cbiAgICAgICAgICAgICAgICA8L3NlbGVjdD5cbiAgICAgICAgICAgICAgPC9kaXY+XG5cbiAgICAgICAgICAgICAgey8qIFNlY3Rpb24gQ29kZSAqL31cbiAgICAgICAgICAgICAgPGRpdj5cbiAgICAgICAgICAgICAgICA8bGFiZWwgY2xhc3NOYW1lPVwiZm9udC1ib2xkIHRleHQtc2xhdGUtNzAwIGJsb2NrIG1iLTFcIj5cbiAgICAgICAgICAgICAgICAgIFNlY3Rpb24gQ29kZSA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXJvc2UtNTAwXCI+Kjwvc3Bhbj5cbiAgICAgICAgICAgICAgICA8L2xhYmVsPlxuICAgICAgICAgICAgICAgIDxpbnB1dFxuICAgICAgICAgICAgICAgICAgdHlwZT1cInRleHRcIlxuICAgICAgICAgICAgICAgICAgdmFsdWU9e25ld1NlY3Rpb25Db2RlfVxuICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXROZXdTZWN0aW9uQ29kZShlLnRhcmdldC52YWx1ZS50b1VwcGVyQ2FzZSgpKX1cbiAgICAgICAgICAgICAgICAgIHBsYWNlaG9sZGVyPVwiZS5nLiBDU0UtRS1TNVwiXG4gICAgICAgICAgICAgICAgICByZXF1aXJlZFxuICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIHB4LTMgcHktMiByb3VuZGVkLXhsIGJvcmRlciBib3JkZXItYmx1ZS0zMDAgYmctd2hpdGUgdGV4dC14cyBmb250LW1vbm8gZm9udC1ib2xkIHRleHQtc2xhdGUtODAwIHVwcGVyY2FzZSBmb2N1czpvdXRsaW5lLW5vbmVcIlxuICAgICAgICAgICAgICAgIC8+XG4gICAgICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgICAgIHsvKiBTZWN0aW9uIENhcGFjaXR5ICovfVxuICAgICAgICAgICAgICA8ZGl2PlxuICAgICAgICAgICAgICAgIDxsYWJlbCBjbGFzc05hbWU9XCJmb250LWJvbGQgdGV4dC1zbGF0ZS03MDAgYmxvY2sgbWItMVwiPlxuICAgICAgICAgICAgICAgICAgQ2FwYWNpdHkgKE1heCBTdHVkZW50cykgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1yb3NlLTUwMFwiPio8L3NwYW4+XG4gICAgICAgICAgICAgICAgPC9sYWJlbD5cbiAgICAgICAgICAgICAgICA8aW5wdXRcbiAgICAgICAgICAgICAgICAgIHR5cGU9XCJudW1iZXJcIlxuICAgICAgICAgICAgICAgICAgbWluPVwiMVwiXG4gICAgICAgICAgICAgICAgICBtYXg9XCI1MDBcIlxuICAgICAgICAgICAgICAgICAgdmFsdWU9e25ld1NlY3Rpb25DYXBhY2l0eX1cbiAgICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0TmV3U2VjdGlvbkNhcGFjaXR5KE51bWJlcihlLnRhcmdldC52YWx1ZSkpfVxuICAgICAgICAgICAgICAgICAgcGxhY2Vob2xkZXI9XCJlLmcuIDYwXCJcbiAgICAgICAgICAgICAgICAgIHJlcXVpcmVkXG4gICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgcHgtMyBweS0yIHJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ibHVlLTMwMCBiZy13aGl0ZSB0ZXh0LXhzIGZvbnQtYm9sZCB0ZXh0LXNsYXRlLTgwMCBmb2N1czpvdXRsaW5lLW5vbmVcIlxuICAgICAgICAgICAgICAgIC8+XG4gICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgPC9kaXY+XG5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIHB0LTFcIj5cbiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1ibHVlLTcwMCBmb250LW1lZGl1bVwiPlxuICAgICAgICAgICAgICAgIEJvdGggSE9EIGFuZCBBZG1pbiBwZXJtaXNzaW9ucyBhcmUgZW5hYmxlZCB0byBzZXQgYW5kIGFkanVzdCBzdHVkZW50IGNhcGFjaXR5LlxuICAgICAgICAgICAgICA8L3NwYW4+XG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cbiAgICAgICAgICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldElzUHJvdmlzaW9uaW5nKGZhbHNlKX1cbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInB4LTMuNSBweS0xLjUgcm91bmRlZC14bCBib3JkZXIgYm9yZGVyLXNsYXRlLTIwMCBiZy13aGl0ZSB0ZXh0LXhzIGZvbnQtYm9sZCB0ZXh0LXNsYXRlLTYwMCBob3ZlcjpiZy1zbGF0ZS01MCB0cmFuc2l0aW9uLWNvbG9yc1wiXG4gICAgICAgICAgICAgICAgPlxuICAgICAgICAgICAgICAgICAgQ2FuY2VsXG4gICAgICAgICAgICAgICAgPC9idXR0b24+XG4gICAgICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICAgICAgdHlwZT1cInN1Ym1pdFwiXG4gICAgICAgICAgICAgICAgICBkaXNhYmxlZD17c3VibWl0dGluZ31cbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInB4LTQgcHktMS41IHJvdW5kZWQteGwgYmctYmx1ZS02MDAgaG92ZXI6YmctYmx1ZS03MDAgZGlzYWJsZWQ6b3BhY2l0eS01MCB0ZXh0LXdoaXRlIHRleHQteHMgZm9udC1ib2xkIHNoYWRvdy14cyB0cmFuc2l0aW9uLWNvbG9ycyBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41IGN1cnNvci1wb2ludGVyXCJcbiAgICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAgICB7c3VibWl0dGluZyA/IChcbiAgICAgICAgICAgICAgICAgICAgPD5cbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInctMy41IGgtMy41IGJvcmRlci0yIGJvcmRlci13aGl0ZSBib3JkZXItdC10cmFuc3BhcmVudCByb3VuZGVkLWZ1bGwgYW5pbWF0ZS1zcGluXCIgLz5cbiAgICAgICAgICAgICAgICAgICAgICA8c3Bhbj5Qcm92aXNpb25pbmcuLi48L3NwYW4+XG4gICAgICAgICAgICAgICAgICAgIDwvPlxuICAgICAgICAgICAgICAgICAgKSA6IChcbiAgICAgICAgICAgICAgICAgICAgPD5cbiAgICAgICAgICAgICAgICAgICAgICA8UGx1cyBzaXplPXsxNH0gLz5cbiAgICAgICAgICAgICAgICAgICAgICA8c3Bhbj5TYXZlIFNlY3Rpb24gdG8gRGF0YWJhc2U8L3NwYW4+XG4gICAgICAgICAgICAgICAgICAgIDwvPlxuICAgICAgICAgICAgICAgICAgKX1cbiAgICAgICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICA8L2Zvcm0+XG4gICAgICAgICl9XG5cbiAgICAgICAgey8qIEFjYWRlbWljIFllYXIgVGFicyAoQWxsIDQgWWVhcnMpICovfVxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm10LTQgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgYm9yZGVyLWIgYm9yZGVyLXNsYXRlLTIwMCBwYi0yIG92ZXJmbG93LXgtYXV0b1wiPlxuICAgICAgICAgIHtbJzFzdCBZZWFyJywgJzJuZCBZZWFyJywgJzNyZCBZZWFyJywgJzR0aCBZZWFyJ10ubWFwKCh5cikgPT4gKFxuICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICBrZXk9e3lyfVxuICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBoYW5kbGVZZWFyQ2hhbmdlKHlyKX1cbiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgcHgtMy41IHB5LTEuNSByb3VuZGVkLXhsIHRleHQteHMgZm9udC1ib2xkIHRyYW5zaXRpb24tYWxsIGN1cnNvci1wb2ludGVyIHNocmluay0wICR7XG4gICAgICAgICAgICAgICAgYWN0aXZlWWVhciA9PT0geXJcbiAgICAgICAgICAgICAgICAgID8gJ2JnLWJsdWUtNjAwIHRleHQtd2hpdGUgc2hhZG93LXhzJ1xuICAgICAgICAgICAgICAgICAgOiAnYmctc2xhdGUtMTAwIHRleHQtc2xhdGUtNjAwIGhvdmVyOmJnLXNsYXRlLTIwMCdcbiAgICAgICAgICAgICAgfWB9XG4gICAgICAgICAgICA+XG4gICAgICAgICAgICAgIHt5cn1cbiAgICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICAgICkpfVxuICAgICAgICA8L2Rpdj5cblxuICAgICAgICB7LyogU2VtZXN0ZXIgVGFicyBmb3IgQ3VycmVudCBZZWFyICovfVxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm10LTMgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgZmxleC13cmFwXCI+XG4gICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC14cyBmb250LWJvbGQgdGV4dC1zbGF0ZS01MDAgbXItMVwiPlNlbWVzdGVyczo8L3NwYW4+XG4gICAgICAgICAgeyh5ZWFyU2VtZXN0ZXJNYXBbYWN0aXZlWWVhcl0gfHwgWzEsIDJdKS5tYXAoKHNlbSkgPT4gKFxuICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICBrZXk9e3NlbX1cbiAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gaGFuZGxlU2VtZXN0ZXJDaGFuZ2Uoc2VtKX1cbiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgcHgtMyBweS0xIHJvdW5kZWQtbGcgdGV4dC14cyBmb250LWJvbGQgdHJhbnNpdGlvbi1hbGwgYm9yZGVyIGN1cnNvci1wb2ludGVyICR7XG4gICAgICAgICAgICAgICAgYWN0aXZlU2VtZXN0ZXIgPT09IHNlbVxuICAgICAgICAgICAgICAgICAgPyAnYmctYmx1ZS01MCB0ZXh0LWJsdWUtNzAwIGJvcmRlci1ibHVlLTQwMCByaW5nLTEgcmluZy1ibHVlLTMwMCdcbiAgICAgICAgICAgICAgICAgIDogJ2JnLXdoaXRlIHRleHQtc2xhdGUtNjAwIGJvcmRlci1zbGF0ZS0yMDAgaG92ZXI6Ym9yZGVyLXNsYXRlLTMwMCdcbiAgICAgICAgICAgICAgfWB9XG4gICAgICAgICAgICA+XG4gICAgICAgICAgICAgIFNlbWVzdGVyIHtzZW19XG4gICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICApKX1cblxuICAgICAgICAgIHsvKiBRdWljayBqdW1wIHRvIGFsbCA4IFNlbWVzdGVycyAqL31cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm1sLWF1dG8gZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEgdGV4dC1bMTFweF0gdGV4dC1zbGF0ZS00MDAgZm9udC1zZW1pYm9sZFwiPlxuICAgICAgICAgICAgPHNwYW4+UXVpY2sganVtcDo8L3NwYW4+XG4gICAgICAgICAgICB7WzEsIDIsIDMsIDQsIDUsIDYsIDcsIDhdLm1hcCgocykgPT4gKFxuICAgICAgICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgICAgICAga2V5PXtzfVxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IGhhbmRsZVNlbWVzdGVyQ2hhbmdlKHMpfVxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17YHctNiBoLTYgcm91bmRlZC1tZCB0ZXh0LVsxMHB4XSBmb250LWJvbGQgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgdHJhbnNpdGlvbi1jb2xvcnMgJHtcbiAgICAgICAgICAgICAgICAgIGFjdGl2ZVNlbWVzdGVyID09PSBzID8gJ2JnLWJsdWUtNjAwIHRleHQtd2hpdGUnIDogJ2JnLXNsYXRlLTEwMCB0ZXh0LXNsYXRlLTYwMCBob3ZlcjpiZy1zbGF0ZS0yMDAnXG4gICAgICAgICAgICAgICAgfWB9XG4gICAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgICBTe3N9XG4gICAgICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICAgICAgKSl9XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvZGl2PlxuXG4gICAgICAgIHsvKiBBY3RpdmUgU2VjdGlvbnMgTGlzdCAqL31cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtdC01XCI+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gbWItM1wiPlxuICAgICAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQteHMgZm9udC1leHRyYWJvbGQgdGV4dC1zbGF0ZS01MDAgdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVyIG0tMFwiPlxuICAgICAgICAgICAgICBBY3RpdmUgU2VjdGlvbnMgKHthY3RpdmVZZWFyfSAtIFNlbWVzdGVyIHthY3RpdmVTZW1lc3Rlcn0pXG4gICAgICAgICAgICA8L2gzPlxuICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC14cyBmb250LWJvbGQgdGV4dC1zbGF0ZS02MDBcIj5cbiAgICAgICAgICAgICAge2ZpbHRlcmVkU2VjdGlvbnMubGVuZ3RofSB7ZmlsdGVyZWRTZWN0aW9ucy5sZW5ndGggPT09IDEgPyAnU2VjdGlvbicgOiAnU2VjdGlvbnMnfSBBdmFpbGFibGVcbiAgICAgICAgICAgIDwvc3Bhbj5cbiAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgIHtsb2FkaW5nID8gKFxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJweS0xMiB0ZXh0LWNlbnRlciB0ZXh0LXhzIHRleHQtc2xhdGUtNDAwIGJnLXNsYXRlLTUwIHJvdW5kZWQtMnhsIGJvcmRlciBib3JkZXItc2xhdGUtMjAwXCI+XG4gICAgICAgICAgICAgIDxSZWZyZXNoQ3cgc2l6ZT17MjB9IGNsYXNzTmFtZT1cImFuaW1hdGUtc3BpbiBteC1hdXRvIHRleHQtYmx1ZS01MDAgbWItMlwiIC8+XG4gICAgICAgICAgICAgIDxzcGFuPkxvYWRpbmcgaW5zdGl0dXRpb25hbCBzZWN0aW9uIGRpcmVjdG9yeS4uLjwvc3Bhbj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICkgOiBmaWx0ZXJlZFNlY3Rpb25zLmxlbmd0aCA9PT0gMCA/IChcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicC04IHRleHQtY2VudGVyIGJnLXNsYXRlLTUwIHJvdW5kZWQtMnhsIGJvcmRlciBib3JkZXItc2xhdGUtMjAwXCI+XG4gICAgICAgICAgICAgIDxMYXllcnMgc2l6ZT17Mjh9IGNsYXNzTmFtZT1cIm14LWF1dG8gdGV4dC1zbGF0ZS0zMDAgbWItMlwiIC8+XG4gICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1leHRyYWJvbGQgdGV4dC1zbGF0ZS04MDAgbS0wXCI+XG4gICAgICAgICAgICAgICAgTm8gc2VjdGlvbnMgcHJvdmlzaW9uZWQgZm9yIFNlbWVzdGVyIHthY3RpdmVTZW1lc3Rlcn1cbiAgICAgICAgICAgICAgPC9wPlxuICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtc2xhdGUtNTAwIGZvbnQtbWVkaXVtIG10LTEgbWItM1wiPlxuICAgICAgICAgICAgICAgIENyZWF0ZSBTZWN0aW9uIEEgb3IgYW55IGN1c3RvbSBzZWN0aW9uIHVuZGVyIHRoaXMgc2VtZXN0ZXIgdG8gYWxsb3cgc3R1ZGVudCByZWdpc3RyYXRpb24gYW5kIFRHIGFzc2lnbm1lbnQuXG4gICAgICAgICAgICAgIDwvcD5cbiAgICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHtcbiAgICAgICAgICAgICAgICAgIHNldE5ld1NlY3Rpb25OYW1lKCdBJyk7XG4gICAgICAgICAgICAgICAgICBzZXROZXdTZWN0aW9uU2VtZXN0ZXIoYWN0aXZlU2VtZXN0ZXIpO1xuICAgICAgICAgICAgICAgICAgc2V0TmV3U2VjdGlvbkNvZGUoYENTRS1BLVMke2FjdGl2ZVNlbWVzdGVyfWApO1xuICAgICAgICAgICAgICAgICAgc2V0TmV3U2VjdGlvbkNhcGFjaXR5KDYwKTtcbiAgICAgICAgICAgICAgICAgIHNldElzUHJvdmlzaW9uaW5nKHRydWUpO1xuICAgICAgICAgICAgICAgIH19XG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgcHgtNCBweS0yIHJvdW5kZWQteGwgYmctYmx1ZS02MDAgaG92ZXI6YmctYmx1ZS03MDAgdGV4dC13aGl0ZSB0ZXh0LXhzIGZvbnQtYm9sZCB0cmFuc2l0aW9uLWNvbG9ycyBjdXJzb3ItcG9pbnRlciBzaGFkb3cteHNcIlxuICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAgPFBsdXMgc2l6ZT17MTR9IC8+XG4gICAgICAgICAgICAgICAgPHNwYW4+KyBQcm92aXNpb24gRmlyc3QgU2VjdGlvbjwvc3Bhbj5cbiAgICAgICAgICAgICAgPC9idXR0b24+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICApIDogKFxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj5cbiAgICAgICAgICAgICAge2ZpbHRlcmVkU2VjdGlvbnMubWFwKChzZWMpID0+IHtcbiAgICAgICAgICAgICAgICBjb25zdCBlbnJvbGxlZCA9IHNlYy5zdHVkZW50Q291bnQgfHwgMDtcbiAgICAgICAgICAgICAgICBjb25zdCBjYXBhY2l0eSA9IHNlYy5jYXBhY2l0eSB8fCA2MDtcbiAgICAgICAgICAgICAgICBjb25zdCBmaWxsUGN0ID0gTWF0aC5taW4oMTAwLCBNYXRoLnJvdW5kKChlbnJvbGxlZCAvIGNhcGFjaXR5KSAqIDEwMCkpO1xuICAgICAgICAgICAgICAgIGNvbnN0IGlzRWRpdGluZyA9IGVkaXRpbmdTZWNJZCA9PT0gc2VjLl9pZDtcblxuICAgICAgICAgICAgICAgIGNvbnN0IGJhckNvbG9yID1cbiAgICAgICAgICAgICAgICAgIGZpbGxQY3QgPj0gOTVcbiAgICAgICAgICAgICAgICAgICAgPyAnYmctcm9zZS01MDAnXG4gICAgICAgICAgICAgICAgICAgIDogZmlsbFBjdCA+PSA4MFxuICAgICAgICAgICAgICAgICAgICA/ICdiZy1hbWJlci01MDAnXG4gICAgICAgICAgICAgICAgICAgIDogJ2JnLWVtZXJhbGQtNTAwJztcblxuICAgICAgICAgICAgICAgIHJldHVybiAoXG4gICAgICAgICAgICAgICAgICA8ZGl2XG4gICAgICAgICAgICAgICAgICAgIGtleT17c2VjLl9pZH1cbiAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwicC00IHNtOnAtNSByb3VuZGVkLTJ4bCBiZy13aGl0ZSBib3JkZXIgYm9yZGVyLXNsYXRlLTIwMCBzaGFkb3ctMnhzIGhvdmVyOmJvcmRlci1ibHVlLTMwMCB0cmFuc2l0aW9uLWFsbCBmbGV4IGZsZXgtY29sIHNtOmZsZXgtcm93IHNtOml0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gZ2FwLTRcIlxuICAgICAgICAgICAgICAgICAgPlxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMS41IG1pbi13LTBcIj5cbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIGZsZXgtd3JhcFwiPlxuICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1iYXNlIGZvbnQtYmxhY2sgdGV4dC1zbGF0ZS05MDBcIj57c2VjLm5hbWV9PC9zcGFuPlxuICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwicHgtMiBweS0wLjUgcm91bmRlZC1tZCBiZy1ibHVlLTUwIHRleHQtYmx1ZS03MDAgdGV4dC14cyBmb250LW1vbm8gZm9udC1ib2xkIGJvcmRlciBib3JkZXItYmx1ZS0yMDBcIj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAge3NlYy5jb2RlfVxuICAgICAgICAgICAgICAgICAgICAgICAgPC9zcGFuPlxuICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwicHgtMiBweS0wLjUgcm91bmRlZC1tZCBiZy1zbGF0ZS0xMDAgdGV4dC1zbGF0ZS03MDAgdGV4dC14cyBmb250LWJvbGRcIj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgU2VtIHtzZWMuc2VtZXN0ZXJ9IOKAoiBZZWFyIHtzZWMueWVhcn1cbiAgICAgICAgICAgICAgICAgICAgICAgIDwvc3Bhbj5cbiAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgdGV4dC14cyB0ZXh0LXNsYXRlLTUwMCBmb250LW1lZGl1bVwiPlxuICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4+XG4gICAgICAgICAgICAgICAgICAgICAgICAgIFRHOnsnICd9XG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxzdHJvbmcgY2xhc3NOYW1lPVwidGV4dC1zbGF0ZS03MDAgZm9udC1ib2xkXCI+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAge3NlYy50Z05hbWUgfHwgJ05vdCBBc3NpZ25lZCd9XG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvc3Ryb25nPlxuICAgICAgICAgICAgICAgICAgICAgICAgPC9zcGFuPlxuICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4+4oCiPC9zcGFuPlxuICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4+XG4gICAgICAgICAgICAgICAgICAgICAgICAgIERlcGFydG1lbnQ6eycgJ31cbiAgICAgICAgICAgICAgICAgICAgICAgICAgPHN0cm9uZyBjbGFzc05hbWU9XCJ0ZXh0LXNsYXRlLTcwMCBmb250LWJvbGRcIj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7c2VjLmRlcGFydG1lbnQ/LmNvZGUgfHwgJ0NTRSd9XG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvc3Ryb25nPlxuICAgICAgICAgICAgICAgICAgICAgICAgPC9zcGFuPlxuICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgICAgICAgICAgICAgey8qIENhcGFjaXR5ICYgRW5yb2xsbWVudCBQcm9ncmVzcyBCYXIgKi99XG4gICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJwdC0yIG1heC13LW1kXCI+XG4gICAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiB0ZXh0LXhzIGZvbnQtYm9sZCBtYi0xXCI+XG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtc2xhdGUtNjAwXCI+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgRW5yb2xsZWQ6IDxzdHJvbmcgY2xhc3NOYW1lPVwidGV4dC1zbGF0ZS05MDBcIj57ZW5yb2xsZWR9PC9zdHJvbmc+IC8ge2NhcGFjaXR5fSBTdHVkZW50c1xuICAgICAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+XG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtc2xhdGUtNDAwIGZvbnQtbW9ubyB0ZXh0LVsxMXB4XVwiPntmaWxsUGN0fSUgUXVvdGE8L3NwYW4+XG4gICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidy1mdWxsIGgtMiByb3VuZGVkLWZ1bGwgYmctc2xhdGUtMTAwIG92ZXJmbG93LWhpZGRlblwiPlxuICAgICAgICAgICAgICAgICAgICAgICAgICA8ZGl2XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgaC1mdWxsIHJvdW5kZWQtZnVsbCB0cmFuc2l0aW9uLWFsbCBkdXJhdGlvbi0zMDAgJHtiYXJDb2xvcn1gfVxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPXt7IHdpZHRoOiBgJHtNYXRoLm1heChmaWxsUGN0LCA0KX0lYCB9fVxuICAgICAgICAgICAgICAgICAgICAgICAgICAvPlxuICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgICAgICAgICAgIHsvKiBSaWdodCBBY3Rpb24gQ29udHJvbHM6IENhcGFjaXR5IEVkaXRpbmcgJiBEZWxldGUgKi99XG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIuNSBzaHJpbmstMFwiPlxuICAgICAgICAgICAgICAgICAgICAgIHtpc0VkaXRpbmcgPyAoXG4gICAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgYmctYmx1ZS01MCBwLTEuNSByb3VuZGVkLXhsIGJvcmRlciBib3JkZXItYmx1ZS0yMDBcIj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIGZvbnQtYm9sZCB0ZXh0LWJsdWUtOTAwIHBsLTFcIj5RdW90YTo8L2xhYmVsPlxuICAgICAgICAgICAgICAgICAgICAgICAgICA8aW5wdXRcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICB0eXBlPVwibnVtYmVyXCJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBtaW49XCIxXCJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBtYXg9XCI1MDBcIlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHZhbHVlPXtlZGl0aW5nQ2FwYWNpdHl9XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRFZGl0aW5nQ2FwYWNpdHkoZS50YXJnZXQudmFsdWUpfVxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInctMTYgcHgtMiBweS0xIGJnLXdoaXRlIGJvcmRlciBib3JkZXItYmx1ZS0zMDAgcm91bmRlZC1sZyB0ZXh0LXhzIGZvbnQtYmxhY2sgdGV4dC1zbGF0ZS05MDAgZm9jdXM6b3V0bGluZS1ub25lXCJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBhdXRvRm9jdXNcbiAgICAgICAgICAgICAgICAgICAgICAgICAgLz5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IGhhbmRsZVNhdmVDYXBhY2l0eShzZWMuX2lkKX1cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBkaXNhYmxlZD17dXBkYXRpbmdDYXBhY2l0eX1cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJwLTEuNSBiZy1ibHVlLTYwMCB0ZXh0LXdoaXRlIHJvdW5kZWQtbGcgaG92ZXI6YmctYmx1ZS03MDAgdHJhbnNpdGlvbi1jb2xvcnNcIlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHRpdGxlPVwiU2F2ZSBuZXcgY2FwYWNpdHlcIlxuICAgICAgICAgICAgICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPENoZWNrIHNpemU9ezE0fSAvPlxuICAgICAgICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldEVkaXRpbmdTZWNJZChudWxsKX1cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJwLTEuNSBiZy13aGl0ZSB0ZXh0LXNsYXRlLTYwMCBib3JkZXIgYm9yZGVyLXNsYXRlLTIwMCByb3VuZGVkLWxnIGhvdmVyOmJnLXNsYXRlLTEwMCB0cmFuc2l0aW9uLWNvbG9yc1wiXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgdGl0bGU9XCJDYW5jZWxcIlxuICAgICAgICAgICAgICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPFggc2l6ZT17MTR9IC8+XG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgICAgICAgICAgKSA6IChcbiAgICAgICAgICAgICAgICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgICAgICAgICAgICAgICAgdHlwZT1cImJ1dHRvblwiXG4gICAgICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHtcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBzZXRFZGl0aW5nU2VjSWQoc2VjLl9pZCk7XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgc2V0RWRpdGluZ0NhcGFjaXR5KHNlYy5jYXBhY2l0eSB8fCA2MCk7XG4gICAgICAgICAgICAgICAgICAgICAgICAgIH19XG4gICAgICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInB4LTMgcHktMS41IHJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1zbGF0ZS0yMDAgaG92ZXI6Ym9yZGVyLWJsdWUtMzAwIGhvdmVyOmJnLWJsdWUtNTAvNTAgdGV4dC1zbGF0ZS03MDAgdGV4dC14cyBmb250LWJvbGQgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSB0cmFuc2l0aW9uLWNvbG9ycyBjdXJzb3ItcG9pbnRlclwiXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHRpdGxlPVwiSE9EL0FkbWluOiBTZXQgb3IgdXBkYXRlIHNlY3Rpb24gY2FwYWNpdHlcIlxuICAgICAgICAgICAgICAgICAgICAgICAgPlxuICAgICAgICAgICAgICAgICAgICAgICAgICA8RWRpdDIgc2l6ZT17MTN9IGNsYXNzTmFtZT1cInRleHQtYmx1ZS02MDBcIiAvPlxuICAgICAgICAgICAgICAgICAgICAgICAgICA8c3Bhbj5TZXQgQ2FwYWNpdHkgKHtjYXBhY2l0eX0pPC9zcGFuPlxuICAgICAgICAgICAgICAgICAgICAgICAgPC9idXR0b24+XG4gICAgICAgICAgICAgICAgICAgICAgKX1cblxuICAgICAgICAgICAgICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IGhhbmRsZURlbGV0ZVNlY3Rpb24oc2VjKX1cbiAgICAgICAgICAgICAgICAgICAgICAgIGRpc2FibGVkPXtlbnJvbGxlZCA+IDB9XG4gICAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2BwLTIgcm91bmRlZC14bCB0cmFuc2l0aW9uLWNvbG9ycyBjdXJzb3ItcG9pbnRlciAke1xuICAgICAgICAgICAgICAgICAgICAgICAgICBlbnJvbGxlZCA+IDBcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA/ICd0ZXh0LXNsYXRlLTMwMCBib3JkZXIgYm9yZGVyLXNsYXRlLTEwMCBjdXJzb3Itbm90LWFsbG93ZWQgb3BhY2l0eS01MCdcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA6ICd0ZXh0LXJvc2UtNTAwIGhvdmVyOmJnLXJvc2UtNTAgYm9yZGVyIGJvcmRlci1yb3NlLTIwMCdcbiAgICAgICAgICAgICAgICAgICAgICAgIH1gfVxuICAgICAgICAgICAgICAgICAgICAgICAgdGl0bGU9e2Vucm9sbGVkID4gMCA/IGBDYW5ub3QgZGVsZXRlOiAke2Vucm9sbGVkfSBzdHVkZW50cyBlbnJvbGxlZGAgOiAnRGVsZXRlIGVtcHR5IHNlY3Rpb24nfVxuICAgICAgICAgICAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgICAgICAgICAgIDxUcmFzaDIgc2l6ZT17MTV9IC8+XG4gICAgICAgICAgICAgICAgICAgICAgPC9idXR0b24+XG5cbiAgICAgICAgICAgICAgICAgICAgICB7LyogUHJvbW90ZSAmIERlbW90ZSBjb250cm9scyAqL31cbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0xIGJvcmRlci1sIGJvcmRlci1zbGF0ZS0yMDAgcGwtMlwiPlxuICAgICAgICAgICAgICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICAgICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgZGlzYWJsZWQ9e3NlYy5zZW1lc3RlciA8PSAxfVxuICAgICAgICAgICAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBzZXRNb3ZlVGFyZ2V0KHsgc2VjdGlvbjogc2VjLCBkaXJlY3Rpb246ICdwcmV2JyB9KX1cbiAgICAgICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwicHgtMiBweS0xLjUgcm91bmRlZC14bCBib3JkZXIgYm9yZGVyLXNsYXRlLTIwMCBob3ZlcjpiZy1zbGF0ZS01MCB0ZXh0LXNsYXRlLTcwMCB0ZXh0LXhzIGZvbnQtYm9sZCBkaXNhYmxlZDpvcGFjaXR5LTQwIGN1cnNvci1wb2ludGVyIHRyYW5zaXRpb24tY29sb3JzIHNoYWRvdy0yeHNcIlxuICAgICAgICAgICAgICAgICAgICAgICAgICB0aXRsZT17c2VjLnNlbWVzdGVyIDw9IDEgPyAnTWluIHNlbWVzdGVyJyA6IGBEZW1vdGUgdG8gU2VtZXN0ZXIgJHtzZWMuc2VtZXN0ZXIgLSAxfWB9XG4gICAgICAgICAgICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAgICAgICAgICAgIOKXgCBTZW0ge3NlYy5zZW1lc3RlciAtIDF9XG4gICAgICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgICAgICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgICAgICAgICAgICAgICAgdHlwZT1cImJ1dHRvblwiXG4gICAgICAgICAgICAgICAgICAgICAgICAgIGRpc2FibGVkPXtzZWMuc2VtZXN0ZXIgPj0gOH1cbiAgICAgICAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0TW92ZVRhcmdldCh7IHNlY3Rpb246IHNlYywgZGlyZWN0aW9uOiAnbmV4dCcgfSl9XG4gICAgICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInB4LTIgcHktMS41IHJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ibHVlLTYwMCBiZy1ibHVlLTYwMCBob3ZlcjpiZy1ibHVlLTcwMCB0ZXh0LXdoaXRlIHRleHQteHMgZm9udC1ib2xkIGRpc2FibGVkOm9wYWNpdHktNDAgY3Vyc29yLXBvaW50ZXIgdHJhbnNpdGlvbi1jb2xvcnMgc2hhZG93LTJ4c1wiXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHRpdGxlPXtzZWMuc2VtZXN0ZXIgPj0gOCA/ICdNYXggc2VtZXN0ZXInIDogYFByb21vdGUgdG8gU2VtZXN0ZXIgJHtzZWMuc2VtZXN0ZXIgKyAxfWB9XG4gICAgICAgICAgICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAgICAgICAgICAgIFNlbSB7c2VjLnNlbWVzdGVyICsgMX0g4pa2XG4gICAgICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICApO1xuICAgICAgICAgICAgICB9KX1cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICl9XG4gICAgICAgIDwvZGl2PlxuXG4gICAgICAgIHsvKiBGb290ZXIgKi99XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibXQtNiBwdC00IGJvcmRlci10IGJvcmRlci1zbGF0ZS0yMDAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuXCI+XG4gICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXNsYXRlLTUwMCBmb250LW1lZGl1bVwiPlxuICAgICAgICAgICAg8J+SoSBTZWN0aW9ucyBjcmVhdGVkIGhlcmUgYXJlIGluc3RhbnRseSBhY3RpdmUgaW4gSE9ELCBURywgQWRtaW4sIGFuZCBTdHVkZW50IHBvcnRhbHMuXG4gICAgICAgICAgPC9zcGFuPlxuICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgIG9uQ2xpY2s9e29uQ2xvc2V9XG4gICAgICAgICAgICBjbGFzc05hbWU9XCJweC02IHB5LTIuNSByb3VuZGVkLXhsIHRleHQteHMgZm9udC1ib2xkIGJnLXNsYXRlLTkwMCBob3ZlcjpiZy1ibGFjayB0ZXh0LXdoaXRlIHRyYW5zaXRpb24tY29sb3JzIGN1cnNvci1wb2ludGVyIHNoYWRvdy14c1wiXG4gICAgICAgICAgPlxuICAgICAgICAgICAgRG9uZVxuICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICAgey8qIE1vdmUgU2VtZXN0ZXIgQ29uZmlybWF0aW9uIE1vZGFsICovfVxuICAgICAgICB7bW92ZVRhcmdldCAmJiAoXG4gICAgICAgICAgPE1vdmVTZW1lc3Rlck1vZGFsXG4gICAgICAgICAgICBzZWN0aW9uPXttb3ZlVGFyZ2V0LnNlY3Rpb259XG4gICAgICAgICAgICBkaXJlY3Rpb249e21vdmVUYXJnZXQuZGlyZWN0aW9ufVxuICAgICAgICAgICAgb25DbG9zZT17KCkgPT4gc2V0TW92ZVRhcmdldChudWxsKX1cbiAgICAgICAgICAgIG9uU3VjY2Vzcz17KCkgPT4ge1xuICAgICAgICAgICAgICBzZXRNb3ZlVGFyZ2V0KG51bGwpO1xuICAgICAgICAgICAgICBmZXRjaFNlY3Rpb25zKCk7XG4gICAgICAgICAgICAgIGlmIChvblVwZGF0ZWQpIG9uVXBkYXRlZCgpO1xuICAgICAgICAgICAgfX1cbiAgICAgICAgICAvPlxuICAgICAgICApfVxuICAgICAgPC9kaXY+XG4gICAgPC9kaXY+XG4gICk7XG59XG4iXSwiZmlsZSI6IkM6L1VzZXJzL0hQL09uZURyaXZlL0Rlc2t0b3AvY29uc2lkZXJhdGlvbiBtYW5hZ2VtZW50L2Zyb250ZW5kL3NyYy9jb21wb25lbnRzL21vZGFscy9DbGFzc2VzQ3VycmljdWx1bU1vZGFsLmpzeCJ9

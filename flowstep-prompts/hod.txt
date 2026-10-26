@@ -1,0 +1,123 @@
+================================================================================
+FLOWSTEP UI GENERATION PROMPT: HEAD OF DEPARTMENT (HOD) WORKSPACE (WEB + RESPONSIVE)
+APPLICATION: CampusFlow Lite (Academic Consideration & ERP Management System)
+PORTAL: Head of Department (HOD) Workspace
+================================================================================
+
+[SYSTEM / DESIGN ROLE]
+You are a Principal Product Designer generating a comprehensive, modern SaaS Head of Department (HOD) administrative dashboard and application approval ledger for 1440px Desktop, 1024px Laptop, 768px Tablet, and 375px Mobile screens.
+
+[DESIGN SYSTEM SPECIFICATIONS]
+- Canvas Background: #F8FAFC (Slate 50).
+- Card Surfaces: #FFFFFF with 16px/24px rounded corners, 1px border rgba(226, 232, 240, 0.85), soft layered SaaS shadow: 0 1px 3px rgba(0,0,0,0.04).
+- Button Rules:
+  * Primary Action: SaaS Royal Blue gradient (180deg, #2563EB 0%, #1D4ED8 100%), text-white, 8px radius.
+  * Secondary / Neutral Action Button: #FFFFFF background, border 1px #E2E8F0, text #0F172A, hover #EFF6FF.
+  * CRITICAL COLOR RULE: Zero green or red action buttons! "Attendance Clearances" header button is styled in clean neutral white with blue icon; "Approve" button is SaaS Royal Blue (#2563EB); "Reject" button is Clean Neutral Slate Outline (#FFFFFF, border #CBD5E1, text #475569).
+- Option Selections vs Buttons:
+  * Filter dropdowns (e.g., Semester & Section on `/hod/considerations`) must look like distinct select controls with 8px radius, blue text (#1D4ED8), and blue hover/focus rings, NOT rounded-full pill buttons!
+  * Filter category tabs have solid SaaS Blue #2563EB when active, and rich blue hover (#EFF6FF, border #BFDBFE, text #1D4ED8) when inactive.
+
+--------------------------------------------------------------------------------
+1. DESKTOP LAYOUT: HOD DASHBOARD (`/hod` - 1440px Viewport)
+--------------------------------------------------------------------------------
+
+A. TOP APP HEADER (Sticky Frosted Glass):
+   - Background: rgba(255, 255, 255, 0.92) with backdrop-filter: blur(12px) and bottom border #E2E8F0.
+   - Left: OIST CSE Emblem, "CampusFlow Lite", "HOD WORKSPACE" pill.
+   - Center: "HOD Dashboard" verified badge with institution shield icon.
+   - Right: Notification Bell with count ("3"), HOD user chip ("Hod cse", "HOD"), Sign-out icon.
+
+B. HERO SECTION (Split Banner Grid):
+   - Left Hero Content:
+     * Category Tag: "🏛️ HOD Office" in clean 11px pill.
+     * Greeting: "Good Evening, Hod cse! 👋" in 28px font-black #0F172A.
+     * Description: "Here's what's happening in your CSE department today."
+     * Action Bar (Row of controls):
+       1) Date/Time Pill: Calendar icon, "Sat, Oct 24, 2026", Clock icon, "07:35 PM" in clean slate container.
+       2) "Attendance Clearances" Button: Clean white button (#FFFFFF, border #E2E8F0, text #0F172A, blue FileText icon, hover #EFF6FF, NO GREEN!).
+       3) "Send Notice" Button: SaaS Royal Blue primary button (#2563EB, text-white, Send icon).
+   - Right Hero Campus Banner:
+     * Panoramic photograph of Oriental Institute of Science & Technology campus building.
+     * Quote Overlay: "Better systems, Better education. — OIST CSE" with dark gradient overlay.
+
+C. MIDDLE ROW: 6 KEY STAT & QUICK ACTION CARDS (6-Column Grid):
+   - Card 1 ("Pending Approvals"):
+     * Label: "Pending Approvals" in 14px bold #0F172A, AlertCircle icon in soft rose ring.
+     * Big Metric: "3" in 32px font-black #E11D48.
+     * Note: "3 requires attention" with decorative subtle wave graphic.
+   - Card 2 ("Tg Recommendation"):
+     * Label: "Tg Recommendation", ShieldCheck icon in soft blue ring.
+     * Big Metric: "2" in 32px font-black #2563EB.
+     * Note: "2 Cons • 0 Leaves".
+   - Card 3 ("Add Faculty"):
+     * Neutral quick action card with soft blue graduation cap container (NO GREEN!).
+     * Title: "Add Faculty" in 14px font-extrabold #0F172A, subtitle "Add faculty member".
+   - Card 4 ("Add Student"):
+     * Blue user-plus container. Title: "Add Student", subtitle "Register new student".
+   - Card 5 ("Manage TGs"):
+     * Indigo shield container. Title: "Manage TGs", subtitle "Teacher Guardian allocations".
+   - Card 6 ("Section Progression"):
+     * Purple layers container. Title: "Section Progression", subtitle "Promote or demote sections".
+
+D. MIDDLE-BOTTOM: 50-50 SPLIT CONTAINERS:
+   - LEFT CONTAINER: "Semester Distribution"
+     * Header: Calendar icon, "Semester Distribution" heading, "View all ->" blue link button.
+     * Left side (45%): Interactive SVG donut chart showing student proportion across semesters, centered total enrolled count ("Students Total Enrolled").
+     * Right side (55%): 8-semester interactive card grid (1st Sem to 8th Sem) displaying student count, percentage pill, and proportional mini progress bar. Hovering on any semester triggers rich blue outline (#93C5FD) and updates Section Overview.
+   - RIGHT CONTAINER: "Section Overview (CSE Only)"
+     * Header: Users icon, "Section Overview (CSE Only)" heading.
+     * Option Controls (Top Right):
+       - "Sem" Label + Semester Dropdown: Clean 8px rounded select box (#FFFFFF, border #CBD5E1, font-bold text #1D4ED8, blue focus ring, distinct from buttons).
+       - "Promote / Demote" Button: Subtle purple/neutral action button.
+       - "View details ->" Blue link button.
+     * 4 Section Cards Grid (CSE-A, CSE-B, CSE-C, CSE-D):
+       - Each card shows section code, student count over capacity ("21 / 60"), "Students (Quota)" label, and "Active" status pill with pulsing indicator dot.
+
+--------------------------------------------------------------------------------
+2. DESKTOP LAYOUT: HOD CONSIDERATIONS & CLEARANCES (`/hod/considerations`)
+--------------------------------------------------------------------------------
+
+A. PAGE TITLE & DESCRIPTION:
+   - Title: "Department Applications & Attendance Clearances" (with "HOD Digital Sign-off" subtag).
+   - Description: "Departmental records of attendance consideration applications, student leave applications, and official clearances."
+
+B. CATEGORY FILTER TABS (Option Selector):
+   - Category Tabs: "All Applications (23)", "Awaiting HOD Sign-off (3)", "Direct Review Applications (3)", "Leave Applications (7)", "Attendance Considerations (16)".
+   - Active Tab: Solid SaaS Blue #2563EB, text-white, bold counter badge.
+   - Inactive Tabs: White surface with rich blue hover feedback (#EFF6FF, border #BFDBFE, text #1D4ED8).
+
+C. FILTER & ACTION TOOLBAR (Distinct Elements):
+   - Option Filters:
+     * Semester Filter Box: Filter icon, "Semester:" label in slate-600, Select dropdown ("All Semesters", "Sem 1".."Sem 8") with blue text #1D4ED8 and 8px border.
+     * Section Filter Box: Filter icon, "Section:" label in slate-600, Select dropdown ("All Sections", "Section A", "Section B").
+   - Action Buttons:
+     * "Approved Clearances" Button: Neutral white button (#FFFFFF, border #CBD5E1, text #334155, FileSpreadsheet icon).
+     * "Live Sheet" Button: Neutral button with Google Sheets logo.
+     * "Export Excel" Button: Neutral button with Excel logo.
+     * "CSV" Button: Neutral button with download icon.
+     * "Print Report" Button: Neutral button with printer icon.
+
+D. APPLICATION APPROVAL CARD:
+   - Header: Document icon, Consideration Category ("Special Activity"), Student Info ("Avinash Bharti (0105CS241101)"), Dates, Status pill ("Pending Review").
+   - Category & Date Grid: Category box, Date range box (Number of Days: 1).
+   - Requested Lectures Box: Clock icon, "REQUESTED LECTURES", "3 Periods • P2, P3, P4".
+   - Sanctioned Lectures Stepper: Stepper box with "-" and "+" buttons and count indicator.
+   - Justification Box (Right): Student reason display.
+   - Action Buttons (Bottom):
+     * "Approve" Button: SaaS Royal Blue primary button (#2563EB, text-white, CheckCircle icon, NO GREEN!).
+     * "Reject" Button: Clean Neutral Slate Outline button (#FFFFFF, border #CBD5E1, text #475569, XCircle icon, hover #F1F5F9, NO RED!).
+
+--------------------------------------------------------------------------------
+3. MOBILE RESPONSIVE LAYOUT (375px Viewport)
+--------------------------------------------------------------------------------
+- Full vertical stack with zero horizontal window scroll (overflow-x: hidden).
+- Hero section stacks header pills vertically; "Attendance Clearances" and "Send Notice" buttons occupy full width with 44px tap heights.
+- Middle 6 cards stack into a clean 2x3 or single-column layout with 12px touch margins.
+- Donut chart and Section Overview stack vertically.
+- Considerations page: Filter select controls stack cleanly on mobile with 44px heights; Approve and Reject buttons display side-by-side with 44px tap targets.
+
+--------------------------------------------------------------------------------
+4. COPY-PASTE READY FLOWSTEP PROMPT
+--------------------------------------------------------------------------------
+"Generate an enterprise SaaS Head of Department (HOD) administrative portal UI for 'CampusFlow Lite' (OIST CSE Department) for both 1440px desktop and 375px mobile viewports. Include two primary views: (1) HOD Dashboard featuring sticky frosted glass header, hero greeting with date/time pill, clean white 'Attendance Clearances' button with blue icon (no green!), royal blue 'Send Notice' button, and college campus banner; middle row of 6 stat and quick action cards ('Pending Approvals', 'Tg Recommendation', 'Add Faculty' in neutral blue styling, 'Add Student', 'Manage TGs', 'Section Progression'); bottom 50/50 split with interactive donut chart semester distribution on left and CSE Section Overview with semester dropdown filter and section quota cards on right; (2) Department Considerations & Clearances page with category filter tabs with blue hover and active states, distinct rectangular form select dropdowns for Semester and Section (must look like form inputs, not buttons), action toolbar for Approved Clearances, Live Sheet, and Excel export, and detailed application approval cards featuring period steppers, primary royal blue 'Approve' button (#2563EB), and neutral slate outline 'Reject' button (#FFFFFF, border #CBD5E1, text #475569). Strictly remove all green and red colors from action buttons, style option selections with blue color and hover feedback, and ensure 44px touch targets on mobile with zero horizontal overflow."

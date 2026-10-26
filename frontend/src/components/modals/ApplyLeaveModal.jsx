@@ -59,23 +59,18 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
   return (
     <div className="modal-backdrop" onClick={!submitting ? onClose : undefined}>
       <div
-        className="modal-container max-w-lg w-[95%]"
+        className="modal-container max-w-lg w-[95%] bg-white rounded-2xl border border-slate-200/80 shadow-2xl p-6 sm:p-7 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="modal-header pb-3 border-b border-slate-100 flex items-start justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
-              <Calendar size={18} />
-            </div>
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900 m-0">
-                Apply for Leave
-              </h3>
-              <p className="text-xs text-slate-500 m-0">
-                Apply for medical, personal, or college duty leave
-              </p>
-            </div>
+        <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 className="font-bold text-xl text-slate-900 tracking-tight m-0">
+              Apply for Leave
+            </h2>
+            <p className="text-slate-500 text-sm mt-0.5 m-0">
+              Submit a leave application for medical, duty, or personal reasons
+            </p>
           </div>
           <button
             type="button"
@@ -88,20 +83,20 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-3">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-3 pb-3">
           {formError && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
-              <AlertCircle size={15} className="shrink-0" />
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700 flex items-center gap-2">
+              <AlertCircle size={16} className="shrink-0" />
               <span>{formError}</span>
             </div>
           )}
 
           {/* Leave Category Segmented Toggle */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Leave Category <span className="text-rose-500">*</span>
+            <label className="block font-semibold text-slate-800 text-sm mb-1.5">
+              Leave category
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2.5">
               {[
                 { id: 'Medical', label: 'Medical' },
                 { id: 'College Duty', label: 'College Duty' },
@@ -114,10 +109,10 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
                     type="button"
                     disabled={submitting}
                     onClick={() => setCategory(cat.id)}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    className={`py-2.5 px-3 rounded-xl text-sm font-semibold transition-all border cursor-pointer ${
                       isSelected
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 font-bold ring-1 ring-indigo-500/20 shadow-2xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                     }`}
                   >
                     {cat.label}
@@ -130,55 +125,55 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
           {/* From Date & To Date */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                From Date <span className="text-rose-500">*</span>
+              <label htmlFor="leave-start-date" className="block font-semibold text-slate-800 text-sm mb-1.5">
+                Start date
               </label>
               <input
+                id="leave-start-date"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
                 disabled={submitting}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-white text-slate-900 px-3.5 py-2.5 text-sm outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 cursor-pointer transition-all"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                To Date <span className="text-rose-500">*</span>
+              <label htmlFor="leave-end-date" className="block font-semibold text-slate-800 text-sm mb-1.5">
+                End date
               </label>
               <input
+                id="leave-end-date"
                 type="date"
                 value={endDate}
                 min={startDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 required
                 disabled={submitting}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-white text-slate-900 px-3.5 py-2.5 text-sm outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 cursor-pointer transition-all"
               />
             </div>
           </div>
 
           {/* Reason / Justification */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Reason for Leave <span className="text-rose-500">*</span>
+            <label htmlFor="leave-justification" className="block font-semibold text-slate-800 text-sm mb-1.5">
+              Justification
             </label>
             <textarea
+              id="leave-justification"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g., Prescribed medical rest due to viral fever / Attending official college event..."
+              placeholder="Explain the reason for your request"
               rows={3}
               required
               disabled={submitting}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 bg-white text-slate-900 p-3 text-sm placeholder:text-slate-400 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 min-h-[90px] resize-y transition-all"
             />
           </div>
 
           {/* Supporting Document */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Supporting Document {category === 'Medical' ? '(Required for > 2 days)' : '(Optional)'}
-            </label>
             <DocumentUploader
               label=""
               selectedFile={attachment}
@@ -186,26 +181,27 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
               onFileVerified={setAttachment}
               onChange={setAttachment}
               onFileRemove={() => setAttachment(null)}
-              hint="Attach medical prescription, certificate, or official duty slip (PDF, JPG, PNG up to 5 MB)"
+              hint=""
             />
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+          {/* Footer Actions */}
+          <div className="flex pt-2 pb-1 justify-end gap-3 items-center">
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
+              className="px-6 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm shadow-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-60 cursor-pointer"
+              className="px-7 py-2.5 rounded-xl bg-primary hover:bg-indigo-700 text-white font-bold text-sm shadow-xs transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {submitting ? <span>Submitting Application...</span> : <span>Submit Application</span>}
+              {submitting && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+              <span>Submit</span>
             </button>
           </div>
         </form>

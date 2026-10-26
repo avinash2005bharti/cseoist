@@ -41,6 +41,13 @@ router.get(
   leavesController.getHODQueue
 );
 
+// HOD / Admin / TG recommendations history
+router.get(
+  '/tg-history',
+  authorize('HOD', 'ADMIN', 'TG'),
+  leavesController.getTGHistory
+);
+
 // Admin review queue (for HOD leaves)
 router.get(
   '/admin-queue',

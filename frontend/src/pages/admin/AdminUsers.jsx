@@ -200,6 +200,8 @@ export default function AdminUsers() {
       setNewSecCode('');
       setNewSecCapacity(60);
       fetchSections();
+      window.dispatchEvent(new CustomEvent('campusflow_sections_changed', { detail: { semester: semNum } }));
+      window.dispatchEvent(new Event('campusflow_queue_changed'));
     } catch (err) {
       addToast({
         type: 'danger',

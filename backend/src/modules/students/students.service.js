@@ -280,35 +280,53 @@ export const deleteStudent = async (id) => {
 
 export const searchPeers = async (query = {}, user = null) => {
   const search = (query.search || query.q || '').trim();
-  if (!search || search.length < 2) {
-    return [];
+  const limit = Math.min(parseInt(query.limit, 10) || 1000, 1000);
+  const filter = {};
+
+  if (query.semester && String(query.semester).toUpperCase() !== 'ALL') {
+    const semNum = parseInt(String(query.semester).replace(/\D/g, ''), 10);
+    if (!isNaN(semNum)) {
+      filter.semester = semNum;
+    }
   }
 
-  const searchRegex = new RegExp(search, 'i');
-  const matchingUsers = await User.find({
-    role: 'STUDENT',
-    isActive: true,
-    name: searchRegex,
-  }).select('_id name');
+  if (query.section && String(query.section).toUpperCase() !== 'ALL') {
+    filter.section = query.section;
+  }
 
-  const students = await Student.find({
-    $or: [
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    const matchingUsers = await User.find({
+      role: 'STUDENT',
+      isActive: true,
+      name: searchRegex,
+    }).select('_id name');
+
+    filter.$or = [
       { rollNumber: searchRegex },
+      { enrollmentNumber: searchRegex },
       { user: { $in: matchingUsers.map((u) => u._id) } },
-    ],
-  })
-    .populate('user', 'name')
-    .populate('section', 'name code semester')
-    .select('_id rollNumber user section semester')
-    .limit(20);
+    ];
+  }
+
+  const students = await Student.find(filter)
+    .populate('user', 'name email phone profileImage')
+    .populate('section', 'name code year semester')
+    .populate('department', 'name code')
+    .select('_id rollNumber enrollmentNumber user section semester department')
+    .sort({ rollNumber: 1 })
+    .limit(limit);
 
   return students.map((s) => ({
     _id: s._id,
     id: s._id,
     name: s.user?.name || 'Student',
+    user: s.user,
     rollNumber: s.rollNumber,
+    enrollmentNumber: s.enrollmentNumber,
     section: s.section,
-    semester: s.semester,
+    semester: s.semester || s.section?.semester,
+    department: s.department,
   }));
 };
 

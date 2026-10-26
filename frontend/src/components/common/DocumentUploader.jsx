@@ -102,16 +102,16 @@ export default function DocumentUploader({
       )}
 
       {activeFile ? (
-        <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50/60 shadow-xs">
+        <div className="flex items-center justify-between p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/50 shadow-xs">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
               <CheckCircle2 size={16} />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-bold text-slate-800 truncate">
+              <div className="text-xs font-bold text-slate-900 truncate">
                 {activeFile.name}
               </div>
-              <div className="text-[11px] text-emerald-700 font-medium">
+              <div className="text-[11px] text-indigo-700 font-medium">
                 {(activeFile.size / 1024).toFixed(1)} KB • Attached & Verified
               </div>
             </div>
@@ -128,12 +128,12 @@ export default function DocumentUploader({
       ) : (
         <div
           onClick={() => !uploading && fileInputRef.current?.click()}
-          className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
+          className={`flex flex-col items-center justify-center p-5 rounded-xl border border-dashed transition-all cursor-pointer ${
             uploading
-              ? 'border-blue-400 bg-blue-50/40'
+              ? 'border-indigo-400 bg-indigo-50/60'
               : error || uploadError
-              ? 'border-rose-300 bg-rose-50/30 hover:border-rose-400'
-              : 'border-slate-300 bg-slate-50/60 hover:bg-blue-50/40 hover:border-blue-400'
+              ? 'border-rose-300 bg-rose-50/40 hover:border-rose-400'
+              : 'border-indigo-200 bg-indigo-50/40 hover:bg-indigo-50/70 hover:border-indigo-300'
           }`}
         >
           <input
@@ -146,20 +146,18 @@ export default function DocumentUploader({
           />
 
           {uploading ? (
-            <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 py-1">
-              <Loader2 size={16} className="animate-spin" />
-              <span>Uploading & verifying with ImageKit...</span>
+            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 py-1">
+              <Loader2 size={18} className="animate-spin" />
+              <span>Uploading supporting document...</span>
             </div>
           ) : (
             <>
-              <div className="w-9 h-9 rounded-xl bg-white shadow-xs border border-slate-200 flex items-center justify-center text-slate-500 mb-1.5">
-                <Upload size={16} />
+              <Upload className="size-5 text-indigo-600 mb-1" />
+              <div className="font-semibold text-sm text-slate-800">
+                Upload supporting document
               </div>
-              <div className="text-xs font-bold text-slate-800">
-                Click to attach certificate or slip
-              </div>
-              <div className="text-[11px] text-slate-500 mt-0.5">
-                PDF, JPG, or PNG (Max 5 MB)
+              <div className="text-xs text-slate-500">
+                PDF, PNG, or JPG
               </div>
             </>
           )}

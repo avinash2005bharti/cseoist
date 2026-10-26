@@ -5,6 +5,7 @@ import { considerationApi, leaveApi, reportApi, masterDataApi } from '../../api'
 import OfficialClearancesLedgerModal from '../../components/modals/OfficialClearancesLedgerModal.jsx';
 import FormalApplicationModal from '../../components/modals/FormalApplicationModal.jsx';
 import PrintClearanceReportModal from '../../components/modals/PrintClearanceReportModal.jsx';
+import './Screen-21.screen.css';
 import {
   STATUS_LABELS,
   REQUEST_TYPE_LABELS,
@@ -29,6 +30,7 @@ import {
   CheckCheck,
   FileSpreadsheet,
   UserCheck,
+  AlertCircle,
 } from 'lucide-react';
 
 const GoogleSheetsLogo = () => (
@@ -128,6 +130,19 @@ export default function HodConsiderations() {
   const [showLedgerModal, setShowLedgerModal] = useState(false);
   const [selectedSanctionItem, setSelectedSanctionItem] = useState(null);
   const [showPrintReportModal, setShowPrintReportModal] = useState(false);
+
+  // Screen 7 Desktop Drawer & Screen 8 Mobile Bottom Sheet Review State
+  const [reviewingItem, setReviewingItem] = useState(null);
+  const [reviewDecision, setReviewDecision] = useState('APPROVE');
+  const [reviewRemarks, setReviewRemarks] = useState('');
+  const [reviewApprovedPeriods, setReviewApprovedPeriods] = useState(3);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
+
+  const [currentDateTime, setCurrentDateTime] = useState({
+    date: 'Sat, Oct 24, 2026',
+    time: '07:35 PM',
+  });
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -408,119 +423,142 @@ export default function HodConsiderations() {
     }
   };
 
-  const handleReject = async (item) => {
-    const remark = window.prompt(
-      'Enter reason for rejection (min 5 characters):',
-      'Documentation insufficient or unverified'
-    );
-    if (remark === null) return;
-    const finalRemark =
-      (remark || '').trim().length >= 5
-        ? remark.trim()
-        : 'Documentation insufficient or unverified';
+  const handleOpenReview = (item, defaultDecision = 'APPROVE') => {
+    setReviewingItem(item);
+    setReviewDecision(defaultDecision);
+    setReviewRemarks('');
+    const periods =
+      sanctionedPeriods[item._id] ||
+      item.approvedPeriods ||
+      (Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : (item.requestedPeriods || 3));
+    setReviewApprovedPeriods(periods);
+    setReviewError(null);
+  };
 
-    // Store rejected ID immediately so the request permanently remains rejected
-    storeRejectedId(item._id);
+  const handleConfirmReview = async () => {
+    if (!reviewingItem) return;
+    setReviewError(null);
+    const isReject = reviewDecision === 'REJECT';
 
+    setReviewSubmitting(true);
     try {
-      if (item.requestKind === 'LEAVE') {
-        await leaveApi.finalReview(item._id, {
-          decision: 'REJECT',
-          remarks: finalRemark,
+      const decisionPayload = reviewDecision;
+      const remarksPayload =
+        reviewRemarks.trim() ||
+        (isReject ? 'Authorization Declined by Department' : 'Approved by HOD');
+
+      if (reviewingItem.requestKind === 'LEAVE') {
+        await leaveApi.finalReview(reviewingItem._id, {
+          decision: decisionPayload,
+          remarks: remarksPayload,
         });
       } else {
-        await considerationApi.hodReview(item._id, {
-          decision: 'REJECT',
-          remarks: finalRemark,
+        await considerationApi.hodReview(reviewingItem._id, {
+          decision: decisionPayload,
+          approvedPeriods: decisionPayload === 'APPROVE' ? Number(reviewApprovedPeriods) : undefined,
+          remarks: remarksPayload,
         });
       }
 
+      if (isReject) {
+        storeRejectedId(reviewingItem._id);
+      }
+
       addToast(
-        'Request Rejected',
-        `Request for ${item.student?.user?.name || 'Student'} marked as rejected.`,
-        'info'
+        'Review Submitted',
+        `Application successfully ${decisionPayload === 'APPROVE' ? 'approved' : 'rejected'}.`,
+        'success'
       );
+
       setItems((prev) =>
         prev.map((i) =>
-          i._id === item._id
+          i._id === reviewingItem._id
             ? {
                 ...i,
-                status: 'REJECTED',
+                status: decisionPayload === 'APPROVE' ? 'APPROVED_BY_HOD' : 'REJECTED',
+                approvedPeriods: decisionPayload === 'APPROVE' ? Number(reviewApprovedPeriods) : i.approvedPeriods,
                 hodReview: {
                   ...i.hodReview,
-                  decision: 'REJECT',
-                  remarks: finalRemark,
+                  decision: decisionPayload,
+                  approvedPeriods: decisionPayload === 'APPROVE' ? Number(reviewApprovedPeriods) : undefined,
+                  remarks: remarksPayload,
                 },
               }
             : i
         )
       );
+
+      setReviewingItem(null);
       fetchData();
     } catch (err) {
-      addToast(
-        'Rejection Recorded',
-        `Request for ${item.student?.user?.name || 'Student'} marked as rejected.`,
-        'info'
+      setReviewError(
+        err.response?.data?.message ||
+        err.response?.data?.error?.message ||
+        err.message ||
+        'Failed to submit review decision.'
       );
-      setItems((prev) =>
-        prev.map((i) =>
-          i._id === item._id
-            ? {
-                ...i,
-                status: 'REJECTED',
-                hodReview: {
-                  ...i.hodReview,
-                  decision: 'REJECT',
-                  remarks: finalRemark,
-                },
-              }
-            : i
-        )
-      );
+    } finally {
+      setReviewSubmitting(false);
     }
   };
 
+  const handleReject = async (item) => {
+    handleOpenReview(item, 'REJECT');
+  };
+
   return (
-    <div className="flex flex-col gap-4 w-full min-w-0 font-sans">
-      {/* Top Header matching exact screenshot text and inline badge */}
+    <div className="hod-page-container">
+      {/* Top Header matching exact Screen 21 & Screen 22 */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight m-0 flex items-baseline gap-3 flex-wrap">
-          <span>Department Applications & Attendance Clearances</span>
-          <span className="text-xs font-bold text-slate-600">HOD Digital Sign-off</span>
-        </h1>
-        <p className="text-xs text-slate-500 font-medium mt-1 m-0">
-          Departmental records of attendance consideration applications, student leave applications, and official clearances.
-        </p>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold w-fit mb-2">
+          🏛️ HOD Office
+        </span>
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight m-0 flex items-center gap-3 flex-wrap">
+              <span>Department Applications & Attendance Clearances</span>
+              <span className="bg-sky-100 text-sky-800 text-xs font-bold px-3 py-1 rounded-full">
+                HOD Digital Sign-off
+              </span>
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1.5 m-0">
+              Departmental records of attendance consideration applications, student leave applications, and official clearances.
+            </p>
+          </div>
+
+          {/* Date & Time pill (Screen 21 desktop right) */}
+          <div className="hidden lg:flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-2xs shrink-0">
+            <div className="flex items-center gap-1.5">
+              <Calendar size={14} className="text-blue-600" />
+              <span>{currentDateTime.date}</span>
+            </div>
+            <span className="text-slate-300">•</span>
+            <div className="flex items-center gap-1.5">
+              <Clock size={14} className="text-blue-600" />
+              <span>{currentDateTime.time}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 1. Tabs Bar ON TOP with icons and counts */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5">
+      {/* 1. Category Filter Tabs (Screen 21 & Screen 22) */}
+      <div className="hod-tabs-track">
         {[
-          { id: 'ALL', label: 'All Applications', count: totalCount, icon: Layers },
-          { id: 'AWAITING_HOD', label: 'Awaiting HOD Sign-off', count: awaitingCount, icon: Clock },
-          { id: 'BYPASS_QUEUE', label: 'Direct Review Applications', count: bypassCount, isZap: true, icon: Zap },
-          { id: 'LEAVES', label: 'Leave Applications', count: leavesCount, icon: Calendar },
-          { id: 'CONSIDERATIONS', label: 'Attendance Considerations', count: considerationsCount, icon: CheckCircle2 },
-          { id: 'CLEARED', label: 'Approved Applications', count: clearedCount, icon: CheckCheck },
+          { id: 'ALL', label: 'All Applications', count: totalCount },
+          { id: 'AWAITING_HOD', label: 'Awaiting HOD Sign-off', count: awaitingCount },
+          { id: 'BYPASS_QUEUE', label: 'Direct Review Applications', count: bypassCount },
+          { id: 'LEAVES', label: 'Leave Applications', count: leavesCount },
+          { id: 'CONSIDERATIONS', label: 'Attendance Considerations', count: considerationsCount },
         ].map((tab) => {
           const isActive = activeTab === tab.id;
-          const TabIcon = tab.icon;
           return (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 shadow-2xs ${
-                isActive
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900'
-              }`}
+              className={`hod-tab-btn ${isActive ? 'active' : ''}`}
             >
-              {tab.isZap ? (
-                <Zap size={13} className={isActive ? 'text-white fill-white' : 'text-amber-500 fill-amber-500 shrink-0'} />
-              ) : TabIcon ? (
-                <TabIcon size={13} className={isActive ? 'text-white' : 'text-slate-400 shrink-0'} />
-              ) : null}
               <span>{tab.label}</span>
               <span className="font-bold">({tab.count})</span>
             </button>
@@ -528,144 +566,150 @@ export default function HodConsiderations() {
         })}
       </div>
 
-      {/* 2. Controls & Actions Bar BELOW Tabs - with official logos and compact text */}
-      <div className="flex flex-wrap items-center gap-2 pt-0.5">
-        {/* Semester Filter Pill */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-2xs text-xs font-semibold text-slate-600">
-          <Filter size={12} className="text-blue-600 shrink-0" />
-          <span>Semester:</span>
-          <select
-            value={semesterFilter}
-            onChange={(e) => setSemesterFilter(e.target.value)}
-            className="text-blue-600 font-bold bg-transparent border-none p-0 focus:outline-none cursor-pointer pr-1"
-          >
-            <option value="ALL">All Semesters</option>
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-            <option value="3">Semester 3</option>
-            <option value="4">Semester 4</option>
-            <option value="5">Semester 5</option>
-            <option value="6">Semester 6</option>
-            <option value="7">Semester 7</option>
-            <option value="8">Semester 8</option>
-          </select>
-          <ChevronDown size={12} className="text-blue-600 -ml-1 pointer-events-none" />
+      {/* 2. Filter & Action Toolbar (Screen 21 & Screen 22) */}
+      <div className="hod-toolbar-card">
+        {/* Top Filter Selects: distinct rectangular form select controls */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Semester Filter */}
+          <div className="hod-filter-select-box">
+            <Filter size={14} className="text-slate-500 shrink-0" />
+            <span>Semester:</span>
+            <select
+              value={semesterFilter}
+              onChange={(e) => setSemesterFilter(e.target.value)}
+              className="hod-filter-select"
+            >
+              <option value="ALL">All Semesters</option>
+              <option value="1">Sem 1</option>
+              <option value="2">Sem 2</option>
+              <option value="3">Sem 3</option>
+              <option value="4">Sem 4</option>
+              <option value="5">Sem 5</option>
+              <option value="6">Sem 6</option>
+              <option value="7">Sem 7</option>
+              <option value="8">Sem 8</option>
+            </select>
+            <ChevronDown size={14} className="text-blue-600 pointer-events-none -ml-1 shrink-0" />
+          </div>
+
+          {/* Section Filter */}
+          <div className="hod-filter-select-box">
+            <Filter size={14} className="text-slate-500 shrink-0" />
+            <span>Section:</span>
+            <select
+              value={sectionFilter}
+              onChange={(e) => setSectionFilter(e.target.value)}
+              className="hod-filter-select"
+            >
+              <option value="ALL">All Sections</option>
+              {uniqueSections.map((sec) => (
+                <option key={sec} value={sec}>
+                  Section {sec}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={14} className="text-blue-600 pointer-events-none -ml-1 shrink-0" />
+          </div>
         </div>
 
-        {/* Section Filter Pill */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-2xs text-xs font-semibold text-slate-600">
-          <Filter size={12} className="text-blue-600 shrink-0" />
-          <span>Section:</span>
-          <select
-            value={sectionFilter}
-            onChange={(e) => setSectionFilter(e.target.value)}
-            className="text-blue-600 font-bold bg-transparent border-none p-0 focus:outline-none cursor-pointer pr-1"
+        {/* Action Buttons Row */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
+          {/* Approved Clearances */}
+          <button
+            type="button"
+            onClick={() => setShowLedgerModal(true)}
+            className="hod-toolbar-btn"
+            title="Open Official Clearances Ledger"
           >
-            <option value="ALL">All Sections</option>
-            {uniqueSections.map((sec) => (
-              <option key={sec} value={sec}>
-                Section {sec}
-              </option>
-            ))}
-          </select>
-          <ChevronDown size={12} className="text-blue-600 -ml-1 pointer-events-none" />
+            <FileSpreadsheet size={15} className="text-blue-600 shrink-0" />
+            <span>Approved Clearances</span>
+          </button>
+
+          {/* Google Live Sheet */}
+          <button
+            type="button"
+            onClick={() =>
+              addToast(
+                'Google Live Sheet',
+                'Connecting to institutional Google Sheet ledger synchronization...',
+                'info'
+              )
+            }
+            className="hod-toolbar-btn"
+            title="Synchronize with institutional Google Live Sheet"
+          >
+            <GoogleSheetsLogo />
+            <span>Live Sheet</span>
+          </button>
+
+          {/* Export Excel */}
+          <button
+            type="button"
+            onClick={() => {
+              openModal('EXPORT_REPORTS', {
+                initialType: activeTab === 'LEAVES' ? 'leaves' : 'considerations',
+                initialSemester: semesterFilter !== 'ALL' ? semesterFilter : 'ALL',
+              });
+            }}
+            className="hod-toolbar-btn"
+            title="Export section-wise spreadsheet (.xlsx)"
+          >
+            <ExcelLogo />
+            <span>Export Excel</span>
+          </button>
+
+          {/* CSV */}
+          <button
+            type="button"
+            onClick={() => {
+              const csvContent =
+                'data:text/csv;charset=utf-8,\uFEFF' +
+                'Category,Student,Roll,Dates,Status\n' +
+                filteredItems
+                  .map(
+                    (i) =>
+                      `"${i.category || i.eventType || 'OD'}","${i.student?.user?.name || 'Student'}","${i.student?.rollNumber || ''}","${i.startDate}","${i.status}"`
+                  )
+                  .join('\n');
+              const encodedUri = encodeURI(csvContent);
+              const link = document.createElement('a');
+              link.setAttribute('href', encodedUri);
+              link.setAttribute('download', `requests_central_${Date.now()}.csv`);
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+            }}
+            className="hod-toolbar-btn"
+            title="Download as CSV text file"
+          >
+            <FileText size={14} className="text-slate-600 shrink-0" />
+            <span>CSV</span>
+          </button>
+
+          {/* Print Report */}
+          <button
+            type="button"
+            onClick={() => setShowPrintReportModal(true)}
+            className="hod-toolbar-btn"
+            title="Generate printable clearance document"
+          >
+            <Printer size={14} className="text-slate-600 shrink-0" />
+            <span>Print Report</span>
+          </button>
         </div>
-
-        {/* Clearances Ledger with ledger icon */}
-        <button
-          type="button"
-          onClick={() => setShowLedgerModal(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-          title="Open Official Clearances Ledger"
-        >
-          <FileSpreadsheet size={14} className="text-blue-600 shrink-0" />
-          <span>Approved Clearances</span>
-        </button>
-
-        {/* Google Live Sheet with Google Sheets logo */}
-        <button
-          type="button"
-          onClick={() =>
-            addToast(
-              'Google Live Sheet',
-              'Connecting to institutional Google Sheet ledger synchronization...',
-              'info'
-            )
-          }
-          className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-          title="Synchronize with institutional Google Live Sheet"
-        >
-          <GoogleSheetsLogo />
-          <span>Live Sheet</span>
-        </button>
-
-        {/* Export Excel with Excel logo */}
-        <button
-          type="button"
-          onClick={() => {
-            openModal('EXPORT_REPORTS', {
-              initialType: activeTab === 'LEAVES' ? 'leaves' : 'considerations',
-              initialSemester: semesterFilter !== 'ALL' ? semesterFilter : 'ALL',
-            });
-          }}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-          title="Export section-wise spreadsheet (.xlsx)"
-        >
-          <ExcelLogo />
-          <span>Export Excel</span>
-        </button>
-
-        {/* CSV with CSV icon */}
-        <button
-          type="button"
-          onClick={() => {
-            const csvContent =
-              'data:text/csv;charset=utf-8,\uFEFF' +
-              'Category,Student,Roll,Dates,Status\n' +
-              filteredItems
-                .map(
-                  (i) =>
-                    `"${i.category || i.eventType || 'OD'}","${i.student?.user?.name || 'Student'}","${i.student?.rollNumber || ''}","${i.startDate}","${i.status}"`
-                )
-                .join('\n');
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `requests_central_${Date.now()}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-          }}
-          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-          title="Download as CSV text file"
-        >
-          <FileText size={13} className="text-emerald-700 shrink-0" />
-          <span>CSV</span>
-        </button>
-
-        {/* Print Report with Printer icon */}
-        <button
-          type="button"
-          onClick={() => setShowPrintReportModal(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-          title="Generate printable clearance document"
-        >
-          <Printer size={13} className="text-slate-700 shrink-0" />
-          <span>Print Report</span>
-        </button>
       </div>
 
-      {/* Request Cards Ledger matching screenshot */}
+      {/* Application Cards (Screen 21 Desktop & Screen 22 Mobile) */}
       {sortedFilteredItems.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center flex flex-col items-center justify-center my-3 shadow-2xs">
-          <FileText size={36} className="text-slate-300 mb-3" />
-          <h3 className="text-sm sm:text-base font-extrabold text-slate-800 m-0">No Requests Found</h3>
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center flex flex-col items-center justify-center my-2 shadow-2xs">
+          <FileText size={40} className="text-slate-300 mb-3" />
+          <h3 className="text-base font-extrabold text-slate-800 m-0">No Requests Found</h3>
           <p className="text-xs text-slate-500 mt-1 max-w-sm m-0">
             There are no consideration or leave requests matching the active filters.
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-5 pt-1">
+        <div className="flex flex-col gap-4">
           {sortedFilteredItems.map((item) => {
             const approved = isApproved(item);
             const rejected = isRejected(item);
@@ -674,352 +718,451 @@ export default function HodConsiderations() {
             const studentName = item.student?.user?.name || item.student?.name || item.applicant?.name || 'Student';
             const rollNo = item.student?.rollNumber || item.applicant?.rollNumber || 'N/A';
             const enrollNo = item.student?.enrollmentNumber || rollNo;
-            const itemIdStr = item._id ? `#${item._id}` : '';
+            const secName = item.student?.section?.name || item.student?.section?.code || item.section || 'CSE-B';
 
-          const categoryName =
-            item.category ||
-            REQUEST_TYPE_LABELS[item.eventType || item.type || item.leaveType] ||
-            'Hackathon / Technical Competition';
+            const categoryName =
+              item.category ||
+              REQUEST_TYPE_LABELS[item.eventType || item.type || item.leaveType] ||
+              'Special Activity';
 
-          const fromDateStr = formatDateSlash(item.startDate);
-          const toDateStr = formatDateSlash(item.endDate || item.startDate);
-          const numDays = 1;
+            const fromDateStr = formatDateSlash(item.startDate);
+            const toDateStr = formatDateSlash(item.endDate || item.startDate);
 
-          const currentSanctioned = sanctionedPeriods[item._id] || item.approvedPeriods || 3;
+            const currentSanctioned = sanctionedPeriods[item._id] || item.approvedPeriods || 3;
 
-          return (
-            <div
-              key={item._id}
-              className="bg-white rounded-3xl border border-slate-200 shadow-2xs hover:shadow-xs transition-all overflow-hidden p-5 sm:p-6"
-            >
-              {/* Card Top Row */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-3">
-                <div className="flex items-start gap-3.5 min-w-0">
-                  {/* Blue Document Squircle Icon matching screenshot */}
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
-                    <FileText size={20} />
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-base font-extrabold text-slate-900 m-0 leading-tight">
-                        {item.requestKind === 'LEAVE' ? 'Leave Application: ' : 'Consideration: '}
-                        {categoryName}
-                      </h3>
-                      {Boolean(item.isGroup || (item.groupMembers && item.groupMembers.length > 0)) && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs flex items-center gap-1">
-                          <Users size={11} className="text-indigo-600" />
-                          <span>Group ({item.groupMembers?.length || 'Multiple'} Students)</span>
-                        </span>
-                      )}
+            return (
+              <div
+                key={item._id}
+                className="hod-app-card"
+              >
+                {/* Card Top Row: Student info & Status badge */}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3.5 min-w-0">
+                    <div className="hod-icon-squircle">
+                      <FileText size={20} />
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50/90 border border-amber-300 text-slate-900 shadow-2xs">
-                        {item.isGroup && (
-                          <span className="text-[10px] font-black uppercase text-indigo-700 tracking-wider">
-                            ★ Lead:
+                    <div className="min-w-0">
+                      <h3 className="text-base font-extrabold text-slate-900 m-0 leading-tight">
+                        {studentName} <span className="font-normal text-slate-500 text-sm ml-1.5 font-mono">{enrollNo}</span>
+                      </h3>
+                      <div className="text-xs text-slate-500 font-medium mt-1 flex items-center gap-1.5 flex-wrap">
+                        <span>{categoryName}</span>
+                        <span>•</span>
+                        <span>{fromDateStr}</span>
+                        {secName && (
+                          <>
+                            <span>•</span>
+                            <span className="font-semibold text-slate-600">{secName}</span>
+                          </>
+                        )}
+                        {Boolean(item.isGroup || (item.groupMembers && item.groupMembers.length > 0)) && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs flex items-center gap-1">
+                            <Users size={11} className="text-indigo-600" />
+                            <span>Group ({item.groupMembers?.length || 'Multiple'} Students)</span>
                           </span>
                         )}
-                        {/* Highlighted Student Name */}
-                        <span className="font-black text-slate-950 bg-amber-200/90 text-amber-950 px-2 py-0.5 rounded text-xs border border-amber-300/80 shadow-2xs">
-                          {studentName}
-                        </span>
-                        <span className="font-mono text-[11px] font-bold text-slate-600">
-                          ({enrollNo})
-                        </span>
-                      </span>
-                      <span className="text-slate-300">•</span>
-                      <span className="text-slate-400 font-mono text-[11px] truncate max-w-[280px]" title={itemIdStr}>
-                        {itemIdStr}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mt-1.5">
-                      <Calendar size={13} className="text-slate-400 shrink-0" />
-                      <span>
-                        {fromDateStr} - {toDateStr}
-                      </span>
-                    </div>
-
-                    {Boolean(item.isGroup && item.groupMembers && item.groupMembers.length > 0) && (() => {
-                      const activeMembers = item.groupMembers.filter((m) => {
-                        const isExcluded = (item.studentAudits || []).some(
-                          (a) => (a.student?._id || a.student)?.toString() === (m._id || m)?.toString() && a.status === 'EXCLUDED'
-                        );
-                        return !isExcluded;
-                      });
-
-                      if (activeMembers.length === 0) return null;
-
-                      return (
-                        <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-2.5 mt-2.5">
-                          <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
-                            <span className="text-[10px] font-black text-indigo-900 uppercase tracking-wider bg-indigo-50 px-2 py-1 rounded-md border border-indigo-200 shadow-2xs">
-                              Group Members ({activeMembers.length}):
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => openModal('AUDIT_GROUP_STUDENTS', { request: item, userRole: 'HOD' })}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs transition-colors cursor-pointer"
-                              title="Audit and manage participating group members"
-                            >
-                              <UserCheck size={12} />
-                              <span>Audit Students</span>
-                            </button>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
-                            {activeMembers.map((m, idx) => {
-                              const mName = m.user?.name || m.name || 'Student';
-                              const mRoll = m.enrollmentNumber || m.rollNumber || '';
-                              const mSec = m.section?.name || m.section?.code || '';
-                              const isLead =
-                                (m._id && item.groupLeader && String(m._id) === String(item.groupLeader._id || item.groupLeader)) ||
-                                (idx === 0 && !item.groupLeader);
-                              return (
-                                <span
-                                  key={m._id || idx}
-                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs shadow-2xs border transition-all ${
-                                    isLead
-                                      ? 'bg-indigo-50 border-indigo-300 text-indigo-950 ring-1 ring-indigo-200'
-                                      : 'bg-amber-50/70 border-amber-300 text-amber-950'
-                                  }`}
-                                >
-                                  {isLead ? (
-                                    <span className="text-amber-600 font-black text-xs">★ Lead:</span>
-                                  ) : (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                                  )}
-                                  {/* Highlighted Student Name */}
-                                  <span
-                                    className={`font-black px-1.5 py-0.5 rounded text-xs tracking-tight shadow-2xs ${
-                                      isLead
-                                        ? 'bg-indigo-200/90 text-indigo-950 border border-indigo-300'
-                                        : 'bg-amber-200/90 text-amber-950 border border-amber-300/80'
-                                    }`}
-                                  >
-                                    {mName}
-                                  </span>
-                                  <span
-                                    className={`font-mono text-[10px] font-semibold ${
-                                      isLead ? 'text-indigo-700' : 'text-slate-600'
-                                    }`}
-                                  >
-                                    ({mRoll || mSec})
-                                  </span>
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                {/* Status Badges on Right Side matching screenshot */}
-                <div className="flex flex-col items-start sm:items-end shrink-0">
-                  {approved ? (
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-                      Approved
-                    </span>
-                  ) : rejected ? (
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
-                      Rejected
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
-                      Pending Review
-                    </span>
-                  )}
-
-                  <span
-                    className={`text-xs font-bold mt-2 ${
-                      approved
-                        ? 'text-emerald-700'
-                        : rejected
-                        ? 'text-rose-600'
-                        : 'text-amber-700'
-                    }`}
-                  >
-                    {approved
-                      ? 'Completed & Synced'
-                      : rejected
-                      ? 'Authorization Declined'
-                      : 'Est. resolution today'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card Body: 50/50 Balanced 2-Column Split matching screenshot */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-3 items-stretch">
-                {/* Left Column */}
-                <div className="flex flex-col gap-3 justify-between">
-                  {/* Top Parameters: Category box & Date box side by side */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Category Box */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-3 flex flex-col justify-center">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        CATEGORY
-                      </span>
-                      <span className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
-                        {categoryName}
-                      </span>
-                    </div>
-
-                    {/* Date Box */}
-                    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider py-1 border-b border-slate-200 text-center">
-                        DATE
-                      </div>
-                      <div className="grid grid-cols-3 text-center border-b border-slate-200">
-                        <div className="py-1 text-[10px] text-slate-400 border-r border-slate-200">From</div>
-                        <div className="py-1 text-[10px] text-slate-400 border-r border-slate-200">To</div>
-                        <div className="py-1 text-[10px] text-slate-400">Number of Days</div>
-                      </div>
-                      <div className="grid grid-cols-3 text-center">
-                        <div className="py-1.5 text-xs font-bold text-slate-900 border-r border-slate-200">{fromDateStr}</div>
-                        <div className="py-1.5 text-xs font-bold text-slate-900 border-r border-slate-200">{toDateStr}</div>
-                        <div className="py-1.5 text-xs font-bold text-blue-600">{numDays}</div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Requested Periods Box matching screenshot */}
-                  <div className="p-3 rounded-xl bg-[#f0f8ff] border border-blue-200 flex flex-col gap-0.5">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-700 uppercase tracking-wider">
-                      <Clock size={13} className="text-blue-600" />
+                  {/* Status Badge */}
+                  <div className="shrink-0">
+                    {approved ? (
+                      <span className="hod-badge-approved">Approved</span>
+                    ) : rejected ? (
+                      <span className="hod-badge-rejected">Rejected</span>
+                    ) : (
+                      <span className="hod-badge-pending">Pending Review</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3-Box Information Grid */}
+                <div className="hod-info-grid">
+                  {/* Box 1: Category */}
+                  <div className="hod-info-box">
+                    <div className="hod-info-label">
+                      CATEGORY
+                    </div>
+                    <div className="hod-info-value">
+                      {categoryName}
+                    </div>
+                    <div className="hod-info-subtext">
+                      {fromDateStr}
+                    </div>
+                  </div>
+
+                  {/* Box 2: Requested Lectures */}
+                  <div className="hod-info-box">
+                    <div className="hod-info-label">
+                      <Clock size={12} className="text-blue-600" />
                       <span>REQUESTED LECTURES</span>
                     </div>
-                    <p className="text-xs font-bold text-blue-900 m-0">
+                    <div className="hod-info-value">
                       {formatPeriodsDisplay(item.requestedPeriods)}
-                    </p>
+                    </div>
                   </div>
 
-                  {/* Sanctioned Period Stepper Box matching Image 1 */}
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-[#faf5ff] border border-purple-200 flex items-center justify-between gap-3">
-                    <div>
-                      <span className="block text-xs font-bold text-purple-900 leading-tight">
-                        Sanctioned Lectures
-                      </span>
-                      <span className="block text-[10px] font-medium text-purple-600 mt-0.5">
-                        (Default: as requested)
-                      </span>
+                  {/* Box 3: Sanctioned Lectures Stepper */}
+                  <div className="hod-info-box justify-between">
+                    <div className="hod-info-label">
+                      SANCTIONED LECTURES
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <div className="border border-purple-200 rounded-lg bg-white px-2 py-0.5 flex items-center gap-2 shadow-2xs">
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="hod-stepper-control">
                         <button
                           type="button"
                           onClick={() => !approved && handleStepChange(item._id, -1)}
                           disabled={approved}
-                          className="text-purple-700 font-bold hover:text-purple-900 disabled:opacity-50 cursor-pointer text-xs"
+                          className="hod-stepper-btn"
                           aria-label="Decrease periods"
                         >
                           –
                         </button>
-
-                        <span className="w-4 text-center font-bold text-xs text-purple-900">
+                        <span className="hod-stepper-count">
                           {currentSanctioned}
                         </span>
-
                         <button
                           type="button"
                           onClick={() => !approved && handleStepChange(item._id, 1)}
                           disabled={approved}
-                          className="text-purple-700 font-bold hover:text-purple-900 disabled:opacity-50 cursor-pointer text-xs"
+                          className="hod-stepper-btn"
                           aria-label="Increase periods"
                         >
                           +
                         </button>
                       </div>
-                      <span className="text-xs font-bold text-purple-900">
+                      <span className="text-xs font-semibold text-slate-600">
                         Periods
                       </span>
                     </div>
                   </div>
+                </div>
 
-                  {/* Bottom Action Area matching Image 1 */}
+                {/* Justification Box (full-width) */}
+                <div className="hod-justification-box">
+                  <div className="hod-info-label">
+                    JUSTIFICATION
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-800 font-normal m-0 leading-relaxed">
+                    {item.description || item.reason || 'Participated in an approved department activity.'}
+                  </p>
+
+                  {/* Proof Attachment link */}
+                  {(() => {
+                    const att = item.attachments?.[0] || (item.documentFileId ? { fileId: item.documentFileId, name: item.documentOriginalName } : null);
+                    if (!att) return null;
+                    return (
+                      <div className="pt-2 mt-2 border-t border-slate-200/80 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => viewAttachment(att.fileId, att.name || 'Document')}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
+                        >
+                          <Eye size={13} />
+                          <span>View Attached Proof ({att.name || 'Document'})</span>
+                        </button>
+                        <span className="text-[11px] text-slate-400">PDF / Image</span>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Group Members Section */}
+                  {Boolean(item.isGroup && item.groupMembers && item.groupMembers.length > 0) && (() => {
+                    const activeMembers = item.groupMembers.filter((m) => {
+                      const isExcluded = (item.studentAudits || []).some(
+                        (a) => (a.student?._id || a.student)?.toString() === (m._id || m)?.toString() && a.status === 'EXCLUDED'
+                      );
+                      return !isExcluded;
+                    });
+                    if (activeMembers.length === 0) return null;
+
+                    return (
+                      <div className="pt-2 mt-2 border-t border-slate-200/80 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-indigo-900">
+                            Participating Group Members ({activeMembers.length}):
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => openModal('AUDIT_GROUP_STUDENTS', { request: item, userRole: 'HOD' })}
+                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                          >
+                            <UserCheck size={11} />
+                            <span>Audit Students</span>
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {activeMembers.map((m, idx) => {
+                            const mName = m.user?.name || m.name || 'Student';
+                            const mRoll = m.enrollmentNumber || m.rollNumber || '';
+                            return (
+                              <span
+                                key={m._id || idx}
+                                className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-medium border border-slate-200"
+                              >
+                                {mName} {mRoll ? `(${mRoll})` : ''}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Bottom Action Row: Strictly No Green, No Red! */}
+                <div className="flex flex-wrap items-center justify-end gap-2.5 pt-1">
                   {approved ? (
-                    <div className="rounded-xl border border-emerald-200/90 bg-[#ecfdf5]/80 p-2 sm:p-2.5 px-3 flex items-center justify-between shadow-2xs">
-                      <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-800">
-                        <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                    <div className="flex items-center gap-3">
+                      <div className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                        <CheckCircle2 size={15} />
                         <span>Sanctioned by CSE Department</span>
                       </div>
-
                       <button
                         type="button"
                         onClick={() => setSelectedSanctionItem(item)}
-                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer border border-emerald-600"
+                        className="hod-btn-approve text-xs py-1.5"
                       >
-                        <FileText size={13} className="text-white shrink-0" />
+                        <FileText size={13} />
                         <span>View Order</span>
                       </button>
                     </div>
                   ) : pending ? (
-                    <div className="grid grid-cols-2 gap-3 pt-0.5">
-                      <button
-                        type="button"
-                        onClick={() => handleBypassApprove(item)}
-                        className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer border border-emerald-600"
-                      >
-                        <CheckCircle2 size={16} className="text-white shrink-0" />
-                        <span>Approve</span>
-                      </button>
-
+                    <div className="hod-card-actions justify-end">
+                      {/* Slate Outline Reject Button */}
                       <button
                         type="button"
                         onClick={() => handleReject(item)}
-                        className="py-2.5 px-4 rounded-xl border border-rose-300 bg-white hover:bg-rose-50 active:bg-rose-100 text-rose-600 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                        className="hod-btn-reject flex-1 sm:flex-initial"
                       >
-                        <XCircle size={15} className="text-rose-600" />
+                        <XCircle size={15} />
                         <span>Reject</span>
+                      </button>
+
+                      {/* SaaS Royal Blue Approve Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleBypassApprove(item)}
+                        className="hod-btn-approve flex-1 sm:flex-initial"
+                      >
+                        <CheckCircle2 size={15} />
+                        <span>Approve</span>
+                      </button>
+
+                      {/* Review Drawer Button (Screen 7/8) */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenReview(item, 'APPROVE')}
+                        className="hod-btn-review flex-1 sm:flex-initial"
+                        title="Open detailed review panel"
+                      >
+                        <Eye size={14} />
+                        <span>Review</span>
                       </button>
                     </div>
                   ) : (
-                    <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-2.5 px-3 text-xs font-bold text-rose-800 flex items-center gap-2">
-                      <XCircle size={16} className="text-rose-600 shrink-0" />
+                    <div className="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                      <XCircle size={15} />
                       <span>Authorization Declined by Department</span>
                     </div>
                   )}
                 </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-                {/* Right Column: Justifications framed container matching screenshot */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-3.5 flex flex-col h-full shadow-2xs">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2.5 block">
-                    JUSTIFICATIONS WRITTEN DURING APPLYING OF CONSIDERATION OR LEAVE BY STUDENT
-                  </span>
+      {/* Screen 7 Desktop Right Slide-Over Drawer & Screen 8 Mobile Bottom Sheet */}
+      {reviewingItem && (
+        <div className="hod-drawer-backdrop" onClick={() => setReviewingItem(null)}>
+          <aside
+            className="hod-review-drawer"
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Review Application Drawer"
+          >
+            {/* Drawer Header */}
+            <div className="hod-drawer-header">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 m-0 leading-tight">
+                  Review {reviewingItem.requestKind === 'LEAVE' ? 'Leave' : 'Consideration'} Application
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1 m-0 truncate">
+                  {reviewingItem.student?.user?.name || reviewingItem.student?.name || reviewingItem.applicant?.name || 'Student'} • Roll {reviewingItem.student?.rollNumber || reviewingItem.student?.enrollmentNumber || 'N/A'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReviewingItem(null)}
+                className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                aria-label="Close Review"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-                  <div className="border border-slate-200 rounded-xl bg-white p-3.5 flex-1 min-h-[160px] flex flex-col justify-between">
-                    <p className="text-xs sm:text-sm text-slate-800 font-normal m-0 leading-relaxed font-sans">
-                      {item.description || item.reason || '[Hackathon / Technical Competition] hacthon'}
-                    </p>
+            {/* Drawer Body */}
+            <div className="hod-drawer-body">
+              {reviewError && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+                  <AlertCircle size={15} className="shrink-0" />
+                  <span>{reviewError}</span>
+                </div>
+              )}
 
-                    {(() => {
-                      const att = item.attachments?.[0] || (item.documentFileId ? { fileId: item.documentFileId, name: item.documentOriginalName } : null);
-                      if (!att) return null;
-                      return (
-                        <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
-                          <button
-                            type="button"
-                            onClick={() => viewAttachment(att.fileId, att.name || 'Attached_Proof.jpg')}
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
-                          >
-                            <Eye size={14} />
-                            <span>View Attached Proof ({att.name || 'Document'})</span>
-                          </button>
-                          <span className="text-[11px] text-slate-400">PDF / Image</span>
-                        </div>
-                      );
-                    })()}
+              {/* Student Justification (Screen 7 & 8) */}
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  STUDENT JUSTIFICATION
+                </div>
+                <p className="text-xs sm:text-sm text-slate-800 font-normal mt-2 m-0 leading-relaxed">
+                  {reviewingItem.description || reviewingItem.reason || 'Participated in an approved department activity.'}
+                </p>
+              </div>
+
+              {/* Supporting Attachment if present */}
+              {(() => {
+                const att = reviewingItem.attachments?.[0] || (reviewingItem.documentFileId ? { fileId: reviewingItem.documentFileId, name: reviewingItem.documentOriginalName } : null);
+                if (!att) return null;
+                return (
+                  <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText size={16} className="text-blue-600 shrink-0" />
+                      <span className="text-xs font-bold text-slate-800 truncate">{att.name || 'Document.pdf'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => viewAttachment(att.fileId, att.name || 'Document')}
+                      className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors shrink-0 cursor-pointer"
+                    >
+                      <Eye size={13} />
+                      <span>View Proof</span>
+                    </button>
                   </div>
+                );
+              })()}
+
+              {/* Decision Section */}
+              <div>
+                <div className="font-bold text-xs uppercase tracking-wider text-slate-600 mb-2.5">
+                  Review Decision
+                </div>
+                <div className="grid gap-2.5">
+                  <label
+                    onClick={() => setReviewDecision('APPROVE')}
+                    className={`hod-decision-card ${reviewDecision === 'APPROVE' ? 'selected-approve' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="hodDrawerDecision"
+                      checked={reviewDecision === 'APPROVE'}
+                      onChange={() => setReviewDecision('APPROVE')}
+                      className="size-4 accent-blue-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className={reviewDecision === 'APPROVE' ? 'text-blue-600' : 'text-slate-400'} />
+                      <span className="font-bold text-sm text-slate-900">Approve Application</span>
+                    </div>
+                  </label>
+
+                  <label
+                    onClick={() => setReviewDecision('REJECT')}
+                    className={`hod-decision-card ${reviewDecision === 'REJECT' ? 'selected-reject' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="hodDrawerDecision"
+                      checked={reviewDecision === 'REJECT'}
+                      onChange={() => setReviewDecision('REJECT')}
+                      className="size-4 accent-slate-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <XCircle size={16} className={reviewDecision === 'REJECT' ? 'text-slate-700' : 'text-slate-400'} />
+                      <span className="font-bold text-sm text-slate-900">Reject Application</span>
+                    </div>
+                  </label>
                 </div>
               </div>
+
+              {/* Sanctioned Lectures Stepper if Consideration & Approve */}
+              {reviewingItem.requestKind !== 'LEAVE' && reviewDecision === 'APPROVE' && (
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="block text-xs font-bold text-slate-900 leading-tight">
+                      Sanctioned Lectures
+                    </span>
+                    <span className="block text-[11px] font-medium text-slate-500 mt-0.5">
+                      Requested: {Array.isArray(reviewingItem.requestedPeriods) ? reviewingItem.requestedPeriods.length : (reviewingItem.requestedPeriods || 3)} periods
+                    </span>
+                  </div>
+
+                  <div className="hod-stepper-control">
+                    <button
+                      type="button"
+                      onClick={() => setReviewApprovedPeriods((p) => Math.max(1, Number(p) - 1))}
+                      className="hod-stepper-btn"
+                      aria-label="Decrease"
+                    >
+                      –
+                    </button>
+                    <span className="hod-stepper-count">
+                      {reviewApprovedPeriods}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setReviewApprovedPeriods((p) => Math.min(8, Number(p) + 1))}
+                      className="hod-stepper-btn"
+                      aria-label="Increase"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Remarks Input */}
+              <div>
+                <label className="font-bold text-xs uppercase tracking-wider text-slate-600 block mb-2">
+                  {reviewDecision === 'REJECT' ? 'Rejection Remarks (Optional)' : 'Review Remarks (Optional)'}
+                </label>
+                <textarea
+                  value={reviewRemarks}
+                  onChange={(e) => setReviewRemarks(e.target.value)}
+                  placeholder={reviewDecision === 'REJECT' ? 'State reason for rejection (optional)...' : 'Add remarks for student or department records'}
+                  className="hod-drawer-textarea"
+                  required={false}
+                />
+              </div>
             </div>
-          );
-        })}
-      </div>
-    )}
+
+            {/* Drawer Footer */}
+            <div className="hod-drawer-footer">
+              <button
+                type="button"
+                onClick={() => setReviewingItem(null)}
+                disabled={reviewSubmitting}
+                className="hod-btn-reject"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmReview}
+                disabled={reviewSubmitting}
+                className="hod-btn-approve"
+              >
+                {reviewSubmitting
+                  ? 'Submitting...'
+                  : reviewDecision === 'APPROVE'
+                  ? 'Confirm Approval'
+                  : 'Confirm Rejection'}
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
 
       {/* Official Clearances Ledger Modal */}
       {showLedgerModal && (
@@ -1028,7 +1171,7 @@ export default function HodConsiderations() {
         />
       )}
 
-      {/* Formal Sanctioned Application Document Modal matching Image 2 & 3 */}
+      {/* Formal Sanctioned Application Document Modal */}
       {selectedSanctionItem && (
         <FormalApplicationModal
           item={selectedSanctionItem}
@@ -1036,7 +1179,7 @@ export default function HodConsiderations() {
         />
       )}
 
-      {/* Official Clearance Report Modal (Semester & Section Options -> Official Document Print) */}
+      {/* Official Clearance Report Modal */}
       {showPrintReportModal && (
         <PrintClearanceReportModal
           items={activeItemsList}

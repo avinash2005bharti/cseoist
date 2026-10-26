@@ -126,65 +126,68 @@ export default function SectionOverviewModal({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-container max-w-4xl w-[96%] max-h-[92vh] overflow-y-auto bg-white p-6 sm:p-8 rounded-3xl text-slate-900 shadow-2xl flex flex-col"
+        className="modal-container max-w-4xl w-[96%] max-h-[92vh] overflow-y-auto bg-white p-5 sm:p-8 rounded-3xl text-slate-900 shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header matching image3.png */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200 shrink-0">
-          <div>
-            <div className="flex items-center gap-2">
-              <Users size={18} className="text-blue-600" />
-              <h2 className="text-base sm:text-lg font-black text-slate-900 m-0">
-                Section Overview (CSE Only)
-              </h2>
+        {/* Header matching Screen 26.png */}
+        <div className="pb-4 border-b border-slate-200 shrink-0">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Users size={20} className="text-[#4F46E5] sm:text-blue-600" />
+                <h2 className="text-base sm:text-lg font-black text-slate-900 m-0">
+                  Section Overview (CSE Only)
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 font-medium m-0 mt-1">
+                Select a section card below to view enrolled students and assigned Tutor Guardian (TG).
+              </p>
             </div>
-            <p className="text-xs text-slate-500 font-medium m-0 mt-1">
-              Select a section card below to view enrolled students and assigned Tutor Guardian (TG).
-            </p>
+
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <span className="text-xs font-semibold text-slate-500 mr-0.5">Current:</span>
-            <span className="px-3 py-1 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200 shadow-2xs">
-              Sem {currentSemester}
-            </span>
+          {/* Navigation Controls matching Screen 26.png */}
+          <div className="mt-3.5 space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-slate-500 mr-0.5">Current:</span>
+              <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200 shadow-2xs">
+                Sem {currentSemester}
+              </span>
 
-            {/* Move to Previous Semester button as requested in user feedback */}
-            <button
-              type="button"
-              onClick={() => setCurrentSemester((prev) => Math.max(1, prev - 1))}
-              disabled={currentSemester <= 1}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-              title={currentSemester > 1 ? `Go to Semester ${currentSemester - 1}` : 'First semester reached'}
-            >
-              <ArrowLeft size={14} />
-              <span>Move to Prev Semester {currentSemester > 1 ? `(Sem ${currentSemester - 1})` : ''}</span>
-            </button>
+              {/* Move to Previous Semester button matching Screen 26.png */}
+              <button
+                type="button"
+                onClick={() => setCurrentSemester((prev) => Math.max(1, prev - 1))}
+                disabled={currentSemester <= 1}
+                className="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                title={currentSemester > 1 ? `Go to Semester ${currentSemester - 1}` : 'First semester reached'}
+              >
+                <span>← Move to Prev Semester {currentSemester > 1 ? `(Sem ${currentSemester - 1})` : ''}</span>
+              </button>
+            </div>
 
-            {/* Move to Next Semester button */}
+            {/* Move to Next Semester button matching Screen 26.png */}
             <button
               type="button"
               onClick={() => setCurrentSemester((prev) => Math.min(8, prev + 1))}
               disabled={currentSemester >= 8}
-              className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              className="hod-btn-move-next w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               title={currentSemester < 8 ? `Go to Semester ${currentSemester + 1}` : 'Last semester reached'}
             >
-              <span>Move to Next Semester {currentSemester < 8 ? `(Sem ${currentSemester + 1})` : ''}</span>
-              <ArrowRight size={14} />
-            </button>
-
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 ml-1 transition-colors cursor-pointer"
-              aria-label="Close"
-            >
-              <X size={18} />
+              <span>Move to Next Semester {currentSemester < 8 ? `(Sem ${currentSemester + 1})` : ''} →</span>
             </button>
           </div>
         </div>
 
-        {/* Section Cards Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+        {/* Section Cards Row matching Screen 26.png */}
+        <div className="hod-section-cards-track no-scrollbar mt-2">
           {sectionOptions.map((opt) => {
             const count = getSectionCount(opt.id);
             const isSelected = selectedSection === opt.id;
@@ -193,72 +196,21 @@ export default function SectionOverviewModal({
                 key={opt.id}
                 type="button"
                 onClick={() => setSelectedSection(opt.id)}
-                style={
-                  isSelected
-                    ? {
-                        backgroundColor: '#2563EB',
-                        borderColor: '#1D4ED8',
-                        color: '#FFFFFF',
-                        boxShadow: '0 8px 20px -3px rgba(37, 99, 235, 0.45), 0 0 0 3px rgba(147, 197, 253, 0.6)',
-                        transform: 'translateY(-2px)',
-                      }
-                    : {
-                        backgroundColor: opt.bgColor,
-                        borderColor: opt.borderColor,
-                        color: '#0F172A',
-                      }
-                }
-                className="p-3.5 rounded-2xl text-center border-2 transition-all cursor-pointer shadow-xs"
+                className={`hod-section-card-btn ${isSelected ? 'is-selected' : ''}`}
               >
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '900',
-                    color: isSelected ? '#FFFFFF' : '#0F172A',
-                    letterSpacing: '0.02em',
-                  }}
-                >
+                <span className="block text-sm font-black text-slate-900 tracking-tight">
                   {opt.label}
                 </span>
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    color: isSelected ? '#DBEAFE' : '#64748B',
-                    marginTop: '2px',
-                  }}
-                >
+                <span className="block text-xs font-semibold text-slate-500 mt-1">
                   {count} / {opt.capacity} Students
                 </span>
                 {isSelected ? (
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      marginTop: '6px',
-                      padding: '2px 8px',
-                      borderRadius: '9999px',
-                      fontSize: '10px',
-                      fontWeight: '800',
-                      backgroundColor: '#FFFFFF',
-                      color: '#1D4ED8',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-                    }}
-                  >
-                    ✓ Selected
+                  <span className="inline-flex items-center justify-center gap-1 mt-1 text-[11px] font-bold text-blue-600">
+                    <span>✓</span>
+                    <span>Selected</span>
                   </span>
                 ) : (
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      marginTop: '6px',
-                      fontSize: '10px',
-                      visibility: 'hidden',
-                    }}
-                  >
+                  <span className="inline-block mt-1 text-[11px] invisible select-none">
                     &nbsp;
                   </span>
                 )}
@@ -267,37 +219,46 @@ export default function SectionOverviewModal({
           })}
         </div>
 
-        {/* Student details Subheader */}
-        <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+        {/* Student details Subheader matching Screen 26.png */}
+        <div className="mt-4 pt-2 border-t border-slate-200">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <GraduationCap size={15} />
             </div>
             <span className="text-sm font-black text-slate-900">
               Student Details
             </span>
-            <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-bold">
-              CSE-{selectedSection} - {displayStudents.length} / {activeCapacity} Enrolled (Capacity: {activeCapacity})
+          </div>
+
+          <div className="mb-2.5">
+            <span className="inline-block px-3 py-1 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-800 shadow-2xs">
+              CSE-{selectedSection} · {displayStudents.length} / {activeCapacity} Enrolled (Capacity: {activeCapacity})
             </span>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold flex items-center gap-1.5">
-              <UserCheck size={14} className="text-blue-600" />
-              <span>TG : {assignedTgName}</span>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="px-3 py-1 rounded-full bg-[#CFFAFE] text-[#0891B2] text-xs font-bold flex items-center gap-1.5">
+              <span>TG: {assignedTgName}</span>
             </span>
 
-            {/* Quick Promote / Demote for active section */}
+            {/* Quick Promote / Demote for active section matching Screen 26.png */}
             {(() => {
-              const currentSecDoc = semesterDbSections.find((s) => getSectionLetter(s) === selectedSection);
-              if (!currentSecDoc) return null;
+              const currentSecDoc = semesterDbSections.find((s) => getSectionLetter(s) === selectedSection) || {
+                _id: 'temp-' + selectedSection,
+                semester: currentSemester,
+                code: `CSE-${selectedSection}`,
+                name: `Section ${selectedSection}`,
+                studentCount: displayStudents.length,
+                capacity: activeCapacity,
+              };
+
               return (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     disabled={currentSemester <= 1}
                     onClick={() => setMoveTarget({ section: currentSecDoc, direction: 'prev' })}
-                    className="px-2 py-1 rounded-lg text-xs font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 cursor-pointer shadow-2xs"
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 disabled:opacity-40 cursor-pointer shadow-2xs transition-colors"
                     title={`Demote to Semester ${currentSemester - 1}`}
                   >
                     ◀ Demote
@@ -306,7 +267,7 @@ export default function SectionOverviewModal({
                     type="button"
                     disabled={currentSemester >= 8}
                     onClick={() => setMoveTarget({ section: currentSecDoc, direction: 'next' })}
-                    className="px-2 py-1 rounded-lg text-xs font-bold border border-blue-600 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40 cursor-pointer shadow-2xs"
+                    className="hod-btn-promote px-3.5 py-1.5 rounded-xl text-xs font-bold text-white disabled:opacity-40 cursor-pointer shadow-xs transition-colors"
                     title={`Promote to Semester ${currentSemester + 1}`}
                   >
                     Promote ▶
@@ -317,26 +278,71 @@ export default function SectionOverviewModal({
           </div>
         </div>
 
-        {/* Search Bar & Result Count */}
-        <div className="mt-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="relative flex-1">
+        {/* Search Bar & Result Count matching Screen 26.png */}
+        <div className="mt-3.5">
+          <div className="relative">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search student by name, enrollment, or email..."
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-all"
             />
           </div>
-          <span className="text-xs text-slate-400 font-medium whitespace-nowrap">
+          <div className="mt-2 text-xs text-slate-500 font-medium">
             Showing {filteredStudents.length} of {displayStudents.length} students
-          </span>
+          </div>
         </div>
 
-        {/* Student Table matching image3.png */}
-        <div className="mt-3.5 rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-2xs shrink-0">
-          <div className="overflow-x-auto min-h-[220px] max-h-[380px] overflow-y-auto">
+        {/* Mobile View: Student Cards matching Screen 26.png */}
+        <div className="block sm:hidden mt-3">
+          {loading ? (
+            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200">
+              <Loader2 size={24} className="animate-spin text-blue-600 mx-auto mb-2" />
+              <span className="text-xs font-bold text-slate-600">Loading student directory...</span>
+            </div>
+          ) : filteredStudents.length === 0 ? (
+            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200">
+              <GraduationCap size={22} className="mx-auto text-blue-600 mb-2" />
+              <span className="text-sm font-black text-slate-800">
+                {search ? 'No matching students found' : `No students enrolled in Semester ${currentSemester} • CSE-${selectedSection}`}
+              </span>
+              <p className="text-xs text-slate-400 mt-1 max-w-md m-0">
+                {search
+                  ? `No students in CSE-${selectedSection} match "${search}".`
+                  : `Section CSE-${selectedSection} currently has 0 enrolled students out of ${activeCapacity} capacity.`}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100 overflow-hidden shadow-2xs">
+              {filteredStudents.map((st) => {
+                const name = st.user?.name || st.designation || 'Student';
+                const enroll = st.enrollmentNumber || st.rollNumber || 'Not provided';
+                const phone = st.user?.phone || 'Not provided';
+                const email = st.user?.email || 'Not provided';
+
+                return (
+                  <div key={st._id} className="p-4 space-y-1">
+                    <h4 className="font-extrabold text-sm text-slate-900 m-0">{name}</h4>
+                    <p className="text-xs font-mono text-slate-600 m-0">{enroll}</p>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-700 pt-0.5">
+                      <span className="text-emerald-600 font-bold">☎</span>
+                      <span>{phone}</span>
+                    </div>
+                    <div className="text-xs text-blue-600 font-medium truncate">
+                      {email}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden sm:block mt-3 rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-2xs shrink-0">
+          <div className="overflow-x-auto min-h-[200px] max-h-[360px] overflow-y-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead className="sticky top-0 bg-slate-50/95 backdrop-blur-xs z-10 border-b border-slate-200">
                 <tr className="text-slate-600 font-black text-[11px] tracking-wider uppercase">
@@ -369,7 +375,7 @@ export default function SectionOverviewModal({
                         <p className="text-xs text-slate-400 mt-1 max-w-md m-0">
                           {search
                             ? `No students in CSE-${selectedSection} match "${search}". Try searching by another keyword.`
-                            : `Section CSE-${selectedSection} has 0 enrolled students out of ${activeCapacity} capacity. You can provision new student user IDs from the Admin Dashboard.`}
+                            : `Section CSE-${selectedSection} has 0 enrolled students out of ${activeCapacity} capacity.`}
                         </p>
                       </div>
                     </td>
@@ -416,7 +422,7 @@ export default function SectionOverviewModal({
           </div>
         </div>
 
-        {/* Footer matching image3.png */}
+        {/* Footer */}
         <div className="mt-5 pt-4 border-t border-slate-200 flex items-center justify-between shrink-0">
           <button
             onClick={() => {
@@ -431,7 +437,7 @@ export default function SectionOverviewModal({
 
           <button
             onClick={onClose}
-            className="px-6 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs cursor-pointer transition-colors"
+            className="hod-btn-primary-blue px-6 py-2 rounded-xl text-xs font-bold text-white shadow-xs cursor-pointer transition-colors"
           >
             Done
           </button>

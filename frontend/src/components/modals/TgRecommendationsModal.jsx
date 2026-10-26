@@ -81,6 +81,8 @@ export default function TgRecommendationsModal({
     if (!item) return false;
     const status = (item.status || '').toUpperCase();
     const decision = (item.tgReview?.decision || '').toUpperCase();
+    if (decision === 'REJECT') return false;
+    if (status === 'REJECTED' || status === 'REJECTED_BY_TG') return false;
     return status === 'RECOMMENDED_BY_TG' || decision === 'RECOMMEND';
   };
 

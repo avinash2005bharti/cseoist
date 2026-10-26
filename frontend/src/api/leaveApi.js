@@ -17,6 +17,10 @@ export const leaveApi = {
     return apiClient.get('/leaves/hod-queue', { params });
   },
 
+  getTGHistory: async (params = {}) => {
+    return apiClient.get('/leaves/tg-history', { params });
+  },
+
   getAdminQueue: async (params = {}) => {
     return apiClient.get('/leaves/admin-queue', { params });
   },

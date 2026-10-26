@@ -1,0 +1,306 @@
+/* ==========================================================================
+   CampusFlow Lite – Screen 3 (Desktop) & Screen 4 (Mobile) Student Dashboard CSS
+   Primary Design Source: newcss.txt & Reference UI Screen 3 / Screen 4
+   ========================================================================== */
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EEF2FF;
+  --secondary-foreground: #4338CA;
+  --accent: #ECFDF5;
+  --accent-foreground: #065F46;
+  --border: #E0E7FF;
+  --border-border: #E0E7FF;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --input: #E0E7FF;
+  --ring: #4F46E5;
+}
+
+[data-appearance="light"] {
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+/* Background utilities */
+.bg-background {
+  background-color: #F8FAFC !important;
+}
+
+.bg-card {
+  background-color: #FFFFFF !important;
+}
+
+.bg-card\/95 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.bg-muted {
+  background-color: #F1F5F9 !important;
+}
+
+.bg-primary {
+  background-color: #4F46E5 !important;
+}
+
+.bg-primary\/10 {
+  background-color: rgba(79, 70, 229, 0.1) !important;
+}
+
+.bg-secondary {
+  background-color: #EEF2FF !important;
+}
+
+.bg-accent {
+  background-color: #ECFDF5 !important;
+}
+
+/* Text color utilities */
+.text-foreground {
+  color: #0F172A !important;
+}
+
+.text-card-foreground {
+  color: #0F172A !important;
+}
+
+.text-muted-foreground {
+  color: #64748B !important;
+}
+
+.text-primary {
+  color: #4F46E5 !important;
+}
+
+.text-primary-foreground {
+  color: #FFFFFF !important;
+}
+
+.text-secondary-foreground {
+  color: #4338CA !important;
+}
+
+.text-accent-foreground {
+  color: #065F46 !important;
+}
+
+/* Borders */
+.border-border {
+  border-color: #E0E7FF !important;
+}
+
+.border-input {
+  border-color: #E0E7FF !important;
+}
+
+/* ==========================================================================
+   Student Portal Main Container & Full Width Reset (No Sidebar)
+   ========================================================================== */
+
+.app-container.student-portal-mode {
+  background-color: #F8FAFC;
+  min-height: 100vh;
+}
+
+.student-content-container {
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* ==========================================================================
+   Screen 3 Two-Column Main Layout Grid
+   Desktop: 1fr 400px (Sticky Form on Right)
+   Tablet & Mobile: Single column stacked
+   ========================================================================== */
+
+.student-desktop-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .student-desktop-grid {
+    grid-template-columns: 1fr 400px !important;
+  }
+}
+
+/* Top 3 Action Cards Grid */
+.student-action-cards-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .student-action-cards-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* 4 KPI Stat Cards Grid */
+.student-kpi-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .student-kpi-grid {
+    gap: 1rem !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ==========================================================================
+   Recent Applications Tabs & Card Items
+   ========================================================================== */
+
+.student-tab-pill {
+  transition: all 0.15s ease-in-out;
+}
+
+.student-tab-pill.active {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.student-tab-pill:not(.active) {
+  color: #64748B !important;
+}
+
+.student-tab-pill:not(.active):hover {
+  color: #0F172A !important;
+}
+
+/* Status Badges */
+.badge-approved-hod {
+  background-color: #ECFDF5 !important;
+  color: #065F46 !important;
+  border: 1px solid #A7F3D0 !important;
+}
+
+.badge-recommended-tg {
+  background-color: #EEF2FF !important;
+  color: #4338CA !important;
+  border: 1px solid #C7D2FE !important;
+}
+
+.badge-pending-review {
+  background-color: #FFFBEB !important;
+  color: #92400E !important;
+  border: 1px solid #FDE68A !important;
+}
+
+.badge-rejected {
+  background-color: #FFF1F2 !important;
+  color: #9F1239 !important;
+  border: 1px solid #FECDD3 !important;
+}
+
+/* ==========================================================================
+   Request Consideration Right Card Form (Screen 3)
+   ========================================================================== */
+
+.student-periods-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.student-period-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.375rem;
+  border: 1px solid #E2E8F0;
+  background-color: #FFFFFF;
+  font-size: 0.875rem;
+  color: #0F172A;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.student-period-label:hover {
+  border-color: #CBD5E1;
+  background-color: #F8FAFC;
+}
+
+.student-period-label.checked {
+  border-color: #4F46E5 !important;
+  background-color: #EEF2FF !important;
+  color: #4338CA !important;
+  font-weight: 600 !important;
+}
+
+.student-upload-zone {
+  border-radius: 0.5rem;
+  background-color: #EEF2FF !important;
+  border: 1.5px dashed #C7D2FE !important;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.student-upload-zone:hover {
+  border-color: #4F46E5 !important;
+  background-color: #E0E7FF !important;
+}
+
+.student-quick-form input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.student-quick-form input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Mobile Bottom Navigation (Screen 4)
+   ========================================================================== */
+
+.student-mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border-top: 1px solid #E2E8F0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 0.5rem;
+  z-index: 50;
+  box-shadow: 0 -1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.student-mobile-nav .mobile-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 0.375rem;
+  transition: color 0.15s ease;
+}
+
+.student-mobile-nav .mobile-nav-btn.active {
+  color: #4F46E5 !important;
+}

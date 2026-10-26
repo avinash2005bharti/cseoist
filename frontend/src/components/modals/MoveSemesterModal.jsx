@@ -41,7 +41,10 @@ export default function MoveSemesterModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
+    <div
+      style={{ zIndex: 100050 }}
+      className="fixed inset-0 z-[100050] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+    >
       <div
         className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 p-6 space-y-4 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
@@ -132,7 +135,7 @@ export default function MoveSemesterModal({
             type="button"
             disabled={loading}
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer disabled:opacity-50"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 border border-slate-200 transition-colors cursor-pointer disabled:opacity-50"
           >
             Cancel
           </button>
@@ -140,9 +143,9 @@ export default function MoveSemesterModal({
             type="button"
             disabled={loading || newSemester < 1 || newSemester > 8}
             onClick={handleConfirm}
-            className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+            className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
               isPromote
-                ? 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+                ? 'hod-btn-promote'
                 : 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800'
             }`}
           >

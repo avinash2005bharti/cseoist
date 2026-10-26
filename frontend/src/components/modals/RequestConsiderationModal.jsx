@@ -16,6 +16,7 @@ import {
   Plus,
   Trash2,
   Lock,
+  ChevronDown,
 } from 'lucide-react';
 import { DocumentUploader } from '../common';
 
@@ -58,8 +59,17 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
   const [timeFrom, setTimeFrom] = useState('10:50 AM');
   const [timeTo, setTimeTo] = useState('01:20 PM');
   const [lecturesCount, setLecturesCount] = useState(1);
+  const [selectedPeriods, setSelectedPeriods] = useState([1]);
   const [description, setDescription] = useState('');
   const [attachment, setAttachment] = useState(null);
+
+  const togglePeriod = (p) => {
+    setSelectedPeriods((prev) => {
+      const next = prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p].sort((a, b) => a - b);
+      setLecturesCount(Math.max(1, next.length));
+      return next;
+    });
+  };
 
   // Consideration application window (9:00 AM - 4:00 PM IST or 24/7 if disabled by Admin)
   const [windowStatus, setWindowStatus] = useState(() => checkWindowStatus());
@@ -102,14 +112,25 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
   useEffect(() => {
     if (applicationType === 'GROUP' && allStudents.length === 0) {
       setLoadingStudents(true);
-      masterDataApi
-        .getStudents({ limit: 300 })
+      const fetchList = masterDataApi.getPeers
+        ? masterDataApi.getPeers({ limit: 1000 })
+        : masterDataApi.getStudents({ all: 'true' });
+
+      fetchList
         .then((res) => {
           const list = res?.data || res?.students || (Array.isArray(res) ? res : []);
           setAllStudents(Array.isArray(list) ? list : []);
         })
-        .catch((err) => {
-          console.warn('Failed to load student directory:', err.message);
+        .catch(() => {
+          masterDataApi
+            .getStudents({ all: 'true' })
+            .then((res) => {
+              const list = res?.data || res?.students || (Array.isArray(res) ? res : []);
+              setAllStudents(Array.isArray(list) ? list : []);
+            })
+            .catch((err) => {
+              console.warn('Failed to load student directory:', err.message);
+            });
         })
         .finally(() => {
           setLoadingStudents(false);
@@ -130,7 +151,14 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
   const filteredCandidates = useMemo(() => {
     return allStudents.filter((st) => {
       // Exclude applying student
-      if (currentStudentId && String(st._id) === String(currentStudentId)) return false;
+      if (
+        currentStudentId &&
+        (String(st._id) === String(currentStudentId) ||
+          String(st.id) === String(currentStudentId) ||
+          String(st.user?._id) === String(currentStudentId))
+      ) {
+        return false;
+      }
 
       // Semester filter
       if (semFilter !== 'ALL') {
@@ -141,7 +169,7 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
 
       // Section filter
       if (secFilter !== 'ALL') {
-        const rawSec = (st.section?.name || st.section?.code || '').toUpperCase();
+        const rawSec = (st.section?.name || st.section?.code || (typeof st.section === 'string' ? st.section : '')).toUpperCase();
         const targetSec = secFilter.toUpperCase().trim();
         if (!rawSec.includes(targetSec)) return false;
       }
@@ -149,7 +177,7 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
       // Search query
       if (searchStudentQuery.trim()) {
         const q = searchStudentQuery.toLowerCase().trim();
-        const name = (st.user?.name || '').toLowerCase();
+        const name = (st.user?.name || st.name || '').toLowerCase();
         const roll = (st.rollNumber || '').toLowerCase();
         const enroll = (st.enrollmentNumber || '').toLowerCase();
         if (!name.includes(q) && !roll.includes(q) && !enroll.includes(q)) return false;
@@ -232,7 +260,7 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
         timeFrom: timeFrom.trim(),
         timeTo: timeTo.trim(),
         requestedPeriods: numLectures,
-        selectedPeriods: [],
+        selectedPeriods: selectedPeriods.map((p) => `P${p}`),
         periodTiming: `${timeFrom.trim()} - ${timeTo.trim()}`,
         description: trimmedDescription,
         attachments: attachment ? [attachment] : [],
@@ -262,23 +290,18 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
   return (
     <div className="modal-backdrop" onClick={!submitting ? onClose : undefined}>
       <div
-        className="modal-container max-w-2xl w-[95%] max-h-[92vh] overflow-y-auto"
+        className="modal-container max-w-2xl w-[95%] bg-white rounded-2xl border border-slate-200/80 shadow-2xl p-6 sm:p-7 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="modal-header pb-3 border-b border-slate-100 flex items-start justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100 shadow-2xs">
-              <Sparkles size={20} />
-            </div>
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900 m-0">
-                Apply for Attendance Consideration
-              </h3>
-              <p className="text-xs text-slate-500 m-0 mt-0.5">
-                Apply for official attendance consideration for lectures missed during approved events or academic activities
-              </p>
-            </div>
+        <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 className="font-bold text-xl text-slate-900 tracking-tight m-0">
+              Request consideration
+            </h2>
+            <p className="text-slate-500 text-sm mt-0.5 m-0">
+              Submit an attendance consideration request
+            </p>
           </div>
           <button
             type="button"
@@ -291,7 +314,7 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-3">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-3 pb-4">
           {/* Consideration Timing Window Indicator (9:00 AM - 4:00 PM IST or Testing Mode) */}
           {windowStatus.isTimeLimitEnabled === false ? (
             <div className="p-3.5 rounded-2xl border bg-purple-50/90 border-purple-300 text-purple-950 flex items-center justify-between gap-3 text-xs shadow-2xs">
@@ -388,31 +411,31 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
 
           {/* Application Scope Toggle: Individual vs Group */}
           <div>
-            <label className="block text-xs font-bold text-slate-800 mb-1.5">
-              Application Type <span className="text-rose-500">*</span>
+            <label className="block font-semibold text-slate-800 text-sm mb-1.5">
+              Application scope
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setApplicationType('INDIVIDUAL')}
-                className={`p-3 rounded-2xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
+                className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
                   applicationType === 'INDIVIDUAL'
-                    ? 'border-blue-600 bg-blue-50/70 text-blue-900 shadow-xs'
-                    : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                    ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 font-bold ring-1 ring-indigo-500/20 shadow-2xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700'
                 }`}
               >
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                     applicationType === 'INDIVIDUAL'
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-primary text-white'
                       : 'bg-slate-100 text-slate-500'
                   }`}
                 >
                   <User size={16} />
                 </div>
                 <div>
-                  <span className="block text-xs font-black">Individual Request</span>
-                  <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  <span className="block text-sm font-bold">Individual Request</span>
+                  <span className="block text-xs text-slate-500 mt-0.5 leading-snug">
                     Apply for yourself only
                   </span>
                 </div>
@@ -421,14 +444,14 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
               <button
                 type="button"
                 onClick={() => setApplicationType('GROUP')}
-                className={`p-3 rounded-2xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
+                className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
                   applicationType === 'GROUP'
-                    ? 'border-purple-600 bg-purple-50/70 text-purple-900 shadow-xs'
-                    : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                    ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 font-bold ring-1 ring-indigo-500/20 shadow-2xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700'
                 }`}
               >
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                     applicationType === 'GROUP'
                       ? 'bg-purple-600 text-white'
                       : 'bg-slate-100 text-slate-500'
@@ -437,9 +460,9 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
                   <Users size={16} />
                 </div>
                 <div>
-                  <span className="block text-xs font-black">Group / Team Request</span>
-                  <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">
-                    Include team members from any section
+                  <span className="block text-sm font-bold">Group / Team Request</span>
+                  <span className="block text-xs text-slate-500 mt-0.5 leading-snug">
+                    Include team members
                   </span>
                 </div>
               </button>
@@ -476,7 +499,7 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 border border-purple-300 text-purple-900 text-[11px] font-bold"
                     >
                       <span>
-                        {m.user?.name} ({m.rollNumber} • {m.section?.name || 'Sec'})
+                        {m.user?.name || m.name} ({m.rollNumber} • {m.section?.name || m.section?.code || 'Sec'})
                       </span>
                       <button
                         type="button"
@@ -524,6 +547,8 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
                     <option value="B">Section B</option>
                     <option value="C">Section C</option>
                     <option value="D">Section D</option>
+                    <option value="E">Section E</option>
+                    <option value="F">Section F</option>
                   </select>
                 </div>
 
@@ -558,7 +583,7 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
                 ) : (
                   filteredCandidates.map((st) => {
                     const isSelected = selectedMembers.some((m) => m._id === st._id);
-                    const secLabel = st.section?.name || st.section?.code || 'Section';
+                    const secLabel = st.section?.name || st.section?.code || (typeof st.section === 'string' ? st.section : 'Section');
                     const semLabel = st.section?.semester || st.semester || '5';
                     return (
                       <div
@@ -577,7 +602,7 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
                           />
                           <div className="min-w-0">
                             <span className="text-xs font-bold text-slate-900 block truncate">
-                              {st.user?.name}
+                              {st.user?.name || st.name || 'Student'}
                             </span>
                             <span className="text-[10px] text-slate-500 font-medium block">
                               Roll: {st.rollNumber} • Sem {semLabel} • {secLabel}
@@ -601,111 +626,178 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
             </div>
           )}
 
-          {/* 1. Event or Activity Name */}
+          {/* Event category */}
           <div>
-            <label className="block text-xs font-bold text-slate-800 mb-1">
-              Event / Activity Name <span className="text-rose-500">*</span>
+            <label htmlFor="consideration-category" className="block font-semibold text-slate-800 text-sm mb-1.5">
+              Event category
+            </label>
+            <div className="relative">
+              <select
+                id="consideration-category"
+                value={eventType}
+                onChange={(e) => setEventType(e.target.value)}
+                disabled={submitting}
+                className="w-full rounded-xl border border-slate-200 bg-white text-slate-900 px-3.5 py-2.5 text-sm appearance-none outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 cursor-pointer transition-all"
+              >
+                <option value="HACKATHON">Attendance consideration</option>
+                <option value="SPORTS">Sports event / Competition</option>
+                <option value="CULTURAL">Cultural activity / Fest</option>
+                <option value="COLLEGE_DUTY">Academic event / Official duty</option>
+                <option value="OTHER">Other academic activity</option>
+              </select>
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Event name */}
+          <div>
+            <label htmlFor="consideration-event-name" className="block font-semibold text-slate-800 text-sm mb-1.5">
+              Event name
             </label>
             <input
+              id="consideration-event-name"
               type="text"
               value={eventTitle}
               onChange={(e) => setEventTitle(e.target.value)}
-              placeholder="e.g., Smart India Hackathon, Annual Sports Meet, Tech Workshop"
+              placeholder="Enter event name"
               required
               disabled={submitting}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-600 focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-slate-200 bg-white text-slate-900 px-3.5 py-2.5 text-sm placeholder:text-slate-400 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-all"
             />
           </div>
 
-          {/* 2. Category */}
-          <div>
-            <label className="block text-xs font-bold text-slate-800 mb-1">
-              Activity Category <span className="text-rose-500">*</span>
-            </label>
-            <select
-              value={eventType}
-              onChange={(e) => setEventType(e.target.value)}
-              disabled={submitting}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-colors"
-            >
-              <option value="HACKATHON">Hackathon / Technical Competition</option>
-              <option value="SPORTS">Sports Meet / Tournament</option>
-              <option value="CULTURAL">Cultural Event / College Fest</option>
-              <option value="COLLEGE_DUTY">College Duty / Official Assignment</option>
-              <option value="OTHER">Other Academic Activity</option>
-            </select>
-          </div>
-
-          {/* 3. Date Range (Start Date & End Date) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Start date & End date */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1">
-                Start Date <span className="text-rose-500">*</span>
+              <label htmlFor="consideration-start-date" className="block font-semibold text-slate-800 text-sm mb-1.5">
+                Start date
               </label>
               <input
+                id="consideration-start-date"
                 type="date"
                 value={startDate}
                 onChange={(e) => handleStartDateChange(e.target.value)}
                 required
                 disabled={submitting}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-slate-200 bg-white text-slate-900 px-3.5 py-2.5 text-sm outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 cursor-pointer transition-all"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1">
-                End Date <span className="text-rose-500">*</span>
+              <label htmlFor="consideration-end-date" className="block font-semibold text-slate-800 text-sm mb-1.5">
+                End date
               </label>
               <input
+                id="consideration-end-date"
                 type="date"
                 value={endDate}
                 min={startDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 required
                 disabled={submitting}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-slate-200 bg-white text-slate-900 px-3.5 py-2.5 text-sm outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 cursor-pointer transition-all"
               />
             </div>
           </div>
 
-          {/* 4. Time From & Time To (User Input for Timing) */}
-          <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-200">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-black text-slate-900 flex items-center gap-1.5 m-0">
-                <Clock size={15} className="text-blue-600" />
-                <span>Lecture Time Schedule (Time From & To)</span>
-                <span className="text-rose-500">*</span>
+          {/* Periods */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block font-semibold text-slate-800 text-sm">
+                Periods
               </label>
-              <span className="text-[11px] font-bold text-blue-700 bg-white px-2 py-0.5 rounded-md border border-blue-200">
-                Time Duration
+              <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
+                {lecturesCount} {parseInt(lecturesCount, 10) === 1 ? 'Lecture' : 'Lectures'}
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-2 mb-2">
+              {[1, 2, 3, 4].map((p) => {
+                const isChecked = selectedPeriods.includes(p);
+                return (
+                  <label
+                    key={p}
+                    className={`cursor-pointer rounded-xl border p-2.5 flex items-center gap-2 text-sm font-semibold transition-all ${
+                      isChecked
+                        ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 font-bold ring-1 ring-indigo-500/20 shadow-2xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => togglePeriod(p)}
+                      className="size-4 rounded accent-indigo-600 cursor-pointer"
+                    />
+                    <span>P{p}</span>
+                  </label>
+                );
+              })}
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[5, 6, 7].map((p) => {
+                const isChecked = selectedPeriods.includes(p);
+                return (
+                  <label
+                    key={p}
+                    className={`cursor-pointer rounded-xl border p-2.5 flex items-center gap-2 text-sm font-semibold transition-all ${
+                      isChecked
+                        ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 font-bold ring-1 ring-indigo-500/20 shadow-2xs'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => togglePeriod(p)}
+                      className="size-4 rounded accent-indigo-600 cursor-pointer"
+                    />
+                    <span>P{p}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Lecture Timing Schedule (Time From & To) */}
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 m-0">
+                <Clock size={14} className="text-indigo-600" />
+                <span>Lecture Time Schedule</span>
+              </label>
+              <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50/70 px-2 py-0.5 rounded-md border border-indigo-200">
+                {timeFrom} – {timeTo}
               </span>
             </div>
 
-            {/* Quick Time Presets */}
             <div className="flex items-center gap-1.5 mb-2.5 flex-wrap">
-              <span className="text-[10px] text-slate-500 font-bold mr-1">Presets:</span>
-              {timePresets.map((p, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => {
-                    setTimeFrom(p.from);
-                    setTimeTo(p.to);
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
-                    timeFrom === p.from && timeTo === p.to
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
+              <span className="text-[10px] text-slate-400 font-bold mr-1">Presets:</span>
+              {timePresets.map((p, idx) => {
+                const isActive = timeFrom === p.from && timeTo === p.to;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => {
+                      setTimeFrom(p.from);
+                      setTimeTo(p.to);
+                    }}
+                    className={`schedule-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                      isActive
+                        ? 'active bg-indigo-600 text-white border-indigo-600 shadow-2xs font-bold'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                    style={isActive ? { backgroundColor: '#4F46E5', color: '#FFFFFF', borderColor: '#4F46E5' } : undefined}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Time From
                 </label>
                 <input
@@ -715,12 +807,12 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
                   placeholder="e.g., 10:50 AM"
                   required
                   disabled={submitting}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:border-blue-600 focus:outline-none transition-colors font-mono"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none transition-colors font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                   Time To
                 </label>
                 <input
@@ -730,81 +822,33 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
                   placeholder="e.g., 01:20 PM"
                   required
                   disabled={submitting}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:border-blue-600 focus:outline-none transition-colors font-mono"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none transition-colors font-mono"
                 />
               </div>
             </div>
           </div>
 
-          {/* 5. Number of Lectures to be Considered */}
+          {/* Justification */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-slate-800 m-0">
-                Number of Lectures Missed <span className="text-rose-500">*</span>
-              </label>
-              <span className="text-[11px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                {lecturesCount} {parseInt(lecturesCount, 10) === 1 ? 'Lecture' : 'Lectures'}
-              </span>
-            </div>
-
-            {/* Quick Preset Buttons */}
-            <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-              <span className="text-[11px] text-slate-500 font-medium mr-1">Quick Select:</span>
-              {quickLecturePresets.map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => setLecturesCount(num)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                    parseInt(lecturesCount, 10) === num
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  {num} {num === 1 ? 'Lecture' : 'Lectures'}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="1"
-                max="50"
-                value={lecturesCount}
-                onChange={(e) => setLecturesCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                required
-                disabled={submitting}
-                className="w-32 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:border-blue-600 focus:outline-none transition-colors"
-              />
-              <span className="text-xs text-slate-500 font-medium">
-                Total lecture periods requested for attendance consideration
-              </span>
-            </div>
-          </div>
-
-          {/* 6. Reason & Description */}
-          <div>
-            <label className="block text-xs font-bold text-slate-800 mb-1">
-              Reason / Activity Details <span className="text-rose-500">*</span>
+            <label htmlFor="consideration-justification" className="block font-semibold text-slate-800 text-sm mb-1.5">
+              Justification
             </label>
             <textarea
+              id="consideration-justification"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., Participated as a team member in the Inter-College Hackathon at nodal center..."
+              placeholder="Explain the reason for your request"
               rows={3}
               required
               disabled={submitting}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-600 focus:outline-none transition-colors"
+              className="w-full rounded-xl border border-slate-200 bg-white text-slate-900 p-3 text-sm placeholder:text-slate-400 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 min-h-[90px] resize-y transition-all"
             />
           </div>
 
-          {/* 7. Supporting Document (Optional) */}
+          {/* Upload supporting document */}
           <div>
             <DocumentUploader
-              label="Supporting Document (Optional)"
-              hint="Upload event certificate, invitation letter, or permission slip (PDF, JPG, PNG up to 5 MB - optional)"
+              label=""
               selectedFile={attachment}
               onFileVerified={setAttachment}
               onFileRemove={() => setAttachment(null)}
@@ -813,12 +857,12 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <div className="flex pt-2 pb-2 justify-end gap-3 items-center">
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm shadow-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>
@@ -828,26 +872,24 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
                 <button
                   type="submit"
                   disabled={submitting || isClosed}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-2 ${
+                  className={`px-7 py-2.5 rounded-xl text-sm font-bold shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
                     isClosed
                       ? 'bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300'
-                      : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white cursor-pointer'
+                      : 'bg-primary hover:bg-indigo-700 text-white'
                   }`}
                 >
                   {isClosed ? (
                     <>
-                      <Lock size={14} className="shrink-0" />
+                      <Lock size={15} className="shrink-0" />
                       <span>Submissions Closed (9:00 AM – 4:00 PM Only)</span>
                     </>
                   ) : submitting ? (
                     <>
-                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       <span>Submitting Application...</span>
                     </>
                   ) : (
-                    <span>
-                      Submit {applicationType === 'GROUP' ? `Group Application (${selectedMembers.length + 1} Students)` : 'Application'} ({lecturesCount} {parseInt(lecturesCount, 10) === 1 ? 'Lecture' : 'Lectures'})
-                    </span>
+                    <span>Submit</span>
                   )}
                 </button>
               );

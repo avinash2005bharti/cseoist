@@ -13,12 +13,16 @@ import {
   CheckCircle2,
   Check,
   Calendar,
+  CalendarDays,
+  CalendarX2,
+  Table2,
   History,
   Filter,
   ArrowLeft,
   Clock,
   Sparkles,
 } from 'lucide-react';
+import './Screen-19.screen.css';
 
 function getTodayISTString() {
   try {
@@ -857,518 +861,637 @@ export default function OfficialClearancesLedgerModal({
   }, [showPreviousModal, showPrintModal, onClose]);
 
   return (
-    <div className="modal-backdrop py-4 sm:py-6" onClick={onClose}>
-      <div
-        className="modal-container clearances-ledger-modal max-w-7xl w-[96vw] max-h-[86vh] overflow-y-auto bg-white px-5 sm:px-8 py-4 sm:py-6 text-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl relative block my-auto"
-        style={{ display: 'block', maxHeight: '86vh' }}
+    <div
+      data-appearance="light"
+      className="ledger-modal-overlay animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      {/* =========================================================================
+          Desktop View: Screen 19 (Visible on >= 640px screens)
+          ========================================================================= */}
+      <section
+        className="hidden sm:block shadow-2xl rounded-3xl bg-card border border-border p-5 sm:p-6 w-full max-w-6xl my-auto text-foreground relative max-h-[90vh] overflow-y-auto ledger-modal-scroll"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Close Button - Placed at Top-Right Corner */}
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            width: '36px',
-            height: '36px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#F8FAFC',
-            color: '#64748B',
-            border: '1.5px solid #CBD5E1',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            zIndex: 20,
-          }}
-          className="hover:bg-slate-100 hover:text-slate-900"
-          aria-label="Close"
-          title="Close (Esc)"
-        >
-          <X size={18} />
-        </button>
-
         {/* Header Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1 pb-3.5 border-b border-slate-200 pr-12">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200 shadow-2xs">
-              <FileText size={22} />
+        <div className="flex justify-between items-start gap-6">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="rounded-lg bg-accent text-accent-foreground flex justify-center items-center shrink-0 size-11 shadow-2xs">
+              <FileText className="size-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-black tracking-tight text-slate-900 m-0">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="font-bold text-base text-foreground leading-snug">
                   ORIENTAL INSTITUTE OF SCIENCE & TECHNOLOGY (OIST)
-                </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black">
+                </h1>
+                <span className="font-semibold rounded-full bg-accent text-accent-foreground text-xs px-3 py-1 border border-sky-200">
                   CampusFlow ERP
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
+                <span className="font-semibold rounded-full bg-secondary text-secondary-foreground text-xs px-3 py-1 border border-indigo-200">
                   Approved Sanctions Only
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium m-0 mt-0.5">
+              <p className="text-muted-foreground text-sm mt-1">
                 Department of Computer Science & Engineering • Approved Attendance Clearances
               </p>
             </div>
           </div>
-
-          {/* Action Buttons: Google live sheet, export excel, csv, print report */}
-          <div className="flex items-center gap-2 flex-wrap shrink-0">
-            <button
-              onClick={handleGoogleSheet}
-              className="px-3.5 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-            >
-              <FileSpreadsheet size={14} className="text-emerald-700" />
-              <span>Google Live Sheet</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            </button>
-
-            <button
-              onClick={handleExportExcel}
-              className="px-3.5 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-            >
-              <Download size={14} className="text-emerald-700" />
-              <span>Export Excel</span>
-            </button>
-
-            <button
-              onClick={handleExportCsv}
-              className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-            >
-              <Download size={14} />
-              <span>Export CSV</span>
-            </button>
-
-            {/* Print Report Button */}
-            <button
-              onClick={() => setShowPrintModal(true)}
-              className="px-3.5 py-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-            >
-              <Printer size={14} />
-              <span>Print Report</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground size-9 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+            title="Close (Esc)"
+            aria-label="Close"
+          >
+            <X className="size-4" />
+          </button>
         </div>
 
-        {/* Row 1: Navigation Tabs (Left) and Date Mode Action (Right) */}
-        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-          {/* Primary Tabs - shrink-0 ensures titles are never squished or hidden */}
-          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+        {/* Action Buttons Row */}
+        <div className="border-b border-border flex mt-5 pb-4 flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleGoogleSheet}
+            className="border border-border bg-card hover:bg-muted text-foreground font-medium text-xs sm:text-sm px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+          >
+            <Table2 className="size-4 text-emerald-600" />
+            Google Live Sheet
+          </button>
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="border border-border bg-card hover:bg-muted text-foreground font-medium text-xs sm:text-sm px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+          >
+            <FileSpreadsheet className="size-4 text-emerald-600" />
+            Export Excel
+          </button>
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            className="border border-border bg-card hover:bg-muted text-foreground font-medium text-xs sm:text-sm px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+          >
+            <Download className="size-4" />
+            Export CSV
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowPrintModal(true)}
+            className="border border-border bg-card hover:bg-muted text-foreground font-medium text-xs sm:text-sm px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+          >
+            <Printer className="size-4" />
+            Print Report
+          </button>
+        </div>
+
+        {/* Tabs & Date Filter Controls Row */}
+        <div className="border-b border-border flex py-4 flex-wrap justify-between items-center gap-3">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setActiveTab('considerations')}
-              style={
+              className={`font-medium text-xs sm:text-sm px-4 py-2.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'considerations'
-                  ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8', boxShadow: '0 2px 6px rgba(37, 99, 235, 0.3)' }
-                  : { backgroundColor: '#F1F5F9', color: '#334155', borderColor: '#CBD5E1' }
-              }
-              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap border flex items-center gap-2 ${
-                activeTab === 'considerations' ? '' : 'hover:bg-slate-200'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span>Attendance Consideration Records ({filteredConsiderations.length})</span>
+              Attendance Consideration Records ({filteredConsiderations.length})
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('leaves')}
-              style={
+              className={`font-medium text-xs sm:text-sm px-4 py-2.5 rounded-lg transition-colors cursor-pointer ${
                 activeTab === 'leaves'
-                  ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8', boxShadow: '0 2px 6px rgba(37, 99, 235, 0.3)' }
-                  : { backgroundColor: '#F1F5F9', color: '#334155', borderColor: '#CBD5E1' }
-              }
-              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap border flex items-center gap-2 ${
-                activeTab === 'leaves' ? '' : 'hover:bg-slate-200'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span>Leave Application Records ({filteredLeaves.length})</span>
+              Leave Application Records ({filteredLeaves.length})
             </button>
           </div>
-
-          {/* Date Scope Controls: Today, Future, Previous */}
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            {/* Today Button */}
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={handleSwitchToToday}
-              style={
+              className={`font-medium text-xs sm:text-sm px-4 py-2 rounded-lg flex items-center gap-2 transition-colors cursor-pointer ${
                 dateMode === 'today'
-                  ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8', boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)' }
-                  : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
-              }
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
-                dateMode === 'today' ? '' : 'hover:bg-slate-100'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'border border-border bg-card hover:bg-muted text-foreground'
               }`}
-              title="Show only considerations/leaves active on current day"
             >
-              <Calendar size={13} style={{ color: dateMode === 'today' ? '#FFFFFF' : '#2563EB' }} />
-              <span>Today ({formatDateSlash(todayStr)})</span>
+              <CalendarDays className="size-4" />
+              Today ({formatDateSlash(todayStr)})
             </button>
-
-            {/* Show Future Considerations Button */}
             <button
               type="button"
               onClick={handleSwitchToFuture}
-              style={
+              className={`font-medium text-xs sm:text-sm px-4 py-2 rounded-lg flex items-center gap-2 transition-colors cursor-pointer ${
                 dateMode === 'future'
-                  ? { backgroundColor: '#D97706', color: '#FFFFFF', borderColor: '#B45309', boxShadow: '0 2px 4px rgba(217, 119, 6, 0.25)' }
-                  : { backgroundColor: '#FFFBEB', color: '#92400E', borderColor: '#FCD34D' }
-              }
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
-                dateMode === 'future' ? '' : 'hover:bg-amber-100'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-chart-3/10 text-foreground border border-chart-3 hover:bg-amber-100/50'
               }`}
-              title="Show approved future considerations/leaves scheduled for upcoming dates"
             >
-              <Sparkles size={13} style={{ color: dateMode === 'future' ? '#FFFFFF' : '#D97706' }} />
-              <span>
-                {activeTab === 'considerations'
-                  ? 'Show Future Considerations'
-                  : 'Show Future Leaves'}
-              </span>
+              <Sparkles className="size-4 text-amber-600" />
+              Show Future Considerations
             </button>
-
-            {/* Show Previous Considerations Button */}
             <button
               type="button"
               onClick={handleOpenPreviousModal}
-              style={
+              className={`font-medium text-xs sm:text-sm px-4 py-2 rounded-lg flex items-center gap-2 transition-colors cursor-pointer ${
                 dateMode === 'previous'
-                  ? { backgroundColor: '#4F46E5', color: '#FFFFFF', borderColor: '#4338CA', boxShadow: '0 2px 4px rgba(79, 70, 229, 0.25)' }
-                  : { backgroundColor: '#EEF2FF', color: '#312E81', borderColor: '#C7D2FE' }
-              }
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
-                dateMode === 'previous' ? '' : 'hover:bg-indigo-100'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-indigo-200'
               }`}
-              title="View historical clearances from previous dates"
             >
-              <History size={13} style={{ color: dateMode === 'previous' ? '#FFFFFF' : '#4F46E5' }} />
-              <span>
-                {activeTab === 'considerations'
-                  ? 'Show Previous Considerations'
-                  : 'Show Previous Leaves'}
-              </span>
+              <History className="size-4" />
+              Show Previous Considerations
             </button>
+          </div>
+        </div>
 
-            {/* If in previous mode, allow changing custom date range */}
-            {dateMode === 'previous' && (
+        {/* Assigned Scope & Search Row */}
+        <div className="flex py-4 items-center gap-3 flex-wrap">
+          {isTgView ? (
+            <div className="font-semibold rounded-full bg-muted text-sm px-3.5 py-2 shrink-0 flex items-center gap-2 border border-border">
+              <span>Assigned Scope:</span>
+              <span className="rounded-full bg-primary text-primary-foreground px-3 py-1 text-xs font-bold">
+                Semester {assignedSemester || 5} • Section {assignedSection || 'B'}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+              {/* Semester Selector */}
+              <div className="flex items-center gap-2 bg-muted/80 px-3 py-1.5 rounded-xl border border-border">
+                <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">Semester:</span>
+                <select
+                  value={semesterFilter}
+                  onChange={(e) => setSemesterFilter(e.target.value)}
+                  className="bg-background text-foreground text-xs font-bold rounded-lg px-2.5 py-1 border border-input outline-none cursor-pointer focus:ring-2 focus:ring-primary shadow-2xs"
+                >
+                  <option value="All Semesters">All Semesters</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                    <option key={s} value={`Semester ${s}`}>Semester {s}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Section Selector */}
+              <div className="flex items-center gap-2 bg-muted/80 px-3 py-1.5 rounded-xl border border-border">
+                <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">Section:</span>
+                <select
+                  value={sectionFilter}
+                  onChange={(e) => setSectionFilter(e.target.value)}
+                  className="bg-background text-foreground text-xs font-bold rounded-lg px-2.5 py-1 border border-input outline-none cursor-pointer focus:ring-2 focus:ring-primary shadow-2xs"
+                >
+                  <option value="All">All Sections</option>
+                  {dynamicSections.map((sec) => (
+                    <option key={sec} value={sec}>Section {sec}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="-translate-y-1/2 text-muted-foreground absolute top-1/2 left-3.5 size-4 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search student or roll..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="ledger-search-input ring-ring rounded-lg bg-background text-sm border border-input outline-none pr-3 w-full h-10 focus:ring-2 text-foreground placeholder:text-muted-foreground"
+              style={{ paddingLeft: '2.75rem' }}
+            />
+          </div>
+        </div>
+
+        {/* Subheader Banner */}
+        <div className="rounded-lg bg-muted text-sm border border-border flex px-4 py-3 justify-between items-center gap-4 flex-wrap">
+          <div className="font-semibold text-foreground">
+            APPROVED CLEARANCES: Official Approved {activeTab === 'considerations' ? 'Attendance Considerations' : 'Leave Applications'}
+          </div>
+          <div className="font-semibold rounded-full bg-accent text-accent-foreground px-3 py-1 text-xs border border-sky-200">
+            {dateMode === 'today'
+              ? `Today's Live Sanctions (${formatDateSlash(todayStr)})`
+              : dateMode === 'future'
+              ? 'Upcoming Future Clearances'
+              : `Previous Range: ${formatDateSlash(dateFrom) || 'Start'} to ${formatDateSlash(dateTo) || 'End'}`}
+          </div>
+          <div className="text-muted-foreground text-xs font-medium">
+            Showing {filteredList.length} approved record(s) • Filtered by:{' '}
+            <span className="font-semibold text-foreground">
+              {semesterFilter === 'All Semesters' ? 'All Semesters' : semesterFilter}
+              {sectionFilter !== 'All' ? ` • Section ${sectionFilter}` : ' • All Sections'}
+            </span>
+          </div>
+        </div>
+
+        {/* Table / Records Area */}
+        <div className="rounded-lg border border-border mt-4 overflow-hidden bg-card">
+          <div className="font-bold bg-muted text-xs grid ledger-grid-cols-7 border-b border-border text-foreground">
+            <div className="border-r border-border p-3.5 flex items-center">Student Name</div>
+            <div className="border-r border-border p-3.5 flex items-center">Enrollment No.</div>
+            <div className="border-r border-border p-3.5 text-center flex items-center justify-center">Section</div>
+            <div className="border-r border-border p-3.5 flex items-center">
+              {activeTab === 'leaves' ? 'Category' : 'Lectures / Periods'}
+            </div>
+            <div className="text-center border-r border-border p-2.5 flex flex-col justify-center">
+              <div>Time</div>
+              <div className="text-muted-foreground grid grid-cols-2 gap-1 mt-1 font-semibold text-[11px]">
+                <span>From</span>
+                <span>To</span>
+              </div>
+            </div>
+            <div className="text-center border-r border-border p-2.5 flex flex-col justify-center">
+              <div>Date</div>
+              <div className="text-muted-foreground grid grid-cols-2 gap-1 mt-1 font-semibold text-[11px]">
+                <span>From</span>
+                <span>To</span>
+              </div>
+            </div>
+            <div className="p-3.5 text-center flex items-center justify-center">Number of Days</div>
+          </div>
+
+          {loading ? (
+            <div className="text-center flex py-16 flex-col justify-center items-center min-h-56">
+              <Clock className="size-7 text-primary animate-spin" />
+              <div className="text-muted-foreground text-sm mt-3">Loading authorized clearances...</div>
+            </div>
+          ) : filteredList.length === 0 ? (
+            <div className="text-center flex px-8 py-12 flex-col justify-center items-center min-h-56">
+              <CalendarX2 className="text-muted-foreground size-7" />
+              <div className="font-semibold text-sm mt-3 max-w-lg text-foreground">
+                No approved {activeTab === 'considerations' ? 'attendance considerations' : 'leave applications'} sanctioned for today ({formatDateSlash(todayStr)}).
+              </div>
+              <div className="text-muted-foreground text-sm mt-2 max-w-xl">
+                You can view upcoming future clearances or historical records from previous dates below.
+              </div>
+              <div className="flex mt-4 flex-wrap justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSwitchToFuture}
+                  className="rounded-md border border-border bg-card hover:bg-muted text-foreground text-sm font-medium px-4 py-2 flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <Sparkles className="size-4 text-amber-600" />
+                  Show Future Considerations
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenPreviousModal}
+                  className="rounded-md border border-border bg-card hover:bg-muted text-foreground text-sm font-medium px-4 py-2 flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <History className="size-4" />
+                  Show Previous Considerations
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="divide-y divide-border text-xs">
+              {filteredList.map((row, idx) => (
+                <div
+                  key={row._id || idx}
+                  className="grid ledger-grid-cols-7 items-center hover:bg-muted/40 transition-colors bg-card"
+                >
+                  <div className="border-r border-border p-3.5 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-bold text-foreground text-sm truncate">{row.studentName}</span>
+                      {row.isLeader && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0">
+                          ★ Lead
+                        </span>
+                      )}
+                      {row.isGroup && !row.isLeader && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground border border-border shrink-0">
+                          Team Member
+                        </span>
+                      )}
+                    </div>
+                    {row.eventTitle && (
+                      <span className="text-[11px] text-muted-foreground block font-semibold mt-0.5 truncate">
+                        [{row.eventTitle}]
+                      </span>
+                    )}
+                    <span className="text-[11px] text-muted-foreground block truncate max-w-xs mt-0.5">
+                      {row.description || 'Approved consideration'}
+                    </span>
+                  </div>
+                  <div className="border-r border-border p-3.5 font-mono text-muted-foreground text-xs truncate">
+                    {row.enrollmentNumber}
+                  </div>
+                  <div className="border-r border-border p-3.5 text-center">
+                    <span className="inline-flex items-center justify-center size-7 rounded-full bg-secondary text-secondary-foreground font-bold text-xs mx-auto border border-border">
+                      {row.sectionName}
+                    </span>
+                  </div>
+                  <div className="border-r border-border p-3.5 font-medium text-foreground text-xs truncate">
+                    {row.periodsStr}
+                  </div>
+                  <div className="border-r border-border p-2.5 text-center font-mono text-muted-foreground text-[11px]">
+                    <div className="grid grid-cols-2 gap-1 items-center">
+                      <span className="truncate">{row.timeFrom || '—'}</span>
+                      <span className="truncate">{row.timeTo || '—'}</span>
+                    </div>
+                  </div>
+                  <div className="border-r border-border p-2.5 text-center font-mono text-muted-foreground text-[11px]">
+                    <div className="grid grid-cols-2 gap-1 items-center">
+                      <span className="font-medium whitespace-nowrap">{formatDateSlash(row.startDate)}</span>
+                      <span className="font-medium whitespace-nowrap">{formatDateSlash(row.endDate || row.startDate)}</span>
+                    </div>
+                  </div>
+                  <div className="p-3.5 text-center">
+                    <span className="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold whitespace-nowrap">
+                      {row.totalDays ? `${row.totalDays} Day${row.totalDays !== 1 ? 's' : ''}` : '1 Day'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Authorized Sign-off Footer */}
+        <div className="text-muted-foreground text-sm border-t border-border mt-4 pt-4">
+          Authorized Sign-off:{' '}
+          <span className="font-semibold text-foreground">
+            Head of Department (HOD CSE) • Department of CSE
+          </span>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          Mobile View: Screen 20 (Visible on < 640px screens)
+          ========================================================================= */}
+      <div
+        className="sm:hidden w-full max-w-md mx-auto my-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="shadow-sm rounded-xl bg-card border border-border flex flex-col w-full max-h-[92vh] overflow-hidden">
+          {/* Mobile Header */}
+          <div className="border-b border-border flex p-4 justify-between items-start gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="rounded-md bg-secondary text-primary flex justify-center items-center shrink-0 size-9">
+                <FileText className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="font-semibold text-base leading-5 text-foreground">
+                    OIST Approved Clearances
+                  </h1>
+                  <span className="rounded-full font-semibold text-xs px-2.5 py-0.5 bg-accent text-accent-foreground">
+                    CampusFlow ERP
+                  </span>
+                  <span className="rounded-full font-semibold text-xs px-2.5 py-0.5 bg-secondary text-secondary-foreground">
+                    Approved Only
+                  </span>
+                </div>
+                <p className="text-muted-foreground text-sm mt-1">{`Department of Computer Science & Engineering`}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md border border-border hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 size-9 flex items-center justify-center transition-colors"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+
+          {/* Mobile Body */}
+          <div className="p-4 flex-1 overflow-y-auto space-y-4">
+            {/* Action buttons */}
+            <div className="grid gap-2">
+              <button
+                type="button"
+                onClick={handleGoogleSheet}
+                className="w-full min-h-11 rounded-lg bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              >
+                <Table2 className="size-4" />
+                Google Live Sheet
+              </button>
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                className="w-full min-h-11 rounded-lg bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              >
+                <FileSpreadsheet className="size-4" />
+                Export Excel
+              </button>
+              <div className="grid gap-2 grid-cols-2">
+                <button
+                  type="button"
+                  onClick={handleExportCsv}
+                  className="w-full min-h-11 rounded-lg border border-border bg-card hover:bg-muted text-foreground font-medium flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Download className="size-4" />
+                  Export CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPrintModal(true)}
+                  className="w-full min-h-11 rounded-lg border border-border bg-card hover:bg-muted text-foreground font-medium flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Printer className="size-4" />
+                  Print Report
+                </button>
+              </div>
+            </div>
+
+            {/* Segmented Control */}
+            <div className="rounded-md bg-muted grid p-1 grid-cols-2 gap-1 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setActiveTab('considerations')}
+                className={`py-2 px-2 rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'considerations'
+                    ? 'bg-card text-foreground shadow-xs font-bold'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                Attendance Records ({filteredConsiderations.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('leaves')}
+                className={`py-2 px-2 rounded-md transition-colors cursor-pointer ${
+                  activeTab === 'leaves'
+                    ? 'bg-card text-foreground shadow-xs font-bold'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                Leave Records ({filteredLeaves.length})
+              </button>
+            </div>
+
+            {/* Date Quick Toggles */}
+            <div className="flex pb-1 gap-2 overflow-x-auto text-xs font-medium">
+              <button
+                type="button"
+                onClick={handleSwitchToToday}
+                className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-colors cursor-pointer ${
+                  dateMode === 'today'
+                    ? 'bg-primary text-primary-foreground font-bold'
+                    : 'border border-border bg-card text-muted-foreground'
+                }`}
+              >
+                Today · {formatDateSlash(todayStr)}
+              </button>
+              <button
+                type="button"
+                onClick={handleSwitchToFuture}
+                className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-colors cursor-pointer ${
+                  dateMode === 'future'
+                    ? 'bg-amber-600 text-white font-bold'
+                    : 'border border-border bg-card text-muted-foreground'
+                }`}
+              >
+                Future
+              </button>
               <button
                 type="button"
                 onClick={handleOpenPreviousModal}
-                className="px-2.5 py-1.5 rounded-xl text-xs font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                title="Change custom date range"
+                className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-colors cursor-pointer ${
+                  dateMode === 'previous'
+                    ? 'bg-primary text-primary-foreground font-bold'
+                    : 'border border-border bg-card text-muted-foreground'
+                }`}
               >
-                <Filter size={13} className="text-slate-500" />
-                <span>Change Dates</span>
+                Previous
               </button>
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* Row 2: Filter Dropdowns & Search Box */}
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          {/* Left: Scope badges or Semester/Section selectors */}
-          <div className="flex items-center gap-2.5 flex-wrap">
-            {isTgView ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold">
-                <span>Assigned Scope:</span>
-                <span
-                  style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}
-                  className="px-2.5 py-0.5 rounded-md text-[11px] font-black"
-                >
-                  Semester {assignedSemester || 5} • Section {assignedSection || 'B'}
-                </span>
+            {/* Scope / Filters & Search */}
+            <div>
+              {isTgView ? (
+                <div className="font-medium text-sm flex mb-2 items-center gap-2">
+                  <span>Assigned Scope:</span>
+                  <span className="rounded-md font-semibold text-xs px-2.5 py-0.5 bg-secondary text-secondary-foreground">
+                    Semester {assignedSemester || 5} • Section {assignedSection || 'B'}
+                  </span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 mb-2.5">
+                  <div>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Semester</label>
+                    <select
+                      value={semesterFilter}
+                      onChange={(e) => setSemesterFilter(e.target.value)}
+                      className="w-full text-xs font-bold h-9 px-2 rounded-lg border border-input bg-background outline-none text-foreground"
+                    >
+                      <option value="All Semesters">All Semesters</option>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                        <option key={s} value={`Semester ${s}`}>Semester {s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Section</label>
+                    <select
+                      value={sectionFilter}
+                      onChange={(e) => setSectionFilter(e.target.value)}
+                      className="w-full text-xs font-bold h-9 px-2 rounded-lg border border-input bg-background outline-none text-foreground"
+                    >
+                      <option value="All">All Sections</option>
+                      {dynamicSections.map((sec) => (
+                        <option key={sec} value={sec}>Section {sec}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+              <input
+                type="text"
+                placeholder="Search student or roll..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full text-base h-11 px-3 rounded-lg border border-input bg-background outline-none text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+
+            {/* Subheader */}
+            <div className="flex justify-between items-start gap-3 pt-1">
+              <div>
+                <h2 className="font-semibold text-base text-foreground">
+                  Approved clearances
+                </h2>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Official approved {activeTab === 'considerations' ? 'attendance considerations' : 'leave applications'}
+                </p>
+              </div>
+              <span className="font-semibold rounded-md text-xs px-2.5 py-1 bg-accent text-accent-foreground shrink-0">
+                Today’s live sanctions
+              </span>
+            </div>
+
+            {/* Mobile Empty State Card or Records */}
+            {filteredList.length === 0 ? (
+              <div className="rounded-xl border border-border bg-card text-center flex px-4 py-8 flex-col items-center">
+                <div className="rounded-full bg-secondary text-primary flex justify-center items-center size-12">
+                  <CalendarDays className="size-6" />
+                </div>
+                <h3 className="font-semibold text-lg mt-4 text-foreground">
+                  No approved clearances today
+                </h3>
+                <p className="text-muted-foreground text-base mt-2">
+                  No approved attendance considerations sanctioned for {formatDateSlash(todayStr)}.
+                </p>
+                <p className="text-muted-foreground text-sm mt-3">
+                  View future or previous clearances to find historical records.
+                </p>
+                <div className="grid mt-6 gap-2 w-full">
+                  <button
+                    type="button"
+                    onClick={handleSwitchToFuture}
+                    className="w-full min-h-11 rounded-lg border border-border bg-card hover:bg-muted text-foreground font-medium flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    Show Future Considerations
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleOpenPreviousModal}
+                    className="w-full min-h-11 rounded-lg border border-border bg-card hover:bg-muted text-foreground font-medium flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    Show Previous Considerations
+                  </button>
+                </div>
               </div>
             ) : (
-              <>
-                <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                  <span className="font-bold text-slate-600">Semester:</span>
-                  <select
-                    value={semesterFilter}
-                    onChange={(e) => setSemesterFilter(e.target.value)}
-                    className="px-2 py-0.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
-                  >
-                    <option value="All Semesters">All Semesters</option>
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                      <option key={s} value={`Semester ${s}`}>
-                        Semester {s}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                  <span className="font-bold text-slate-600">Section:</span>
-                  <select
-                    value={sectionFilter}
-                    onChange={(e) => setSectionFilter(e.target.value)}
-                    className="px-2 py-0.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
-                  >
-                    <option value="All">All Sections</option>
-                    {dynamicSections.map((sec) => (
-                      <option key={sec} value={sec}>
-                        Section {sec}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Right: Search Box */}
-          <div style={{ position: 'relative' }} className="flex-1 sm:flex-initial min-w-[240px]">
-            <Search
-              size={15}
-              style={{
-                position: 'absolute',
-                left: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#94A3B8',
-                pointerEvents: 'none',
-              }}
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search student or roll..."
-              style={{
-                paddingLeft: '38px',
-                paddingRight: '14px',
-                paddingTop: '7px',
-                paddingBottom: '7px',
-                backgroundColor: '#FFFFFF',
-                color: '#0F172A',
-                border: '1.5px solid #CBD5E1',
-                borderRadius: '12px',
-                outline: 'none',
-                width: '100%',
-                fontSize: '12px',
-                boxSizing: 'border-box',
-              }}
-              className="sm:w-64 shadow-2xs focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Subhead Banner with Current Scope State */}
-        <div className="mt-4 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-600">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-black text-slate-800">
-              APPROVED CLEARANCES:{' '}
-              {activeTab === 'considerations'
-                ? 'Official Approved Attendance Considerations'
-                : 'Official Approved Student Leave Applications'}
-            </span>
-            {dateMode === 'today' ? (
-              <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 font-extrabold text-[11px] flex items-center gap-1">
-                <Clock size={11} /> Today's Live Sanctions ({formatDateSlash(todayStr)})
-              </span>
-            ) : dateMode === 'future' ? (
-              <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[11px] flex items-center gap-1">
-                <Sparkles size={11} className="text-amber-700" /> Future Clearances (Upcoming)
-              </span>
-            ) : (
-              <span className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[11px] flex items-center gap-1">
-                <History size={11} /> Previous Range: {formatDateSlash(dateFrom) || 'Start'} to {formatDateSlash(dateTo) || 'End'}
-              </span>
-            )}
-          </div>
-          <span className="text-slate-500 font-semibold shrink-0">
-            Showing {filteredList.length} approved record(s) • Filtered by: {semesterFilter}
-          </span>
-        </div>
-
-        {/* Ledger Table (Approved Students Only, No Clipped Columns) */}
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white shadow-2xs overflow-visible">
-          <table className="w-full text-left border-collapse text-xs min-w-[980px]">
-            <thead className="sticky top-0 z-10 bg-slate-100 shadow-xs">
-              <tr className="bg-slate-100 text-slate-700 font-black border-b border-slate-200">
-                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 w-[280px]">Student Name</th>
-                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 w-[140px]">Enrollment No.</th>
-                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 text-center w-[75px]">Section</th>
-                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 w-[120px]">
-                  {activeTab === 'leaves' ? 'Category' : 'Lectures / Periods'}
-                </th>
-                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 text-center w-[160px]" colSpan={2}>
-                  Time
-                  <div className="grid grid-cols-2 text-[10px] font-bold text-slate-500 border-t border-slate-200 mt-1 pt-1">
-                    <span>From</span>
-                    <span>To</span>
-                  </div>
-                </th>
-                <th className="sticky top-0 z-10 p-3.5 border-r border-slate-200 bg-slate-100 text-center w-[190px]" colSpan={2}>
-                  Date
-                  <div className="grid grid-cols-2 text-[10px] font-bold text-slate-500 border-t border-slate-200 mt-1 pt-1">
-                    <span>From</span>
-                    <span>To</span>
-                  </div>
-                </th>
-                <th className="sticky top-0 z-10 p-3.5 bg-slate-100 text-center w-[130px]">Number of Days</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
-              {loading ? (
-                <tr>
-                  <td colSpan={9} className="p-10 text-center text-slate-400 font-semibold">
-                    <div className="flex items-center justify-center gap-2">
-                      <Clock size={16} className="animate-spin text-blue-600" />
-                      <span>Loading authorized records...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : filteredList.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="p-10 text-center text-slate-400 font-semibold">
-                    <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
-                      <Calendar size={28} className="text-slate-300" />
-                      <p className="text-sm font-bold text-slate-700 m-0">
-                        {dateMode === 'today'
-                          ? `No approved ${activeTab === 'considerations' ? 'attendance considerations' : 'leave applications'} sanctioned for today (${formatDateSlash(todayStr)}).`
-                          : dateMode === 'future'
-                          ? `No approved upcoming ${activeTab === 'considerations' ? 'attendance considerations' : 'leave applications'} found for future dates.`
-                          : `No approved ${activeTab === 'considerations' ? 'attendance considerations' : 'leave applications'} found between ${formatDateSlash(dateFrom)} and ${formatDateSlash(dateTo)}.`}
-                      </p>
-                      <p className="text-xs text-slate-400 m-0 text-center">
-                        {dateMode === 'today'
-                          ? 'You can view upcoming future clearances or historical records from previous dates below.'
-                          : dateMode === 'future'
-                          ? 'You can switch back to today’s view or inspect previous historical records.'
-                          : 'Try switching to today, upcoming future dates, or adjusting the date range.'}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
-                        {dateMode !== 'today' && (
-                          <button
-                            type="button"
-                            onClick={handleSwitchToToday}
-                            className="px-3.5 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
-                          >
-                            <Calendar size={14} />
-                            <span>View Today ({formatDateSlash(todayStr)})</span>
-                          </button>
-                        )}
-                        {dateMode !== 'future' && (
-                          <button
-                            type="button"
-                            onClick={handleSwitchToFuture}
-                            className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
-                          >
-                            <Sparkles size={14} className="text-amber-600" />
-                            <span>
-                              Show Future{' '}
-                              {activeTab === 'considerations' ? 'Considerations' : 'Leaves'}
-                            </span>
-                          </button>
-                        )}
-                        {dateMode !== 'previous' && (
-                          <button
-                            type="button"
-                            onClick={handleOpenPreviousModal}
-                            className="px-3.5 py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
-                          >
-                            <History size={14} />
-                            <span>
-                              Show Previous{' '}
-                              {activeTab === 'considerations' ? 'Considerations' : 'Leaves'}
-                            </span>
-                          </button>
-                        )}
+              <div className="space-y-3">
+                {filteredList.map((row, idx) => (
+                  <div key={row._id || idx} className="rounded-xl border border-border bg-card p-4 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-bold text-foreground text-base">{row.studentName}</div>
+                        <div className="text-xs font-mono text-muted-foreground">{row.enrollmentNumber}</div>
                       </div>
+                      <span className="rounded-full bg-secondary text-secondary-foreground font-bold text-xs px-2.5 py-0.5">
+                        Sec {row.sectionName}
+                      </span>
                     </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredList.map((row, idx) => {
-                  const studentName = row.studentName;
-                  const rollNo = row.enrollmentNumber;
-                  const secName = row.sectionName;
-                  const periodsStr = row.periodsStr;
-                  const timeFrom = row.timeFrom;
-                  const timeTo = row.timeTo;
-                  const dateFromStr = formatDateSlash(row.startDate);
-                  const dateToStr = formatDateSlash(row.endDate || row.startDate);
-                  const isLead = row.isLeader;
-                  const isTeam = row.isGroup && !row.isLeader;
-
-                  return (
-                    <tr key={row._id || idx} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="p-3.5 border-r border-slate-100">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-black text-slate-900 text-xs">{studentName}</span>
-                          {isLead && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300">
-                              ★ Lead
-                            </span>
-                          )}
-                          {isTeam && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                              Team Member
-                            </span>
-                          )}
-                        </div>
-                        {row.eventTitle && (
-                          <span className="text-[11px] text-slate-600 block font-bold mt-0.5">
-                            [{row.eventTitle}]
-                          </span>
-                        )}
-                        <span className="text-[10px] text-slate-400 block truncate max-w-xs mt-0.5">
-                          {row.description || 'Approved attendance consideration'}
-                        </span>
-                      </td>
-                      <td className="p-3.5 border-r border-slate-100 font-mono text-slate-700 text-xs">
-                        {rollNo}
-                      </td>
-                      <td className="p-3.5 border-r border-slate-100 text-center">
-                        <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-700 font-black text-xs border border-blue-200 flex items-center justify-center mx-auto shadow-2xs">
-                          {secName}
-                        </div>
-                      </td>
-                      <td className="p-3.5 border-r border-slate-100 font-bold text-slate-700 text-xs">
-                        {periodsStr}
-                      </td>
-                      <td className="p-3.5 border-r border-slate-100 text-center text-slate-600 font-mono text-xs">
-                        {timeFrom}
-                      </td>
-                      <td className="p-3.5 border-r border-slate-100 text-center text-slate-600 font-mono text-xs">
-                        {timeTo}
-                      </td>
-                      <td className="p-3.5 border-r border-slate-100 text-center text-slate-600 whitespace-nowrap font-mono text-xs">
-                        {dateFromStr}
-                      </td>
-                      <td className="p-3.5 border-r border-slate-100 text-center text-slate-600 whitespace-nowrap font-mono text-xs">
-                        {dateToStr}
-                      </td>
-                      <td className="p-3.5 text-center">
-                        <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black shadow-2xs">
-                          {row.totalDays ? `${row.totalDays} Day${row.totalDays !== 1 ? 's' : ''}` : '1 Day'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-5 pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="text-slate-500 font-medium">
-            Authorized Sign-off:{' '}
-            <strong className="text-slate-800">
-              Head of Department (HOD CSE) • Department of CSE
-            </strong>
+                    <div className="text-xs text-muted-foreground">
+                      <span className="font-semibold text-foreground">Lectures:</span> {row.periodsStr}
+                    </div>
+                    <div className="text-xs text-muted-foreground flex justify-between">
+                      <span><strong className="text-foreground">Time:</strong> {row.timeFrom} - {row.timeTo}</span>
+                      <span><strong className="text-foreground">Date:</strong> {formatDateSlash(row.startDate)}</span>
+                    </div>
+                    <div className="pt-2 border-t border-border flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">{row.description || 'Approved consideration'}</span>
+                      <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2.5 py-0.5 font-bold">
+                        {row.totalDays ? `${row.totalDays} Day${row.totalDays !== 1 ? 's' : ''}` : '1 Day'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <button
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white transition-colors cursor-pointer self-end sm:self-auto shadow-xs"
-          >
-            Close Window
-          </button>
+
+          {/* Mobile Footer */}
+          <div className="text-muted-foreground text-sm border-t border-border px-4 py-3">
+            Authorized sign-off: Head of Department (HOD CSE)
+          </div>
         </div>
+      </div>
 
         {/* =======================================================================
             Modal: Select Date Range for Previous Data
@@ -1436,10 +1559,10 @@ export default function OfficialClearancesLedgerModal({
                           style={
                             isSelected
                               ? {
-                                  backgroundColor: '#2563EB',
+                                  backgroundColor: '#4F46E5',
                                   color: '#FFFFFF',
-                                  border: '1.5px solid #1D4ED8',
-                                  boxShadow: '0 2px 8px rgba(37, 99, 235, 0.35)',
+                                  border: '1.5px solid #4338CA',
+                                  boxShadow: '0 2px 8px rgba(79, 70, 229, 0.35)',
                                 }
                               : {
                                   backgroundColor: '#F1F5F9',
@@ -1449,7 +1572,7 @@ export default function OfficialClearancesLedgerModal({
                           }
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                             isSelected
-                              ? 'bg-blue-600 text-white border-blue-700 shadow-xs ring-2 ring-blue-400/30'
+                              ? 'bg-primary text-white border-indigo-700 shadow-xs ring-2 ring-indigo-400/30'
                               : 'hover:bg-slate-200 text-slate-700'
                           }`}
                         >
@@ -1531,12 +1654,12 @@ export default function OfficialClearancesLedgerModal({
                       fetchRecords({ from: modalFrom, to: modalTo });
                     }}
                     style={{
-                      backgroundColor: '#2563EB',
+                      backgroundColor: '#4F46E5',
                       color: '#FFFFFF',
-                      border: '1px solid #1D4ED8',
-                      boxShadow: '0 4px 12px rgba(37, 99, 235, 0.35)',
+                      border: '1px solid #4338CA',
+                      boxShadow: '0 4px 12px rgba(79, 70, 229, 0.35)',
                     }}
-                    className="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white flex items-center gap-2 cursor-pointer transition-all"
+                    className="px-5 py-2.5 rounded-xl text-xs font-bold bg-primary hover:bg-primary-hover active:bg-indigo-800 text-white flex items-center gap-2 cursor-pointer transition-all"
                   >
                     <CheckCircle2 size={15} style={{ color: '#FFFFFF' }} />
                     <span style={{ color: '#FFFFFF' }}>Apply & View Records</span>
@@ -1623,7 +1746,7 @@ export default function OfficialClearancesLedgerModal({
                       onClick={() => setPrintDateScope('today')}
                       style={
                         printDateScope === 'today'
-                          ? { backgroundColor: '#2563EB', color: '#FFFFFF', borderColor: '#1D4ED8' }
+                          ? { backgroundColor: '#4F46E5', color: '#FFFFFF', borderColor: '#4338CA' }
                           : { backgroundColor: '#F8FAFC', color: '#334155', borderColor: '#CBD5E1' }
                       }
                       className={`min-h-[40px] py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
@@ -1780,12 +1903,12 @@ export default function OfficialClearancesLedgerModal({
                       type="button"
                       onClick={executeGenerateReport}
                       style={{
-                        backgroundColor: '#2563EB',
+                        backgroundColor: '#4F46E5',
                         color: '#FFFFFF',
-                        border: '1px solid #1D4ED8',
-                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
+                        border: '1px solid #4338CA',
+                        boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
                       }}
-                      className="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[42px] shadow-xs flex-1 sm:flex-none"
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold bg-primary hover:bg-primary-hover active:bg-indigo-800 text-white flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[42px] shadow-xs flex-1 sm:flex-none"
                     >
                       <Printer size={15} style={{ color: '#FFFFFF' }} />
                       <span style={{ color: '#FFFFFF' }}>Generate PDF / Print</span>
@@ -1819,6 +1942,5 @@ export default function OfficialClearancesLedgerModal({
           />
         )}
       </div>
-    </div>
-  );
-}
+    );
+  }

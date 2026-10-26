@@ -60,7 +60,15 @@ export default function StudentConsiderations() {
       const params = {};
       if (statusFilter) params.status = statusFilter;
       const res = await considerationApi.getMine(params);
-      setRequests(res?.data || []);
+      const data = res?.data || [];
+      setRequests(data);
+      if (data.length > 0) {
+        setSelectedRequest((prev) => {
+          if (!prev) return data[0];
+          const found = data.find((r) => r._id === prev._id);
+          return found || data[0];
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -166,8 +174,8 @@ export default function StudentConsiderations() {
             }}
             className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold text-center transition-all cursor-pointer shadow-2xs ${
               statusFilter === tab.value
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'bg-card text-muted-foreground border border-border hover:bg-muted/50'
             }`}
           >
             {tab.label}
@@ -277,6 +285,8 @@ export default function StudentConsiderations() {
                         <TableRow
                           key={r._id}
                           isSelected={selectedRequest?._id === r._id}
+                          onClick={() => setSelectedRequest(r)}
+                          className="cursor-pointer hover:bg-slate-50/80 transition-colors"
                         >
                           <TableCell>
                             <div className="flex items-center gap-1.5 flex-wrap">
@@ -306,15 +316,21 @@ export default function StudentConsiderations() {
                           <TableCell>
                             <div className="flex items-center gap-1.5">
                               <button
-                                onClick={() => setSelectedRequest(r)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedRequest(r);
+                                }}
                                 className="btn btn-outline btn-xs p-1 cursor-pointer"
-                                title="View Audit Stepper"
+                                title="View Application Details"
                               >
                                 <Eye size={13} />
                               </button>
                               {r.status === 'PENDING' && (
                                 <button
-                                  onClick={() => handleCancel(r._id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCancel(r._id);
+                                  }}
                                   disabled={cancellingId === r._id}
                                   className="btn btn-danger btn-xs p-1 cursor-pointer disabled:opacity-50"
                                   title="Cancel Request"
@@ -459,7 +475,7 @@ export default function StudentConsiderations() {
                     fullWidth
                     icon={<FileText size={14} />}
                     onClick={() => setFormalModalItem(selectedRequest)}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer shadow-xs"
                   >
                     View Sanctioned Certificate
                   </Button>

@@ -73,6 +73,10 @@ const leaveApplicationSchema = new mongoose.Schema(
       index: true,
     },
     tgReview: {
+      decision: {
+        type: String,
+        enum: ['RECOMMEND', 'REJECT'],
+      },
       remarks: String,
       reviewedAt: Date,
       reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

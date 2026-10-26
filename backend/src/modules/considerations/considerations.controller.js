@@ -22,6 +22,11 @@ export const getHODQueue = asyncHandler(async (req, res) => {
   return sendSuccess(res, result.requests, result.meta);
 });
 
+export const getTGHistory = asyncHandler(async (req, res) => {
+  const result = await considerationsService.getTGRecommendationsHistory(req.query, req.user);
+  return sendSuccess(res, result.requests, result.meta);
+});
+
 export const getById = asyncHandler(async (req, res) => {
   const request = await considerationsService.getConsiderationById(req.params.id, req.user);
   return sendSuccess(res, request);
@@ -57,6 +62,7 @@ export default {
   getMine,
   getTGQueue,
   getHODQueue,
+  getTGHistory,
   getById,
   cancel,
   tgReview,

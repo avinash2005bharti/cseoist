@@ -1,0 +1,126 @@
+================================================================================
+FLOWSTEP UI GENERATION PROMPT: TUTOR GUARDIAN (TG) WORKSPACE (WEB + RESPONSIVE)
+APPLICATION: CampusFlow Lite (Academic Consideration & ERP Management System)
+PORTAL: Tutor Guardian (TG) Workspace
+================================================================================
+
+[SYSTEM / DESIGN ROLE]
+You are a Senior SaaS UI/UX Designer creating a comprehensive Teacher / Tutor Guardian (TG) interface for student application review and mentorship tracking across 1440px Desktop and 375px Mobile viewports.
+
+[DESIGN SYSTEM SPECIFICATIONS]
+- Canvas Background: #F8FAFC (Slate 50).
+- Card Surfaces: #FFFFFF with 12px/16px rounded corners, 1px border rgba(226, 232, 240, 0.85), soft SaaS shadow: 0 1px 3px rgba(0,0,0,0.04).
+- Button Rules:
+  * Primary Action: SaaS Royal Blue gradient (180deg, #2563EB 0%, #1D4ED8 100%), text-white, 8px radius.
+  * Secondary / Outline Button: #FFFFFF background, border 1px #CBD5E1, text #475569, hover #F1F5F9.
+  * Decision Buttons: Recommend to HOD is styled in SaaS Primary Blue (#2563EB), Reject is styled in Clean Dark Neutral Slate (#334155), NEVER green or red button fills!
+- Option Selections (Tabs & Filter Pills):
+  * Active Option: Solid SaaS Blue #2563EB with text-white and 0 1px 2px rgba(37,99,235,0.2).
+  * Inactive Option: Clean white/transparent with blue hover feedback (#EFF6FF background, #BFDBFE border, #1D4ED8 text).
+  * Counter Badges inside tabs must flow inline-flex without clipping text (e.g. "Attendance Consideration (1)" with full label visible).
+
+--------------------------------------------------------------------------------
+1. DESKTOP LAYOUT: TG DASHBOARD (`/tg` - 1440px Viewport)
+--------------------------------------------------------------------------------
+
+A. TOP APP HEADER:
+   - Sticky frosted glass bar (rgba(255, 255, 255, 0.92) with blur 12px).
+   - Left: OIST CSE Crest, "CampusFlow Lite", "TG WORKSPACE" pill.
+   - Center: "TG Dashboard" pill with verified shield badge.
+   - Right: Notification Bell with count ("6"), Teacher profile ("Test Teacher", "TEACHER"), Sign-out icon.
+
+B. WELCOME BANNER & CONTEXT ROW:
+   - Breadcrumb: "TUTOR GUARDIAN WORKSPACE" in uppercase blue tag.
+   - Welcome Card:
+     * Avatar: User icon in rounded blue container.
+     * Heading: "Welcome back, Test Teacher!" in 26px font-black #0F172A.
+     * Subtitle: "Here is the real-time overview for your assigned student section."
+     * Metadata Pills:
+       - "Active TG Duty" status pill (clean emerald dot, #065F46 on #ECFDF5).
+       - "Department: Computer Science and Engineering".
+       - "Assigned: Semester 5 • Section B".
+
+C. 4 KEY METRIC & RECORD CARDS (4-Column Grid):
+   - Card 1 ("PENDING APPLICATIONS"):
+     * Icon: FileText in soft rose container.
+     * Label: "PENDING APPLICATIONS" in 11px uppercase bold.
+     * Big Number: "1" in 30px font-black #0F172A.
+     * Notice: "Requires your action" in bold amber/rose text.
+     * Bottom Action Link: "Review Applications ->" in #2563EB font-bold.
+   - Card 2 ("TOTAL STUDENTS"):
+     * Icon: Users in soft blue container.
+     * Label: "TOTAL STUDENTS" in 11px uppercase bold.
+     * Big Number: "21" in 30px font-black #0F172A.
+     * Metadata: "CSE • Semester 5 • Section B".
+     * Bottom Action Link: "View Student List ->" in #2563EB font-bold.
+   - Card 3 ("Attendance Consideration Records"):
+     * Icon: CheckSquare in soft purple container.
+     * Title: "Attendance Consideration Records" in 15px font-bold #0F172A.
+     * Subtitle: "Approved attendance clearances and official records".
+     * Bottom Action Link: "View Records [ExternalLink]" in #7C3AED font-bold.
+   - Card 4 ("Leave Application Records"):
+     * Icon: Calendar in soft blue container (NO GREEN!).
+     * Title: "Leave Application Records" in 15px font-bold #0F172A.
+     * Subtitle: "Section leave records and sanctioned leaves".
+     * Bottom Action Link: "View Records [ExternalLink]" in #2563EB font-bold.
+
+D. NOTICE BOARD SECTION:
+   - Header: Megaphone icon with "Notice Board" title.
+   - Option Selection Tabs (Top Right):
+     * "Latest" (Active Blue #2563EB pill, text-white).
+     * "Circulars" (Inactive option with blue hover #EFF6FF, text #1D4ED8).
+     * "Department" (Inactive option with blue hover #EFF6FF, text #1D4ED8).
+   - Empty State / Notice List: Clean card with empty state megaphone icon and text "No active circulars for CSE • Semester 5 • Section B."
+
+--------------------------------------------------------------------------------
+2. DESKTOP LAYOUT: REVIEW APPLICATIONS (`/tg/requests` - 1440px Viewport)
+--------------------------------------------------------------------------------
+
+A. PAGE TITLE & DESCRIPTION:
+   - Title: "Review Applications" in 28px font-black #0F172A.
+   - Description: "Review and recommend attendance consideration and leave applications for your assigned students."
+
+B. MAIN CATEGORY TABS (Inline Option Selector):
+   - Tab 1: "Attendance Consideration" with inline red counter badge "1" (badge positioned inline-flex to right, zero text truncation).
+     * Active State: Solid SaaS Blue #2563EB, text-white.
+   - Tab 2: "Leave Applications" (white background, border #CBD5E1, text #334155, hover #EFF6FF).
+
+C. STATUS SUB-FILTER OPTION CHIPS (Segmented Option Selector):
+   - Option 1: "Pending Review" (Active: Solid Blue #2563EB, text-white).
+   - Option 2: "Recommended by TG" (Inactive with blue hover #EFF6FF, border #BFDBFE, text #1D4ED8).
+   - Option 3: "Rejected" (Inactive with blue hover).
+   - Option 4: "All Applications" (Inactive with blue hover).
+
+D. APPLICATION REVIEW CARD (Container Card):
+   - Header Row:
+     * Left: Student Name "Avinash Bharti" in 16px font-bold #0F172A, Roll "Roll: 0105CS241101 • CSE-B" in 13px #64748B.
+     * Right: Status Pill "Pending Review" in high-contrast amber (#92400E on #FFFBEB).
+   - Body Row (Data Strip):
+     * EVENT Box: Label "EVENT" uppercase 11px, Value "testing", Date "2026-10-25".
+     * LECTURES Box: Label "LECTURES" uppercase 11px, Value "2 Lectures" in font-bold #0F172A.
+   - Footer Actions:
+     * "Details" button: Neutral outline (#FFFFFF, border #CBD5E1, text #475569, eye icon).
+     * "Review" button: SaaS Primary Blue (#2563EB, text-white, check-square icon).
+
+E. APPLICATION REVIEW MODAL DIALOG:
+   - Header: "Review Consideration Application" with student name and roll.
+   - Student Justification Box: Read-only card displaying student's reason.
+   - Decision Action Selector:
+     * Option 1: "Recommend to HOD" in Primary SaaS Blue button (NO GREEN!).
+     * Option 2: "Reject" in Clean Neutral Dark Slate button (NO RED!).
+   - Remarks Textarea: "Review Remarks (Optional)" or mandatory rejection explanation.
+   - Modal Actions: "Cancel" outline button, "Confirm Recommendation" primary blue button.
+
+--------------------------------------------------------------------------------
+3. MOBILE RESPONSIVE LAYOUT (375px Viewport)
+--------------------------------------------------------------------------------
+- All components adapt with 0px horizontal page scroll (overflow-x: hidden).
+- Review Applications main tabs display with full text "Attendance Consideration 1" on mobile without cutting off letters.
+- Status filter chips scroll horizontally in a dedicated overflow container.
+- Review card buttons ("Details" and "Review") stack side-by-side or full-width with 44px min-height touch targets.
+- Modal dialog occupies width: calc(100vw - 24px) with accessible touch inputs.
+
+--------------------------------------------------------------------------------
+4. COPY-PASTE READY FLOWSTEP PROMPT
+--------------------------------------------------------------------------------
+"Generate a modern, responsive Teacher Guardian (TG) portal UI for 'CampusFlow Lite' academic consideration management for both 1440px desktop and 375px mobile viewports. Include two key screens: (1) TG Dashboard showing welcome banner with verified TG duty badge, 4 metric cards for Pending Applications, Total Students, Attendance Consideration Records, and Leave Application Records without any green colors in links or cards, and a Notice Board section with option tabs 'Latest', 'Circulars', and 'Department' featuring blue hover feedback; (2) Review Applications page featuring main tabs 'Attendance Consideration' with inline counter badge '1' without text clipping and 'Leave Applications', sub-filter option chips ('Pending Review' active blue, 'Recommended by TG', 'Rejected', 'All Applications') with blue hover, and student review cards with student info, event metrics, neutral outline 'Details' button, and primary royal blue 'Review' button (#2563EB). Also include the Review Decision Modal where 'Recommend to HOD' is styled in primary blue and 'Reject' is styled in neutral slate. Strictly avoid green and red colors in buttons, and ensure 44px touch targets on mobile with zero horizontal overflow."

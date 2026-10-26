@@ -1,0 +1,157 @@
+{
+  "hod": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhZGUzNTQ3OTgwMGVmYjNjNGJlMGEyOCIsInJvbGUiOiJIT0QiLCJpYXQiOjE3OTMwNDI2NTYsImV4cCI6MTc5MzY0NzQ1Nn0.JrIUm9PITAkkFSzKXXJA7C7Fg9Hl25i71gerDScyrW4",
+    "user": {
+      "id": "6ade35479800efb3c4be0a28",
+      "name": "HOD CSE",
+      "email": "hod@campusflow.edu",
+      "role": "HOD",
+      "mustChangePassword": false,
+      "isTG": false,
+      "profile": {
+        "_id": "6ade35479800efb3c4be0a29",
+        "user": "6ade35479800efb3c4be0a28",
+        "department": {
+          "_id": "6ade35469800efb3c4be0a22",
+          "name": "Computer Science and Engineering",
+          "code": "CSE",
+          "createdAt": "2026-10-25T16:58:46.770Z",
+          "updatedAt": "2026-10-25T16:58:46.770Z",
+          "__v": 0
+        },
+        "designation": "Professor & Head of Department",
+        "employeeId": "EMP_HOD_01",
+        "specialization": "Computer Science & Engineering",
+        "createdAt": "2026-10-25T16:58:47.565Z",
+        "updatedAt": "2026-10-25T16:58:47.565Z",
+        "__v": 0
+      }
+    },
+    "role": "hod"
+  },
+  "student": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhZGUzNTQ4OTgwMGVmYjNjNGJlMGEzNyIsInJvbGUiOiJTVFVERU5UIiwiaWF0IjoxNzkzMDQyNjU3LCJleHAiOjE3OTM2NDc0NTd9.oTnO77bgIGMlbkYwY3PpBUpGydj1CxGFtioSstufQOQ",
+    "user": {
+      "id": "6ade35489800efb3c4be0a37",
+      "name": "Ayush Mishra",
+      "email": "ayushmishra2372005@gmail.com",
+      "role": "STUDENT",
+      "mustChangePassword": false,
+      "isTG": false,
+      "profile": {
+        "_id": "6ade35489800efb3c4be0a38",
+        "user": "6ade35489800efb3c4be0a37",
+        "department": {
+          "_id": "6ade35469800efb3c4be0a22",
+          "name": "Computer Science and Engineering",
+          "code": "CSE",
+          "createdAt": "2026-10-25T16:58:46.770Z",
+          "updatedAt": "2026-10-25T16:58:46.770Z",
+          "__v": 0
+        },
+        "section": {
+          "_id": "6ade35469800efb3c4be0a24",
+          "department": "6ade35469800efb3c4be0a22",
+          "year": 3,
+          "semester": 5,
+          "name": "Section B",
+          "code": "CSE-B",
+          "capacity": 60,
+          "createdAt": "2026-10-25T16:58:46.962Z",
+          "updatedAt": "2026-10-25T16:58:46.962Z",
+          "__v": 0
+        },
+        "rollNumber": "0105CS241110",
+        "enrollmentNumber": "0105CS241110",
+        "enrollmentYear": 2023,
+        "batch": "2024-2028",
+        "semester": 5,
+        "guardianName": "Guardian of Ayush Mishra",
+        "guardianPhone": "+919302378451",
+        "mentorGroup": {
+          "_id": "6ade35489800efb3c4be0a31",
+          "department": "6ade35469800efb3c4be0a22",
+          "tg": "6ade35479800efb3c4be0a2c",
+          "academicYear": "2025-2026",
+          "semester": 5,
+          "section": "6ade35469800efb3c4be0a24",
+          "students": [
+            "6ade35489800efb3c4be0a38",
+            "6ade35489800efb3c4be0a3a",
+            "6ade35489800efb3c4be0a3c",
+            "6adb3bdaa5a6ca2a2607f617",
+            "6adb3bf8a5a6ca2a2607f61d",
+            "6adb3bfba5a6ca2a2607f620",
+            "6adb3c02a5a6ca2a2607f623",
+            "6adb3c0da5a6ca2a2607f626",
+            "6adb3cb6a5a6ca2a2607f62c",
+            "6adb3ce5a5a6ca2a2607f62f",
+            "6adb3d04a5a6ca2a2607f632",
+            "6adb3d04a5a6ca2a2607f634",
+            "6adb3d47a5a6ca2a2607f63a",
+            "6adb3d9ba5a6ca2a2607f642",
+            "6adb3da8a5a6ca2a2607f645",
+            "6adb3fe8a5a6ca2a2607f64b",
+            "6adb41faa5a6ca2a2607f65c",
+            "6adb6966a5a6ca2a2607f674",
+            "6adb698ca5a6ca2a2607f676",
+            "6adb6ba1a5a6ca2a2607f679",
+            "6ade4d73d3a761fb0e462c77"
+          ],
+          "isActive": true,
+          "createdAt": "2026-10-25T16:58:48.039Z",
+          "updatedAt": "2026-10-25T18:43:44.219Z",
+          "__v": 3
+        },
+        "createdAt": "2026-10-25T16:58:48.429Z",
+        "updatedAt": "2026-10-25T18:30:34.640Z",
+        "__v": 0,
+        "status": "ACTIVE"
+      }
+    },
+    "role": "student"
+  },
+  "tg": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhZGUzNTQ3OTgwMGVmYjNjNGJlMGEyYiIsInJvbGUiOiJURUFDSEVSIiwiaXNURyI6dHJ1ZSwidGVhY2hlcklkIjoiNmFkZTM1NDc5ODAwZWZiM2M0YmUwYTJjIiwiaWF0IjoxNzkzMDQyNjU3LCJleHAiOjE3OTM2NDc0NTd9.zCUB6tQBgiy6iYDKIx4dw5vUl452yzMywlXlZu_oWwo",
+    "user": {
+      "id": "6ade35479800efb3c4be0a2b",
+      "name": "Test Teacher",
+      "email": "test_teacher@mail.in",
+      "role": "TEACHER",
+      "mustChangePassword": false,
+      "isTG": true,
+      "profile": {
+        "_id": "6ade35479800efb3c4be0a2c",
+        "user": "6ade35479800efb3c4be0a2b",
+        "department": {
+          "_id": "6ade35469800efb3c4be0a22",
+          "name": "Computer Science and Engineering",
+          "code": "CSE",
+          "createdAt": "2026-10-25T16:58:46.770Z",
+          "updatedAt": "2026-10-25T16:58:46.770Z",
+          "__v": 0
+        },
+        "designation": "Assistant Professor (TG)",
+        "employeeId": "EMP_TG_01",
+        "specialization": "Computer Science & Engineering",
+        "createdAt": "2026-10-25T16:58:47.732Z",
+        "updatedAt": "2026-10-25T16:58:47.732Z",
+        "__v": 0
+      }
+    },
+    "role": "tg"
+  },
+  "admin": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhZGUzNTQ3OTgwMGVmYjNjNGJlMGEyNyIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc5MzA0MjY1NywiZXhwIjoxNzkzNjQ3NDU3fQ.QOITvOsEw1xWtPm9kEk3SCxSambAv99GmuIreUX6L80",
+    "user": {
+      "id": "6ade35479800efb3c4be0a27",
+      "name": "System Administrator",
+      "email": "admin@campusflow.edu",
+      "role": "ADMIN",
+      "mustChangePassword": false,
+      "isTG": false,
+      "profile": null
+    },
+    "role": "admin"
+  }
+}

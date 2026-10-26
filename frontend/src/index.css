@@ -8,18 +8,18 @@
      1. Color Palette Tokens (Academic Nexus Design System)
      ======================================================================== */
   /* Primary - Academic Indigo */
-  --primary-50: #EFF6FF;
-  --primary-100: #DBEAFE;
-  --primary-200: #BFDBFE;
-  --primary-300: #93C5FD;
-  --primary-400: #60A5FA;
-  --primary-500: #3B82F6;
-  --primary-600: #2563EB;
-  --primary-700: #1D4ED8;
-  --primary-800: #1E40AF;
-  --primary-900: #1E3A8A;
-  --primary: var(--primary-700);
-  --primary-hover: var(--primary-800);
+  --primary-50: #EEF2FF;
+  --primary-100: #E0E7FF;
+  --primary-200: #C7D2FE;
+  --primary-300: #A5B4FC;
+  --primary-400: #818CF8;
+  --primary-500: #6366F1;
+  --primary-600: #4F46E5;
+  --primary-700: #4338CA;
+  --primary-800: #3730A3;
+  --primary-900: #312E81;
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
   --primary-container: var(--primary-50);
   --on-primary: #FFFFFF;
   --primary-fixed: #DCE1FF;
@@ -317,19 +317,57 @@ textarea {
   left: 0 !important;
 }
 
-.top-0 { top: 0 !important; }
-.top-1\/2 { top: 50% !important; }
-.bottom-0 { bottom: 0 !important; }
-.left-0 { left: 0 !important; }
-.left-2 { left: 0.5rem !important; }
-.left-3 { left: 0.75rem !important; }
-.left-3\.5 { left: 0.875rem !important; }
-.left-4 { left: 1rem !important; }
-.right-0 { right: 0 !important; }
-.right-2 { right: 0.5rem !important; }
-.right-3 { right: 0.75rem !important; }
-.right-3\.5 { right: 0.875rem !important; }
-.right-4 { right: 1rem !important; }
+.top-0 {
+  top: 0 !important;
+}
+
+.top-1\/2 {
+  top: 50% !important;
+}
+
+.bottom-0 {
+  bottom: 0 !important;
+}
+
+.left-0 {
+  left: 0 !important;
+}
+
+.left-2 {
+  left: 0.5rem !important;
+}
+
+.left-3 {
+  left: 0.75rem !important;
+}
+
+.left-3\.5 {
+  left: 0.875rem !important;
+}
+
+.left-4 {
+  left: 1rem !important;
+}
+
+.right-0 {
+  right: 0 !important;
+}
+
+.right-2 {
+  right: 0.5rem !important;
+}
+
+.right-3 {
+  right: 0.75rem !important;
+}
+
+.right-3\.5 {
+  right: 0.875rem !important;
+}
+
+.right-4 {
+  right: 1rem !important;
+}
 
 .-translate-y-1\/2 {
   transform: translateY(-50%) !important;
@@ -348,31 +386,101 @@ textarea {
 }
 
 /* Directional Paddings (Left & Right) */
-.pl-0 { padding-left: 0 !important; }
-.pl-1 { padding-left: var(--space-1) !important; }
-.pl-2 { padding-left: var(--space-2) !important; }
-.pl-3 { padding-left: var(--space-3) !important; }
-.pl-3\.5 { padding-left: var(--space-3-5) !important; }
-.pl-4 { padding-left: var(--space-4) !important; }
-.pl-5 { padding-left: var(--space-5) !important; }
-.pl-6 { padding-left: var(--space-6) !important; }
-.pl-8 { padding-left: var(--space-8) !important; }
-.pl-10 { padding-left: 2.5rem !important; }
-.pl-11 { padding-left: 2.75rem !important; }
-.pl-12 { padding-left: 3rem !important; }
+.pl-0 {
+  padding-left: 0 !important;
+}
 
-.pr-0 { padding-right: 0 !important; }
-.pr-1 { padding-right: var(--space-1) !important; }
-.pr-2 { padding-right: var(--space-2) !important; }
-.pr-3 { padding-right: var(--space-3) !important; }
-.pr-3\.5 { padding-right: var(--space-3-5) !important; }
-.pr-4 { padding-right: var(--space-4) !important; }
-.pr-5 { padding-right: var(--space-5) !important; }
-.pr-6 { padding-right: var(--space-6) !important; }
-.pr-8 { padding-right: var(--space-8) !important; }
-.pr-10 { padding-right: 2.5rem !important; }
-.pr-11 { padding-right: 2.75rem !important; }
-.pr-12 { padding-right: 3rem !important; }
+.pl-1 {
+  padding-left: var(--space-1) !important;
+}
+
+.pl-2 {
+  padding-left: var(--space-2) !important;
+}
+
+.pl-3 {
+  padding-left: var(--space-3) !important;
+}
+
+.pl-3\.5 {
+  padding-left: var(--space-3-5) !important;
+}
+
+.pl-4 {
+  padding-left: var(--space-4) !important;
+}
+
+.pl-5 {
+  padding-left: var(--space-5) !important;
+}
+
+.pl-6 {
+  padding-left: var(--space-6) !important;
+}
+
+.pl-8 {
+  padding-left: var(--space-8) !important;
+}
+
+.pl-10 {
+  padding-left: 2.5rem !important;
+}
+
+.pl-11 {
+  padding-left: 2.75rem !important;
+}
+
+.pl-12 {
+  padding-left: 3rem !important;
+}
+
+.pr-0 {
+  padding-right: 0 !important;
+}
+
+.pr-1 {
+  padding-right: var(--space-1) !important;
+}
+
+.pr-2 {
+  padding-right: var(--space-2) !important;
+}
+
+.pr-3 {
+  padding-right: var(--space-3) !important;
+}
+
+.pr-3\.5 {
+  padding-right: var(--space-3-5) !important;
+}
+
+.pr-4 {
+  padding-right: var(--space-4) !important;
+}
+
+.pr-5 {
+  padding-right: var(--space-5) !important;
+}
+
+.pr-6 {
+  padding-right: var(--space-6) !important;
+}
+
+.pr-8 {
+  padding-right: var(--space-8) !important;
+}
+
+.pr-10 {
+  padding-right: 2.5rem !important;
+}
+
+.pr-11 {
+  padding-right: 2.75rem !important;
+}
+
+.pr-12 {
+  padding-right: 3rem !important;
+}
 
 /* Flexbox */
 .flex {
@@ -1157,11 +1265,11 @@ textarea {
   padding-top: 0.875rem !important;
 }
 
-.space-y-1 > :not([hidden]) ~ :not([hidden]) {
+.space-y-1> :not([hidden])~ :not([hidden]) {
   margin-top: 0.25rem !important;
 }
 
-.space-y-3\.5 > :not([hidden]) ~ :not([hidden]) {
+.space-y-3\.5> :not([hidden])~ :not([hidden]) {
   margin-top: 0.875rem !important;
 }
 
@@ -2248,6 +2356,7 @@ textarea.input-field {
     padding: 0.5rem;
     align-items: center;
   }
+
   .modal-container,
   .modal-content {
     max-height: calc(100vh - 1rem);
@@ -2276,6 +2385,341 @@ textarea.input-field {
     width: 98vw !important;
     max-height: 88vh !important;
     padding: 1rem !important;
+  }
+}
+
+/* Formal Sanction Order Document Modal (Universal Solid Overlay Fix) */
+.formal-modal-backdrop,
+div.formal-modal-backdrop,
+.modal-backdrop:has(#formal-sanction-printable),
+.modal-backdrop:has(.formal-sanction-container) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1.5rem !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  box-sizing: border-box !important;
+  animation: formalModalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+#formal-sanction-printable,
+div#formal-sanction-printable,
+.formal-sanction-container {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  opacity: 1 !important;
+  border-radius: 1.5rem !important;
+  max-width: 46rem !important;
+  width: 100% !important;
+  padding: 1.75rem 2rem !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(15, 23, 42, 0.08) !important;
+  border: 1px solid #E2E8F0 !important;
+  position: relative !important;
+  z-index: 1000000 !important;
+  max-height: calc(100vh - 3rem) !important;
+  overflow-y: auto !important;
+  margin: auto !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.85rem !important;
+  font-family: inherit !important;
+  animation: formalModalScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Formal Modal Top Bar */
+#formal-sanction-printable .formal-modal-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-bottom: 0.85rem !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+  width: 100% !important;
+}
+
+/* Print Button in Document Modal: Clean White Pill with Emerald Text & Icon (matching Image 2) */
+#formal-sanction-printable button.formal-print-btn,
+#formal-sanction-printable button:has(svg.lucide-printer) {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #059669 !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 9999px !important;
+  padding: 0.35rem 0.95rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+}
+
+#formal-sanction-printable button.formal-print-btn:hover,
+#formal-sanction-printable button:has(svg.lucide-printer):hover {
+  background-color: #F8FAFC !important;
+  background: #F8FAFC !important;
+  border-color: #94A3B8 !important;
+}
+
+#formal-sanction-printable button:has(svg.lucide-printer) svg {
+  color: #059669 !important;
+}
+
+#formal-sanction-printable button:has(svg.lucide-printer) span {
+  color: #059669 !important;
+}
+
+/* Close Button in Document Modal */
+#formal-sanction-printable button[aria-label="Close modal"] {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #F8FAFC !important;
+  color: #64748B !important;
+  border: 1px solid #E2E8F0 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+#formal-sanction-printable button[aria-label="Close modal"]:hover {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+/* Letterhead Typography */
+#formal-sanction-printable .formal-letterhead,
+#formal-sanction-printable .text-center {
+  text-align: center !important;
+}
+
+#formal-sanction-printable h2 {
+  font-size: 1.125rem !important;
+  font-weight: 900 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.02em !important;
+  margin: 0.25rem 0 0 0 !important;
+}
+
+/* Document Inner Sub-Cards */
+#formal-sanction-printable .rounded-xl.border.border-slate-200\/90,
+#formal-sanction-printable .formal-order-title-box {
+  background-color: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 0.875rem !important;
+  padding: 0.75rem 1rem !important;
+  text-align: center !important;
+}
+
+#formal-sanction-printable .rounded-xl.border.border-indigo-200\/90,
+#formal-sanction-printable .formal-group-roster-box {
+  background-color: #F8FAFC !important;
+  border: 1px solid #E0E7FF !important;
+  border-radius: 0.875rem !important;
+  padding: 1rem !important;
+}
+
+#formal-sanction-printable .rounded-xl.border.border-emerald-200\/80,
+#formal-sanction-printable .formal-individual-box {
+  background-color: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 0.875rem !important;
+  padding: 1rem !important;
+}
+
+#formal-sanction-printable .rounded-xl.border.border-blue-200,
+#formal-sanction-printable .formal-timing-box {
+  background-color: #EFF6FF !important;
+  border: 1px solid #BFDBFE !important;
+  border-radius: 0.875rem !important;
+  padding: 0.75rem 1rem !important;
+}
+
+/* Roster Table Styling */
+#formal-sanction-printable table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background-color: #FFFFFF !important;
+  font-size: 0.75rem !important;
+}
+
+#formal-sanction-printable th {
+  background-color: #F8FAFC !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  padding: 0.5rem 0.625rem !important;
+  font-weight: 700 !important;
+  color: #64748B !important;
+  font-size: 0.65rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+#formal-sanction-printable td {
+  padding: 0.5rem 0.625rem !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+  color: #334155 !important;
+}
+
+/* Digital Signatures Grid */
+#formal-sanction-printable .grid.grid-cols-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 1.25rem !important;
+}
+
+@keyframes formalModalFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes formalModalScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .formal-modal-backdrop {
+    padding: 0.5rem !important;
+  }
+
+  #formal-sanction-printable {
+    padding: 1.15rem 1rem !important;
+    border-radius: 1rem !important;
+    max-height: calc(100vh - 1rem) !important;
+    width: 98% !important;
+  }
+
+  #formal-sanction-printable .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+}
+
+/* ==========================================================================
+   OFFICIAL ACADEMIC SANCTION LETTER PRINT STYLING
+   Eliminates all drop shadows, modal backdrops, dialog gaps, and scrollbars.
+   Formats document as a clean, authentic, edge-to-edge official institutional letter.
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+
+  *, *::before, *::after {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  header, nav, aside, .sidebar, .app-sidebar, .toast-container {
+    display: none !important;
+  }
+
+  .formal-modal-backdrop,
+  .modal-backdrop {
+    position: static !important;
+    background: none !important;
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    box-shadow: none !important;
+  }
+
+  #formal-sanction-printable,
+  div#formal-sanction-printable,
+  .formal-sanction-container,
+  .official-sanction-letter-print {
+    position: static !important;
+    border: 1.5px solid #0F172A !important;
+    border-radius: 8px !important;
+    padding: 24px 28px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
+    background: #FFFFFF !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
+
+  .no-print,
+  #formal-sanction-printable .no-print,
+  #formal-sanction-printable .formal-modal-header {
+    display: none !important;
+  }
+
+  #formal-sanction-printable .formal-letterhead,
+  #formal-sanction-printable .text-center {
+    display: block !important;
+    text-align: center !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+  }
+
+  #formal-sanction-printable .formal-letterhead * {
+    display: block !important;
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 }
 
@@ -2480,6 +2924,7 @@ textarea.input-field {
 }
 
 @media (min-width: 1024px) {
+
   .sidebar.sidebar-open,
   .sidebar-container.sidebar-open {
     box-shadow: 1px 0 0 0 var(--border-subtle);
@@ -4172,35 +4617,101 @@ textarea.input-field {
 }
 
 @media (min-width: 640px) {
-  .sm\:grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
-  .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-  .sm\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-  .sm\:grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+  .sm\:grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+
+  .sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .sm\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .sm\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .sm\:grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
 }
 
 @media (min-width: 768px) {
-  .md\:grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
-  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-  .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-  .md\:grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
-  .md\:col-span-1 { grid-column: span 1 / span 1 !important; }
-  .md\:col-span-2 { grid-column: span 2 / span 2 !important; }
-  .md\:col-span-3 { grid-column: span 3 / span 3 !important; }
-  .md\:col-span-full { grid-column: 1 / -1 !important; }
+  .md\:grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .md\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .md\:grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+
+  .md\:col-span-1 {
+    grid-column: span 1 / span 1 !important;
+  }
+
+  .md\:col-span-2 {
+    grid-column: span 2 / span 2 !important;
+  }
+
+  .md\:col-span-3 {
+    grid-column: span 3 / span 3 !important;
+  }
+
+  .md\:col-span-full {
+    grid-column: 1 / -1 !important;
+  }
 }
 
 @media (min-width: 1024px) {
-  .lg\:grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
-  .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-  .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-  .lg\:grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
-  .lg\:col-span-1 { grid-column: span 1 / span 1 !important; }
-  .lg\:col-span-2 { grid-column: span 2 / span 2 !important; }
-  .lg\:col-span-3 { grid-column: span 3 / span 3 !important; }
-  .lg\:col-span-full { grid-column: 1 / -1 !important; }
+  .lg\:grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:col-span-1 {
+    grid-column: span 1 / span 1 !important;
+  }
+
+  .lg\:col-span-2 {
+    grid-column: span 2 / span 2 !important;
+  }
+
+  .lg\:col-span-3 {
+    grid-column: span 3 / span 3 !important;
+  }
+
+  .lg\:col-span-full {
+    grid-column: 1 / -1 !important;
+  }
 }
 
 
@@ -4659,7 +5170,7 @@ textarea.input-field {
 }
 
 .text-indigo-700 {
-  color: #4338CA !important;
+  color: #2563EB !important;
 }
 
 .text-emerald-600 {
@@ -7324,6 +7835,7 @@ button:disabled:active,
 }
 
 @media (min-width: 640px) {
+
   .sm\:w-20,
   .sm\:h-20 {
     width: 5rem !important;
@@ -7331,200 +7843,1522 @@ button:disabled:active,
   }
 }
 
+/* ==========================================================================
+   CampusFlow Academic Gateway - Authentication Design System
+   Matches new_ui/Screen 1.png (Desktop 1440px) & Screen 2.png (Mobile 375px)
+   ========================================================================== */
+
 .auth-login-page {
-  background-color: #F8FAFC;
+  background-color: #F1F5F9 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  font-family: var(--font-body);
 }
 
-.auth-login-panel,
-.auth-register-panel {
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  align-items: center !important;
-  min-height: 100vh !important;
-  padding: 3rem 1.5rem !important;
-  background-color: #F8FAFC !important;
-  width: 100% !important;
+/* Desktop Dual-Column Floating Split Card Layout (Screen 1.png) */
+@media (min-width: 1024px) {
+  .auth-login-page {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+    padding: 2.5rem 1.5rem !important;
+    background-color: #EEF2F6 !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-login-page>.auth-brand-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    width: 520px !important;
+    max-width: 50% !important;
+    min-height: 680px !important;
+    height: auto !important;
+    border-radius: 24px 0 0 24px !important;
+    padding: 3.5rem 3rem !important;
+    background: #2563EB !important;
+    background: linear-gradient(155deg, #4F46E5 0%, #4338CA 50%, #3B82F6 100%) !important;
+    color: #FFFFFF !important;
+    box-shadow: -15px 25px 50px -12px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.8) !important;
+    border-right: none !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  .auth-login-page:not(:has(.auth-register-panel))>.auth-login-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 520px !important;
+    max-width: 50% !important;
+    min-height: 680px !important;
+    height: auto !important;
+    border-radius: 0 24px 24px 0 !important;
+    padding: 3.25rem 3rem !important;
+    background-color: #FFFFFF !important;
+    box-shadow: 15px 25px 50px -12px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.8) !important;
+    border-left: none !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-login-card {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  /* ==========================================================================
+     Student Self-Registration Desktop Layout (Screen 14.png)
+     Two distinct cards with generous gap: Light indigo brand card on left,
+     and clean white registration form card on right.
+     ========================================================================== */
+  .auth-login-page:has(.auth-register-panel) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 3rem !important;
+    padding: 3rem 4rem !important;
+    max-width: 1440px !important;
+    margin: 0 auto !important;
+    min-height: 100vh !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    background-color: #F8FAFC !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Left Brand Card in Screen 14.png */
+  .auth-login-page:has(.auth-register-panel) .auth-brand-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    max-width: 620px !important;
+    min-height: 900px !important;
+    height: auto !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(67, 56, 202, 0.2) !important;
+    background: #F4F6FF !important;
+    padding: 3rem !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    color: #0F172A !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-pill {
+    display: none !important;
+  }
+
+  /* Top identity row with 56px squircle */
+  .auth-login-page:has(.auth-register-panel) .auth-brand-title-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    margin-bottom: 3rem !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-emblem {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    border-radius: 12px !important;
+    background-color: #2563EB !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    box-shadow: 0 2px 6px rgba(67, 56, 202, 0.25) !important;
+    position: relative !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-emblem img {
+    display: none !important;
+  }
+
+  /* White graduation cap SVG inside the 56px squircle */
+  .auth-login-page:has(.auth-register-panel) .auth-brand-emblem::after {
+    content: "" !important;
+    display: block !important;
+    width: 28px !important;
+    height: 28px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='28' height='28' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/%3E%3Cpath d='M22 10v6'/%3E%3Cpath d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-title-row>div:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-inst-name {
+    order: 2 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.15em !important;
+    color: #2563EB !important;
+    margin: 2px 0 0 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-heading {
+    order: 1 !important;
+    font-size: 0 !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-heading::before {
+    content: "CampusFlow Lite" !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #0F172A !important;
+    letter-spacing: -0.01em !important;
+    display: block !important;
+    line-height: 1.3 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-sub {
+    display: none !important;
+  }
+
+  /* Main portal headline and description */
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6 {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    margin-top: 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6>div.flex {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6>div.flex svg {
+    display: none !important;
+  }
+
+  /* Eyebrow: ORIENTAL GROUP OF INSTITUTES */
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6>div.flex::before {
+    content: "ORIENTAL GROUP OF INSTITUTES" !important;
+    display: block !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2em !important;
+    color: #2563EB !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Main Title: Student Self-Registration Portal */
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6>div.flex>span {
+    font-size: 46px !important;
+    font-weight: 700 !important;
+    color: #0F172A !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.025em !important;
+    display: block !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6>p {
+    font-size: 17px !important;
+    line-height: 1.65 !important;
+    color: #64748B !important;
+    margin: 1.25rem 0 2rem 0 !important;
+    font-weight: 400 !important;
+    max-width: 540px !important;
+  }
+
+  /* Academic Icons Showcase Box in Screen 14.png */
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6::after {
+    content: "" !important;
+    display: block !important;
+    width: 100% !important;
+    min-height: 280px !important;
+    border-radius: 14px !important;
+    background-color: #E0F2FE !important;
+    border: 1px solid rgba(67, 56, 202, 0.2) !important;
+    box-sizing: border-box !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 460 220' width='460' height='220' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(50, 18) scale(2.2)' stroke='%234338CA' stroke-width='2'%3E%3Cpath d='M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z'/%3E%3Cpath d='M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z'/%3E%3C/g%3E%3Cg transform='translate(195, 10) scale(2.8)' stroke='%230F172A' stroke-width='2'%3E%3Cpath d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/%3E%3Cpath d='M22 10v6'/%3E%3Cpath d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/%3E%3C/g%3E%3Cg transform='translate(355, 18) scale(2.2)' stroke='%234338CA' stroke-width='2'%3E%3Cline x1='3' y1='22' x2='21' y2='22'/%3E%3Cline x1='6' y1='18' x2='6' y2='11'/%3E%3Cline x1='10' y1='18' x2='10' y2='11'/%3E%3Cline x1='14' y1='18' x2='14' y2='11'/%3E%3Cline x1='18' y1='18' x2='18' y2='11'/%3E%3Cpolygon points='12 2 20 7 4 7'/%3E%3C/g%3E%3Cg transform='translate(54, 126) scale(2.2)' stroke='%230F172A' stroke-width='2'%3E%3Cpath d='M4 6h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z'/%3E%3Cline x1='15' y1='2' x2='15' y2='6'/%3E%3Cline x1='9' y1='2' x2='9' y2='6'/%3E%3Cline x1='8' y1='12' x2='16' y2='12'/%3E%3Cline x1='8' y1='16' x2='13' y2='16'/%3E%3C/g%3E%3Cg transform='translate(205, 126) scale(2.1)' stroke='%234338CA' stroke-width='2'%3E%3Cpath d='m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z'/%3E%3C/g%3E%3Cg transform='translate(355, 126) scale(2.2)' stroke='%230F172A' stroke-width='2'%3E%3Cpath d='m5 8 6 6'/%3E%3Cpath d='m4 14 6-6 2-3'/%3E%3Cpath d='M2 5h12'/%3E%3Cpath d='M7 2h1'/%3E%3Cpath d='m22 22-5-10-5 10'/%3E%3Cpath d='M14 18h6'/%3E%3C/g%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 420px auto !important;
+    margin-top: 2rem !important;
+  }
+
+  /* Bottom 2x2 Accreditation Badges in Screen 14.png */
+  .auth-login-page:has(.auth-register-panel) .auth-brand-badges {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    margin-top: auto !important;
+    padding-top: 2.5rem !important;
+    width: 100% !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-badge-item {
+    background-color: #FFFFFF !important;
+    border: 1px solid rgba(67, 56, 202, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 12px 16px !important;
+    color: #0F172A !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-badge-item svg {
+    color: #2563EB !important;
+    stroke: #4338CA !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Right Registration Form Card in Screen 14.png */
+  .auth-login-page>.auth-register-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 620px !important;
+    min-height: 900px !important;
+    height: auto !important;
+    border-radius: 16px !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+  }
+
+  .auth-register-card {
+    width: 100% !important;
+    max-width: 620px !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 16px !important;
+    padding: 2.5rem !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.08) !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Right Card Header in Screen 14.png */
+  .auth-register-card .mb-6 {
+    margin-bottom: 2rem !important;
+  }
+
+  .auth-register-card .mb-6>.flex:first-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .auth-register-card .mb-6>.flex:first-child svg {
+    width: 24px !important;
+    height: 24px !important;
+    padding: 10px !important;
+    box-sizing: content-box !important;
+    background-color: #EEF2FF !important;
+    color: #2563EB !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .auth-register-card .mb-6>.flex:first-child span {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #2563EB !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+  }
+
+  .auth-register-card .mb-6 h2 {
+    font-size: 30px !important;
+    font-weight: 700 !important;
+    color: #0F172A !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+  }
+
+  .auth-register-card .mb-6 p.auth-form-description {
+    font-size: 14px !important;
+    color: #64748B !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0 !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Form layout & spacing */
+  .auth-register-card form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .auth-register-card form>* {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Labels */
+  .auth-register-card label {
+    display: block !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #0F172A !important;
+    margin-bottom: 8px !important;
+  }
+
+  .auth-register-card label span.text-rose-500,
+  .auth-register-card label span.text-destructive {
+    color: #EF4444 !important;
+  }
+
+  /* Remove all leading icons inside input wrappers */
+  .auth-register-card div.relative>svg.pointer-events-none {
+    display: none !important;
+  }
+
+  /* Standard input & select fields: clean 48px height, 6px border-radius, 16px padding */
+  .auth-register-card input,
+  .auth-register-card select {
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 16px !important;
+    border-radius: 6px !important;
+    border: 1px solid #CBD5E1 !important;
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  }
+
+  .auth-register-card input::placeholder {
+    color: #94A3B8 !important;
+  }
+
+  .auth-register-card input:focus,
+  .auth-register-card select:focus {
+    border-color: #2563EB !important;
+    box-shadow: 0 0 0 2px rgba(67, 56, 202, 0.2) !important;
+  }
+
+  /* Password field with eye toggle icon */
+  .auth-register-card input[type="password"],
+  .auth-register-card input[name="password"] {
+    padding-right: 44px !important;
+  }
+
+  .auth-register-card div.relative>button[aria-label="Toggle password visibility"] {
+    position: absolute !important;
+    right: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #64748B !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Email & Enrollment No Grid */
+  .auth-register-card form>div.grid.grid-cols-1.sm\:grid-cols-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+  }
+
+  /* Year, Semester, Section Grid */
+  .auth-register-card form>div.grid.grid-cols-1.sm\:grid-cols-3 {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+  }
+
+  /* Academic Batch & Contact Phone Layout in Screen 14.png */
+  .auth-register-card form>div:has(#academic_batch_from) {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .auth-register-card form>div:has(#academic_batch_from)>div:first-child {
+    width: 100% !important;
+  }
+
+  /* Hide the calendar icon */
+  .auth-register-card form>div:has(#academic_batch_from) label svg {
+    display: none !important;
+  }
+
+  /* Hide the blue pill badge (e.g. 2022 – 2026) */
+  .auth-register-card form>div:has(#academic_batch_from) .flex.items-center.justify-between>span.text-blue-600 {
+    display: none !important;
+  }
+
+  /* Academic batch 2 dropdowns side by side */
+  .auth-register-card form>div:has(#academic_batch_from) .grid.grid-cols-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    width: 100% !important;
+  }
+
+  /* Contact phone full width container */
+  .auth-register-card form>div:has(#academic_batch_from)>div:last-child {
+    width: 100% !important;
+  }
+
+  /* Password and Confirm Password 2 columns */
+  .auth-register-card form>div.grid:has(input[name="confirmPassword"]) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+  }
+
+  /* Password Helper Text */
+  .auth-register-card p.text-\[11px\].text-slate-500 {
+    font-size: 12px !important;
+    color: #64748B !important;
+    line-height: 1.5 !important;
+    margin: -4px 0 0 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  /* Submit Button: Royal Blue / Iris #4338CA */
+  .auth-register-card button[type="submit"],
+  .auth-register-card button.auth-submit {
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    background-color: #2563EB !important;
+    color: #FFFFFF !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    cursor: pointer !important;
+    transition: background-color 0.15s ease !important;
+    margin-top: 4px !important;
+  }
+
+  .auth-register-card button[type="submit"]:hover,
+  .auth-register-card button.auth-submit:hover {
+    background-color: #3730A3 !important;
+  }
+
+  .auth-register-card button[type="submit"]:disabled,
+  .auth-register-card button.auth-submit:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  /* Bottom Sign In to ERP Link & Divider */
+  .auth-register-card>.mt-6.text-center {
+    border-top: 1px solid #E2E8F0 !important;
+    padding-top: 1.5rem !important;
+    margin-top: 1.5rem !important;
+    font-size: 14px !important;
+    color: #64748B !important;
+  }
+
+  .auth-register-card>.mt-6.text-center a {
+    color: #2563EB !important;
+    font-weight: 600 !important;
+    margin-left: 4px !important;
+    text-decoration: none !important;
+  }
+
+  .auth-register-card>.mt-6.text-center a:hover {
+    text-decoration: underline !important;
+  }
 }
 
 /* ==========================================================================
-   Auth Brand Panel (Left 50% split)
+   Mobile & Tablet Authentication Layout (Screen 2.png / Flowstep spec)
+   Zero horizontal overflow, 375px max viewport, compact identity row with crest,
+   indigo gradient banner, white auth card with 2x2 role tiles and 44px tap targets.
    ========================================================================== */
-.auth-brand-panel {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 100vh;
-  position: relative;
-  overflow: hidden;
-  padding: 3.5rem 4rem;
-  color: #FFFFFF;
-  background: radial-gradient(circle at 75% 25%, #1d4ed8 0%, #0d2870 38%, #071744 75%, #051030 100%);
+@media (max-width: 1023px) {
+  .auth-login-page {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: #F8FAFC !important;
+    overflow-x: hidden !important;
+  }
+
+  .auth-login-panel {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 375px !important;
+    min-height: 100vh !important;
+    margin: 0 auto !important;
+    padding: 186px 16px 24px 16px !important;
+    /* Space reserved for identity row + gradient banner */
+    background-color: transparent !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* ==========================================================================
+     Screen 15.png: Student Registration Mobile Layout
+     Top mobile app bar, branding section, accreditation badge card,
+     and white registration card with 44px+ tap targets.
+     ========================================================================== */
+  .auth-login-page:has(.auth-register-panel)::before {
+    content: "" !important;
+    display: block !important;
+    width: 100% !important;
+    height: 56px !important;
+    background-color: #FFFFFF !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+    box-sizing: border-box !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 375 56' width='375' height='56' fill='none'%3E%3Cpath d='m26 28-6-6m0 0 6-6m-6 6h16' stroke='%230F172A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='56' y='10' width='36' height='36' rx='8' fill='%23EEF2FF'/%3E%3Cg transform='translate(64, 18)' stroke='%234338CA' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/%3E%3Cpath d='M22 10v6'/%3E%3Cpath d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/%3E%3C/g%3E%3Ctext x='102' y='33' font-family='-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' font-size='16' font-weight='600' fill='%230F172A'%3EStudent Registration%3C/text%3E%3C/svg%3E") !important;
+    background-position: left 0 center !important;
+    background-repeat: no-repeat !important;
+    background-size: 375px 56px !important;
+  }
+
+  /* Show and style brand panel on mobile for registration */
+  .auth-login-page:has(.auth-register-panel) .auth-brand-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 375px !important;
+    margin: 0 auto !important;
+    padding: 16px 16px 0 16px !important;
+    min-height: auto !important;
+    background: transparent !important;
+    color: #0F172A !important;
+    box-shadow: none !important;
+    border: none !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-pill {
+    display: none !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-title-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-emblem {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    border-radius: 8px !important;
+    background-color: #2563EB !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-emblem img {
+    filter: brightness(0) invert(1) !important;
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-inst-name {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.1em !important;
+    color: #2563EB !important;
+    margin: 0 0 2px 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-heading {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #0F172A !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-sub {
+    display: none !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6 {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6>div.flex {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #0F172A !important;
+    line-height: 1.25 !important;
+    margin: 8px 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6>div.flex svg {
+    display: none !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6>p {
+    font-size: 14px !important;
+    line-height: 22px !important;
+    color: #64748B !important;
+    margin: 0 0 16px 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-header>.mt-6::after {
+    display: none !important;
+  }
+
+  /* Section 2: Institute Accreditation in Screen 15.png */
+  .auth-login-page:has(.auth-register-panel) .auth-brand-badges {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    background-color: #E0F2FE !important;
+    border: 1px solid rgba(67, 56, 202, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+    margin: 0 0 16px 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-badges::before {
+    content: "Institute Accreditation" !important;
+    grid-column: 1 / -1 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #0F172A !important;
+    display: block !important;
+    margin-bottom: 4px !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-badge-item {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 6px !important;
+    padding: 8px 10px !important;
+    color: #0F172A !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-height: 48px !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-brand-badge-item svg {
+    color: #2563EB !important;
+    stroke: #4338CA !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Section 3: White Registration Card in Screen 15.png */
+  .auth-login-page:has(.auth-register-panel) .auth-register-panel {
+    width: 100% !important;
+    max-width: 375px !important;
+    margin: 0 auto !important;
+    padding: 0 16px 24px 16px !important;
+    background: transparent !important;
+    min-height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card {
+    width: 100% !important;
+    max-width: 375px !important;
+    background-color: #FFFFFF !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    border: 1px solid #E2E8F0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Screen 15.png Eyebrow with Squircle */
+  .auth-login-page:has(.auth-register-panel) .auth-register-card .mb-6>.flex:first-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card .mb-6>.flex:first-child svg {
+    width: 20px !important;
+    height: 20px !important;
+    padding: 8px !important;
+    box-sizing: content-box !important;
+    background-color: #EEF2FF !important;
+    color: #2563EB !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card .mb-6>.flex:first-child span {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #2563EB !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card h2 {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.025em !important;
+    line-height: 32px !important;
+    color: #0F172A !important;
+    margin: 0 0 4px 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card .auth-form-description {
+    font-size: 14px !important;
+    color: #64748B !important;
+    line-height: 20px !important;
+    margin: 0 0 16px 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card form>* {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card label {
+    display: block !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #0F172A !important;
+    margin-bottom: 6px !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card label span.text-rose-500,
+  .auth-login-page:has(.auth-register-panel) .auth-register-card label span.text-destructive {
+    color: #EF4444 !important;
+  }
+
+  /* Remove all leading icons inside input wrappers on mobile */
+  .auth-login-page:has(.auth-register-panel) .auth-register-card div.relative>svg.pointer-events-none {
+    display: none !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card input,
+  .auth-login-page:has(.auth-register-panel) .auth-register-card select {
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 14px !important;
+    border-radius: 6px !important;
+    border: 1px solid #CBD5E1 !important;
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card input:focus,
+  .auth-login-page:has(.auth-register-panel) .auth-register-card select:focus {
+    border-color: #2563EB !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(67, 56, 202, 0.2) !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card input[type="password"],
+  .auth-login-page:has(.auth-register-panel) .auth-register-card input[name="password"] {
+    padding-right: 44px !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card div.relative>button[aria-label="Toggle password visibility"] {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #64748B !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  /* Academic Batch & Phone on Mobile (Screen 15.png) */
+  .auth-login-page:has(.auth-register-panel) .auth-register-card form>div:has(#academic_batch_from) {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card form>div:has(#academic_batch_from) label svg {
+    display: none !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card form>div:has(#academic_batch_from) .flex.items-center.justify-between>span.text-blue-600 {
+    display: none !important;
+  }
+
+  /* Stack batch dropdowns vertically on mobile as in Screen 15.png */
+  .auth-login-page:has(.auth-register-panel) .auth-register-card form>div:has(#academic_batch_from) .grid.grid-cols-2 {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  /* Password Helper Text */
+  .auth-login-page:has(.auth-register-panel) .auth-register-card p.text-\[11px\].text-slate-500 {
+    font-size: 12px !important;
+    color: #64748B !important;
+    line-height: 18px !important;
+    margin: 0 !important;
+  }
+
+  /* Submit Button: Royal Blue / Iris #4338CA */
+  .auth-login-page:has(.auth-register-panel) .auth-register-card button[type="submit"],
+  .auth-login-page:has(.auth-register-panel) .auth-register-card button.auth-submit {
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    background-color: #2563EB !important;
+    color: #FFFFFF !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card button[type="submit"]:hover,
+  .auth-login-page:has(.auth-register-panel) .auth-register-card button.auth-submit:hover {
+    background-color: #3730A3 !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card>.mt-6.text-center {
+    border-top: 1px solid #E2E8F0 !important;
+    padding-top: 16px !important;
+    margin-top: 16px !important;
+    font-size: 13px !important;
+    color: #64748B !important;
+  }
+
+  .auth-login-page:has(.auth-register-panel) .auth-register-card>.mt-6.text-center a {
+    color: #2563EB !important;
+    font-weight: 600 !important;
+    margin-left: 4px !important;
+    text-decoration: none !important;
+  }
+
+  /* Screen 2 Top Identity Row + Indigo Gradient Banner Container */
+  .auth-login-card>.lg\:hidden {
+    position: absolute !important;
+    top: 14px !important;
+    left: 16px !important;
+    right: 16px !important;
+    width: calc(100% - 32px) !important;
+    max-width: 343px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    text-align: left !important;
+    margin-bottom: 0 !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Compact Identity Row: 36px Squircle with Crest + Title/Subtitle + Verified Badge */
+  .auth-login-card>.lg\:hidden::before {
+    content: "" !important;
+    display: block !important;
+    width: 100% !important;
+    height: 36px !important;
+    margin-bottom: 14px !important;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 36' width='190' height='36'%3E%3Crect x='0' y='0' width='36' height='36' rx='8' fill='%234338CA'/%3E%3Cpath d='M18 7.5c-2.8 0-6.5-1.2-8-2v6c0 5 3.5 7.5 7.66 8.95a1 1 0 0 0 .68 0C22.5 19 26 16.5 26 11.5v-6c-1.5.8-5.2 2-8 2z' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='m15 12 2 2 4-4' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ctext x='46' y='16' font-family='-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' font-size='14' font-weight='700' fill='%230F172A'%3ECampusFlow Lite%3C/text%3E%3Ctext x='46' y='32' font-family='-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' font-size='12' font-weight='500' fill='%2364748B'%3EOIST CSE verified%3C/text%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='20' height='20' fill='none' stroke='%234338CA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E") !important;
+    background-position: left center, right center !important;
+    background-repeat: no-repeat, no-repeat !important;
+    background-size: 190px 36px, 20px 20px !important;
+  }
+
+  /* Hide default centered logo box inside .lg:hidden */
+  .auth-login-card>.lg\:hidden>div:first-of-type {
+    display: none !important;
+  }
+
+  /* Indigo Gradient Banner: Heading (Your academic workspace) */
+  .auth-login-card>.lg\:hidden>h1 {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    border-radius: 12px 12px 0 0 !important;
+    background: linear-gradient(135deg, #4338CA 0%, #3B82F6 50%, #06B6D4 100%) !important;
+    padding: 18px 16px 2px 16px !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    color: transparent !important;
+    text-align: left !important;
+    border: none !important;
+  }
+
+  .auth-login-card>.lg\:hidden>h1::before {
+    content: "Your academic workspace" !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+    line-height: 28px !important;
+    display: block !important;
+    letter-spacing: -0.01em !important;
+    font-family: inherit !important;
+  }
+
+  /* Indigo Gradient Banner: Subtitle (Secure access for students...) */
+  .auth-login-card>.lg\:hidden>p {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    border-radius: 0 0 12px 12px !important;
+    background: linear-gradient(135deg, #4338CA 0%, #3B82F6 50%, #06B6D4 100%) !important;
+    padding: 0 16px 18px 16px !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    color: transparent !important;
+    text-align: left !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+    border: none !important;
+  }
+
+  .auth-login-card>.lg\:hidden>p::before {
+    content: "Secure access for students, faculty, and department leaders." !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: rgba(255, 255, 255, 0.88) !important;
+    line-height: 20px !important;
+    display: block !important;
+    font-family: inherit !important;
+  }
+
+  /* Mobile Auth White Card */
+  .auth-login-card {
+    width: 100% !important;
+    max-width: 375px !important;
+    margin: 0 auto !important;
+    background-color: #FFFFFF !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    border: 1px solid #E2E8F0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+    box-sizing: border-box !important;
+  }
+
+
+  /* Card Eyebrow, Title, Subtitle */
+  .auth-login-card span.text-blue-600 {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #2563EB !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+  }
+
+  .auth-login-card h2 {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.025em !important;
+    line-height: 32px !important;
+    color: #0F172A !important;
+    margin: 0 0 4px 0 !important;
+  }
+
+  .auth-login-card .auth-form-description {
+    font-size: 14px !important;
+    color: #64748B !important;
+    line-height: 20px !important;
+    margin: 0 0 20px 0 !important;
+  }
+
+  /* Role Selection 2x2 Grid */
+  .auth-login-card div.mb-5>label {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #64748B !important;
+    margin-bottom: 8px !important;
+  }
+
+  .auth-login-card .auth-role-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    margin-bottom: 20px !important;
+  }
+
+  .auth-login-card .auth-role-tab {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border: 1px solid #E2E8F0 !important;
+    background-color: #FFFFFF !important;
+    color: #64748B !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    padding: 0 12px !important;
+  }
+
+  .auth-login-card .auth-role-tab:hover {
+    background-color: #F8FAFC !important;
+    border-color: #CBD5E1 !important;
+    color: #0F172A !important;
+  }
+
+  .auth-login-card .auth-role-tab.active,
+  .auth-login-card .auth-role-tab[data-active="true"] {
+    background-color: #2563EB !important;
+    background: #2563EB !important;
+    color: #FFFFFF !important;
+    border-color: #2563EB !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .auth-login-card .auth-role-tab svg {
+    width: 16px !important;
+    height: 16px !important;
+    color: #64748B !important;
+  }
+
+  .auth-login-card .auth-role-tab.active svg,
+  .auth-login-card .auth-role-tab[data-active="true"] svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+  }
+
+  /* Form Inputs (44px min-height) */
+  .auth-login-card label {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #0F172A !important;
+    margin-bottom: 6px !important;
+  }
+
+  .auth-login-card input {
+    height: 44px !important;
+    min-height: 44px !important;
+    border-radius: 8px !important;
+    border: 1px solid #CBD5E1 !important;
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    padding: 0 14px 0 40px !important;
+  }
+
+  .auth-login-card input[type="password"] {
+    padding-right: 44px !important;
+  }
+
+  .auth-login-card .relative>svg {
+    left: 12px !important;
+    width: 16px !important;
+    height: 16px !important;
+    color: #94A3B8 !important;
+  }
+
+  /* Primary Submit Button: 48px height */
+  .auth-submit,
+  .auth-login-card button[type="submit"] {
+    height: 48px !important;
+    min-height: 48px !important;
+    border-radius: 8px !important;
+    background: linear-gradient(180deg, #4338CA 0%, #3730A3 100%) !important;
+    background-color: #2563EB !important;
+    color: #FFFFFF !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    width: 100% !important;
+    margin-top: 20px !important;
+    border: none !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Divider */
+  .auth-login-card .relative.my-5 {
+    margin: 20px 0 !important;
+  }
+
+  .auth-login-card .relative.my-5 span {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #94A3B8 !important;
+    background-color: #FFFFFF !important;
+    padding: 0 12px !important;
+  }
+
+  /* Google Sign In Button */
+  #google_oauth_signin_btn,
+  .auth-login-card button#google_oauth_signin_btn {
+    height: 44px !important;
+    min-height: 44px !important;
+    border-radius: 8px !important;
+    border: 1px solid #CBD5E1 !important;
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  /* Registration Banner */
+  .auth-register-block {
+    margin-top: 16px !important;
+    padding-top: 0 !important;
+    border-top: none !important;
+  }
+
+  .auth-register-block>span:first-child {
+    display: none !important;
+  }
+
+  .auth-register-link,
+  .auth-login-card .auth-register-link {
+    height: 48px !important;
+    min-height: 48px !important;
+    border-radius: 12px !important;
+    border: 1px solid #CBD5E1 !important;
+    background-color: #FFFFFF !important;
+    color: #2563EB !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    padding: 0 16px !important;
+  }
+
+  .auth-register-link .auth-register-icon {
+    display: none !important;
+  }
+
+  .auth-register-link .auth-register-link-text {
+    color: #2563EB !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+  }
+
+  .auth-register-link svg {
+    color: #2563EB !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .auth-register-note {
+    text-align: center !important;
+    font-size: 12px !important;
+    line-height: 16px !important;
+    color: #64748B !important;
+    margin-top: 16px !important;
+    margin-bottom: 0 !important;
+  }
 }
 
-.auth-brand-header {
-  position: relative;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-}
-
+/* Brand Panel Internal Elements (Left side) */
 .auth-brand-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 16px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  font-size: 13px;
-  font-weight: 600;
-  color: #FFFFFF;
-  width: fit-content;
-  margin-bottom: 2.25rem;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 16px !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #FFFFFF !important;
+  width: fit-content !important;
+  margin-bottom: 2rem !important;
 }
 
 .auth-brand-title-row {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  margin-bottom: 1.75rem;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 1.25rem !important;
+  margin-bottom: 1.5rem !important;
 }
 
 .auth-brand-emblem {
-  width: 76px;
-  height: 76px;
-  min-width: 76px;
-  border-radius: 20px;
-  background: #FFFFFF;
-  padding: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  width: 64px !important;
+  height: 64px !important;
+  min-width: 64px !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  padding: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: none !important;
 }
 
 .auth-brand-emblem img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  filter: brightness(0) invert(1) !important;
+  /* Elegant white crest */
 }
 
 .auth-brand-inst-name {
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #7DD3FC;
-  margin: 0 0 4px 0;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.15em !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  margin: 0 0 6px 0 !important;
 }
 
 .auth-brand-heading {
-  font-size: 26px;
-  font-weight: 900;
-  color: #FFFFFF;
-  line-height: 1.25;
-  margin: 0 0 6px 0;
-  letter-spacing: -0.02em;
+  font-size: 30px !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.025em !important;
+  margin: 0 0 6px 0 !important;
 }
 
 .auth-brand-sub {
-  font-size: 14px;
-  color: #DBEAFE;
-  font-weight: 600;
-  margin: 0;
+  font-size: 15px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
 }
 
 .auth-brand-desc {
-  font-size: 14px;
-  line-height: 1.65;
-  color: #E2E8F0;
-  margin: 0;
-  max-width: 520px;
+  font-size: 14.5px !important;
+  line-height: 1.65 !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  margin: 1.25rem 0 0 0 !important;
+  max-width: 440px !important;
 }
 
+/* 2x2 Accreditation Badges (Screen 1.png bottom) */
 .auth-brand-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: auto;
-  padding-top: 3rem;
-  position: relative;
-  z-index: 10;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin-top: auto !important;
+  padding-top: 2.5rem !important;
+  position: relative !important;
+  z-index: 10 !important;
+  width: 100% !important;
 }
 
 .auth-brand-badge-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  font-size: 12px;
-  font-weight: 600;
-  color: #F8FAFC;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 12px !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  color: #FFFFFF !important;
+  white-space: normal !important;
 }
 
-/* ==========================================================================
-   Auth Cards & Sizing
-   ========================================================================== */
-.auth-login-card {
-  width: 100%;
-  max-width: 490px;
-  background-color: #FFFFFF;
-  border-radius: 24px;
-  padding: 2.5rem 2.5rem;
-  box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.85);
+.auth-brand-badge-item svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
 }
 
-.auth-register-card {
-  width: 100%;
-  max-width: 620px;
-  background-color: #FFFFFF;
-  border-radius: 24px;
-  padding: 2.5rem 2.5rem;
-  box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.85);
-}
-
-.auth-login-form,
-.auth-register-form {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-.auth-login-form h2,
-.auth-register-form h2 {
-  font-size: 26px !important;
-  font-weight: 900 !important;
+/* Right Panel Authentication Card Elements */
+.auth-login-card h2 {
+  font-size: 28px !important;
+  font-weight: 800 !important;
   color: #0F172A !important;
-  line-height: 32px !important;
-  margin: 0 0 6px 0 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.25 !important;
+  margin: 4px 0 6px 0 !important;
 }
 
 .auth-form-description {
   font-size: 14px !important;
-  color: #475569 !important;
-  margin: 0 !important;
+  color: #64748B !important;
+  margin: 0 0 1.5rem 0 !important;
 }
 
-/* Form Labels */
+/* 2x2 Segmented Portal / Role Selector */
+.auth-role-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  padding: 6px !important;
+  border-radius: 14px !important;
+  background-color: #F1F5F9 !important;
+  border: 1px solid #E2E8F0 !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.auth-role-tab {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  min-height: 48px !important;
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #475569 !important;
+}
+
+.auth-role-tab svg {
+  width: 17px !important;
+  height: 17px !important;
+  margin-bottom: 0 !important;
+  color: #64748B !important;
+  transition: color 0.15s ease !important;
+}
+
+.auth-role-tab:hover {
+  background-color: #EFF6FF !important;
+  border-color: #BFDBFE !important;
+  color: #1D4ED8 !important;
+}
+
+.auth-role-tab:hover svg {
+  color: #1D4ED8 !important;
+}
+
+.auth-role-tab.active,
+.auth-role-tab[data-active="true"] {
+  background-color: #2563EB !important;
+  background: #2563EB !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px -2px rgba(67, 56, 202, 0.35) !important;
+  border-color: #2563EB !important;
+}
+
+.auth-role-tab.active svg,
+.auth-role-tab[data-active="true"] svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* Form Labels & Field Inputs */
 .auth-login-card label,
 .auth-register-card label {
   font-size: 13px !important;
   font-weight: 700 !important;
-  color: #334155 !important;
+  color: #0F172A !important;
   margin-bottom: 6px !important;
   display: block !important;
 }
 
-/* Form Inputs & Selects */
 .auth-login-card input,
 .auth-register-card input,
 .auth-register-card select {
@@ -7532,7 +9366,7 @@ button:disabled:active,
   min-height: 48px !important;
   border-radius: 12px !important;
   border: 1px solid #CBD5E1 !important;
-  background-color: #F8FAFC !important;
+  background-color: #FFFFFF !important;
   color: #0F172A !important;
   font-size: 14px !important;
   font-weight: 500 !important;
@@ -7542,42 +9376,39 @@ button:disabled:active,
   transition: all 0.15s ease !important;
 }
 
-/* Auto-padding for inputs with leading icons */
+.auth-login-card input:focus,
+.auth-register-card input:focus,
+.auth-register-card select:focus {
+  background-color: #FFFFFF !important;
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.15) !important;
+  outline: none !important;
+}
+
+/* Icon placement in inputs */
 .auth-login-card .relative input,
-.auth-register-card .relative input,
-.auth-login-card input.pl-11,
-.auth-register-card input.pl-11 {
+.auth-register-card .relative input {
   padding-left: 44px !important;
 }
 
-.auth-login-card select,
-.auth-register-card select {
-  padding: 0 10px !important;
-  font-size: 13.5px !important;
-}
-
-/* Auto-padding for password fields or inputs with trailing buttons */
 .auth-login-card .relative input[type="password"],
-.auth-login-card input.pr-11,
-.auth-register-card .relative input[type="password"],
-.auth-register-card input.pr-11 {
+.auth-register-card .relative input[type="password"] {
   padding-right: 44px !important;
 }
 
-/* Ensure leading icons inside input wrappers stay vertically centered */
-.auth-login-card .relative > svg,
-.auth-register-card .relative > svg {
+.auth-login-card .relative>svg,
+.auth-register-card .relative>svg {
   position: absolute !important;
   left: 14px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
   pointer-events: none !important;
+  color: #94A3B8 !important;
   z-index: 2 !important;
 }
 
-/* Ensure trailing toggle buttons (e.g. eye icon) stay inside the input box */
-.auth-login-card .relative > button,
-.auth-register-card .relative > button {
+.auth-login-card .relative>button,
+.auth-register-card .relative>button {
   position: absolute !important;
   right: 12px !important;
   top: 50% !important;
@@ -7587,130 +9418,116 @@ button:disabled:active,
   justify-content: center !important;
   background: transparent !important;
   border: none !important;
+  color: #94A3B8 !important;
   cursor: pointer !important;
   z-index: 3 !important;
   padding: 4px !important;
 }
 
-.auth-login-card input:focus,
-.auth-register-card input:focus,
-.auth-register-card select:focus {
-  background-color: #FFFFFF !important;
-  border-color: #2563EB !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-  outline: none !important;
+.auth-login-card .relative>button:hover,
+.auth-register-card .relative>button:hover {
+  color: #475569 !important;
 }
 
-/* Role Selection Tabs - 4 equal columns for Student, TG, HOD, Admin */
-.auth-role-tabs {
-  display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  gap: 6px !important;
-  padding: 6px !important;
-  border-radius: 16px !important;
-  background-color: #F1F5F9 !important;
-  border: 1px solid #E2E8F0 !important;
-  margin-bottom: 1.5rem !important;
-}
-
-.auth-role-tab {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-height: 54px !important;
-  padding: 8px 4px !important;
-  border-radius: 12px !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  cursor: pointer !important;
-  transition: all 0.15s ease !important;
-  border: 1px solid transparent !important;
-}
-
-.auth-role-tab svg {
-  width: 18px !important;
-  height: 18px !important;
-  margin-bottom: 2px !important;
-}
-
-.auth-role-tab.active,
-.auth-role-tab[data-active="true"] {
-  background-color: #FFFFFF !important;
-  color: #1D4ED8 !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
-  border-color: #CBD5E1 !important;
-}
-
-/* Submit Buttons */
-.auth-submit {
+/* Primary Submit Button: Iris / Royal Blue */
+.auth-submit,
+button[type="submit"].auth-submit,
+.auth-login-card button[type="submit"],
+.auth-register-card button[type="submit"] {
   width: 100% !important;
   min-height: 48px !important;
   height: 48px !important;
   padding: 12px 20px !important;
   border-radius: 12px !important;
+  background: #2563EB !important;
   background-color: #2563EB !important;
   color: #FFFFFF !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 700 !important;
+  border: none !important;
+  box-shadow: 0 4px 12px -2px rgba(67, 56, 202, 0.3) !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.auth-submit:hover:not(:disabled),
+button[type="submit"].auth-submit:hover:not(:disabled),
+.auth-login-card button[type="submit"]:hover:not(:disabled),
+.auth-register-card button[type="submit"]:hover:not(:disabled) {
+  background: #3730A3 !important;
+  background-color: #3730A3 !important;
+  box-shadow: 0 6px 16px -2px rgba(67, 56, 202, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Google OAuth Button */
+.auth-login-card button.btn-secondary,
+.auth-login-panel button:has(span:contains("Google")),
+.auth-login-panel button:has(svg.google-icon),
+button[class*="border-slate-200"]:has(span:contains("Google")),
+button[class*="border-slate-200"]:has(.font-bold) {
+  height: 48px !important;
+  min-height: 48px !important;
+  border-radius: 12px !important;
+  border: 1px solid #CBD5E1 !important;
+  background-color: #FFFFFF !important;
+  color: #334155 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+  width: 100% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
   cursor: pointer !important;
-  border: none !important;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
   transition: all 0.15s ease !important;
 }
 
-.auth-submit:hover:not(:disabled) {
-  background-color: #1D4ED8 !important;
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35) !important;
-}
-
+/* New Student Banner Link */
 .auth-register-block {
-  margin-top: 1.75rem !important;
-  padding-top: 1.5rem !important;
-  border-top: 1px solid #E2E8F0 !important;
+  margin-top: 1.25rem !important;
+  padding-top: 0 !important;
+  border-top: none !important;
 }
 
-.auth-register-link {
-  min-height: 52px !important;
-  padding: 12px 18px !important;
+.auth-register-link,
+.auth-login-card a[href*="register"],
+.auth-login-panel a[href*="register"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  padding: 12px 16px !important;
   border-radius: 14px !important;
-  border: 1px solid #E2E8F0 !important;
   background-color: #FFFFFF !important;
-  transition: all 0.15s ease !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #1E293B !important;
+  font-size: 13.5px !important;
+  text-decoration: none !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04) !important;
 }
 
-.auth-register-link:hover {
-  background-color: #F8FAFC !important;
+.auth-register-link:hover,
+.auth-login-card a[href*="register"]:hover,
+.auth-login-panel a[href*="register"]:hover {
+  background-color: #EFF6FF !important;
   border-color: #93C5FD !important;
+  color: #1D4ED8 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.12) !important;
 }
 
-@media (max-width: 639px) {
-  .auth-login-card,
-  .auth-register-card {
-    padding: 1.75rem 1.25rem !important;
-    border-radius: 20px !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
-  }
-
-  .auth-role-tabs {
-    gap: 4px !important;
-    padding: 4px !important;
-  }
-
-  .auth-role-tab {
-    min-height: 48px !important;
-    font-size: 12px !important;
-    padding: 6px 2px !important;
-  }
-
-  .auth-role-tab svg {
-    width: 16px !important;
-    height: 16px !important;
-  }
+.auth-register-link .auth-register-icon {
+  background-color: #EFF6FF !important;
+  color: #2563EB !important;
+  border-color: #BFDBFE !important;
 }
 
 /* ==========================================================================
@@ -7773,6 +9590,7 @@ button:disabled:active,
   .sm\:hidden {
     display: none !important;
   }
+
   .sm\:flex {
     display: flex !important;
   }
@@ -7797,13 +9615,16 @@ button:disabled:active,
 .notification-dropdown-scroll::-webkit-scrollbar {
   width: 6px;
 }
+
 .notification-dropdown-scroll::-webkit-scrollbar-track {
   background: #f8fafc;
 }
+
 .notification-dropdown-scroll::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 9999px;
 }
+
 .notification-dropdown-scroll::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
@@ -7813,6 +9634,7 @@ button:disabled:active,
     opacity: 0;
     transform: scale(0.95) translateY(-6px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -7824,8 +9646,2069 @@ button:disabled:active,
     opacity: 0;
     transform: translateY(-16px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* ==========================================================================
+   CAMPUSFLOW MODERN SAAS REDESIGN & VISUAL POLISH SYSTEM
+   Senior UI/UX Polish, Accessibility, Contrast & Responsive Layout Engine
+   ========================================================================== */
+
+/* 1. Global Typography & Canvas Polish */
+html {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+  font-family: var(--font-body);
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-heading {
+  font-family: var(--font-heading) !important;
+  letter-spacing: -0.024em !important;
+  color: #0F172A !important;
+}
+
+/* 2. Elevated Modern SaaS Cards */
+.card,
+div.bg-white[class*="rounded-2xl"],
+div.bg-white[class*="rounded-xl"] {
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.card:hover,
+div.bg-white[class*="rounded-2xl"]:hover {
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.03) !important;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(147, 197, 253, 0.7) !important;
+  box-shadow: 0 10px 20px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03) !important;
+}
+
+/* 3. Refined Buttons & Interactive Elements (ISSUE-07) */
+.btn {
+  border-radius: 8px !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  min-height: 38px !important;
+  padding: 0.5rem 1rem !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+}
+
+.btn:active {
+  transform: scale(0.98) !important;
+}
+
+.btn-primary,
+button.btn-primary,
+a.btn-primary {
+  background: linear-gradient(180deg, #4F46E5 0%, #4338CA 100%) !important;
+  border: 1px solid #4338CA !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.btn-primary:hover,
+button.btn-primary:hover,
+a.btn-primary:hover {
+  background: linear-gradient(180deg, #4338CA 0%, #3730A3 100%) !important;
+  border-color: #3730A3 !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.32), inset 0 1px 0 0 rgba(255, 255, 255, 0.22) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-secondary,
+.btn-outline,
+button.btn-secondary,
+button.btn-outline {
+  background-color: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #334155 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+}
+
+.btn-secondary:hover,
+.btn-outline:hover,
+button.btn-secondary:hover,
+button.btn-outline:hover {
+  background-color: #F8FAFC !important;
+  border-color: #94A3B8 !important;
+  color: #0F172A !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-success,
+button.btn-success {
+  background: linear-gradient(180deg, #059669 0%, #047857 100%) !important;
+  border: 1px solid #047857 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.16) !important;
+}
+
+.btn-success:hover,
+button.btn-success:hover {
+  background: linear-gradient(180deg, #047857 0%, #065F46 100%) !important;
+  border-color: #065F46 !important;
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.28) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-danger,
+button.btn-danger {
+  background: linear-gradient(180deg, #E11D48 0%, #BE123C 100%) !important;
+  border: 1px solid #BE123C !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.16) !important;
+}
+
+.btn-danger:hover,
+button.btn-danger:hover {
+  background: linear-gradient(180deg, #BE123C 0%, #9F1239 100%) !important;
+  border-color: #9F1239 !important;
+  box-shadow: 0 4px 12px rgba(190, 18, 60, 0.28) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 4. Status Badges & Chips Polish (ISSUE-05) */
+.badge,
+span.badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  padding: 0.2rem 0.65rem !important;
+  border-radius: 9999px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+}
+
+.badge-emerald,
+span[class*="bg-emerald-100"],
+span[class*="bg-green-100"] {
+  background-color: #ECFDF5 !important;
+  border: 1px solid #A7F3D0 !important;
+  color: #065F46 !important;
+}
+
+.badge-amber,
+span[class*="bg-amber-100"],
+span[class*="bg-yellow-100"] {
+  background-color: #FFFBEB !important;
+  border: 1px solid #FDE68A !important;
+  color: #92400E !important;
+}
+
+.badge-rose,
+span[class*="bg-rose-100"],
+span[class*="bg-red-100"] {
+  background-color: #FFF1F2 !important;
+  border: 1px solid #FECDD3 !important;
+  color: #9F1239 !important;
+}
+
+.badge-indigo,
+span[class*="bg-blue-100"],
+span[class*="bg-indigo-100"] {
+  background-color: #EFF6FF !important;
+  border: 1px solid #BFDBFE !important;
+  color: #1E40AF !important;
+}
+
+.badge-slate,
+span[class*="bg-slate-100"],
+span[class*="bg-gray-100"] {
+  background-color: #F1F5F9 !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #334155 !important;
+}
+
+/* 5. Tab Buttons & Overlapping Badge Fix (ISSUE-01) - Targeted to avoid breaking absolute badges */
+button[role="tab"] span[class*="rounded-full"]:not(.absolute):not(.w-2):not(.w-1\.5):not(.w-2\.5):not(.h-2):not([class*="animate-pulse"]),
+.tab-pill span[class*="rounded-full"]:not(.absolute):not(.w-2):not(.w-1\.5):not(.w-2\.5):not(.h-2):not([class*="animate-pulse"]),
+a.nav-link span[class*="rounded-full"]:not(.absolute):not(.w-2):not(.w-1\.5):not(.w-2\.5):not(.h-2):not([class*="animate-pulse"]) {
+  position: static !important;
+  margin-left: 0.45rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 5px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  vertical-align: middle !important;
+}
+
+/* Explicit protection for notification badges and pulsing dots */
+button span.absolute[class*="rounded-full"],
+button .absolute[class*="rounded-full"],
+span.absolute.rounded-full {
+  position: absolute !important;
+  margin-left: 0 !important;
+}
+
+span.rounded-full[class*="w-1\.5"],
+span.rounded-full[class*="w-2"],
+span.rounded-full[class*="w-2\.5"],
+span.rounded-full[class*="h-1\.5"],
+span.rounded-full[class*="h-2"],
+span.rounded-full[class*="h-2\.5"] {
+  min-width: 0 !important;
+  padding: 0 !important;
+  display: inline-block !important;
+}
+
+/* Tab bar container overflow protection */
+div[class*="flex"][class*="gap-2"][class*="overflow-x-auto"],
+div[class*="flex"][class*="items-center"][class*="gap-2"][class*="overflow-x-auto"] {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  padding-bottom: 2px !important;
+}
+
+div[class*="flex"][class*="gap-2"][class*="overflow-x-auto"]::-webkit-scrollbar,
+div[class*="flex"][class*="items-center"][class*="gap-2"][class*="overflow-x-auto"]::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Tab item padding and text wrapping protection */
+button[class*="rounded-xl"][class*="whitespace-nowrap"],
+button[class*="rounded-full"][class*="whitespace-nowrap"] {
+  padding-left: 0.85rem !important;
+  padding-right: 0.85rem !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+/* 6. Form Controls & Search Input Polish (ISSUE-06) */
+input.input-field,
+select.form-select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"] {
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 0.85rem !important;
+  border-radius: 8px !important;
+  border: 1px solid #CBD5E1 !important;
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  font-size: 13.5px !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+/* Ensure inputs with left icon (e.g. search bars) maintain proper icon clearance */
+input.ledger-search-input,
+input[class*="pl-10"],
+input[class*="pl-11"],
+input[class*="pl-12"] {
+  padding-left: 2.75rem !important;
+}
+
+/* Dedicated textarea styling to prevent 40px height flattening */
+textarea.input-field,
+textarea {
+  min-height: 84px !important;
+  height: auto !important;
+  padding: 0.65rem 0.85rem !important;
+  border-radius: 8px !important;
+  border: 1px solid #CBD5E1 !important;
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  font-size: 13.5px !important;
+  line-height: 1.5 !important;
+  resize: vertical !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+input.input-field:focus,
+select.form-select:focus,
+textarea.input-field:focus,
+textarea:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus {
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+  outline: none !important;
+}
+
+/* 7. Stat Cards & Number Typography (ISSUE-03) */
+.card .text-xs.font-semibold.uppercase,
+.card .text-xs.font-bold.uppercase,
+div[class*="text-xs"][class*="font-semibold"][class*="uppercase"] {
+  white-space: normal !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0.04em !important;
+  color: #64748B !important;
+}
+
+.card .text-2xl.font-extrabold,
+.card .text-3xl.font-black,
+div[class*="text-2xl"][class*="font-extrabold"],
+span[class*="text-3xl"][class*="font-black"] {
+  font-feature-settings: 'tnum' on, 'lnum' on !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.2 !important;
+}
+
+/* 8. Modern SaaS Sidebar & Header Elevation (ISSUE-08) */
+header.sticky {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03) !important;
+}
+
+.sidebar,
+.sidebar-container {
+  background-color: #FFFFFF !important;
+  border-right: 1px solid rgba(226, 232, 240, 0.9) !important;
+}
+
+.sidebar .nav-link {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  font-size: 13.5px !important;
+  transition: all 0.15s ease !important;
+  color: #334155 !important;
+}
+
+.sidebar .nav-link:hover {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
+.sidebar .nav-link.active,
+.sidebar .nav-link.bg-blue-600 {
+  background: linear-gradient(180deg, #4F46E5 0%, #4338CA 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.32) !important;
+}
+
+.sidebar div.p-3\.5.m-3.rounded-2xl {
+  background-color: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+}
+
+/* 9. Data Tables & Ledgers Polish - with smooth horizontal scroll */
+.table-responsive {
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03) !important;
+}
+
+.table-responsive table thead,
+.table-responsive thead {
+  background-color: #F8FAFC !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+.table-responsive table th {
+  background-color: #F8FAFC !important;
+  color: #475569 !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  padding: 0.75rem 1rem !important;
+  white-space: nowrap !important;
+}
+
+.table-responsive table td {
+  padding: 0.85rem 1rem !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+  color: #1E293B !important;
+  font-size: 13.5px !important;
+  vertical-align: middle !important;
+}
+
+.table-responsive table tr:hover td {
+  background-color: #F8FAFC !important;
+}
+
+/* 10. Filter & Action Bar Polish (ISSUE-02) */
+div.flex.flex-wrap.items-center.gap-2 {
+  gap: 0.5rem !important;
+}
+
+/* 11. Responsive Breakpoints & Mobile Verification (ISSUE-09) */
+@media (max-width: 639px) {
+
+  html,
+  body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
+  .app-container,
+  .page-wrapper {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Accessible touch targets on mobile - targeted to avoid breaking steppers and pills */
+  .btn:not(.btn-xs):not(.btn-sm),
+  .btn-primary:not(.btn-xs):not(.btn-sm),
+  .btn-secondary:not(.btn-xs):not(.btn-sm),
+  .auth-submit,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+    min-height: 44px !important;
+  }
+
+  /* Modals mobile sizing & safe scrolling */
+  .modal-container,
+  .modal-content {
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    padding: 1.15rem !important;
+    border-radius: 16px !important;
+    overflow-y: auto !important;
+  }
+
+  /* Grid stacking on mobile */
+  .grid-cols-1,
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4,
+  .grid-cols-6 {
+    gap: 0.85rem !important;
+  }
+}
+
+/* Modal responsive sizing overrides (fixes squashing of wide modals like Ledger, Curriculum, and Applications) */
+.modal-container.max-w-sm {
+  max-width: 24rem !important;
+}
+
+.modal-container.max-w-md {
+  max-width: 28rem !important;
+}
+
+.modal-container.max-w-lg {
+  max-width: 32rem !important;
+}
+
+.modal-container.max-w-xl {
+  max-width: 36rem !important;
+}
+
+.modal-container.max-w-2xl {
+  max-width: 42rem !important;
+}
+
+.modal-container.max-w-3xl {
+  max-width: 48rem !important;
+}
+
+.modal-container.max-w-4xl {
+  max-width: 56rem !important;
+}
+
+.modal-container.max-w-5xl {
+  max-width: 64rem !important;
+}
+
+.modal-container.max-w-6xl {
+  max-width: 72rem !important;
+}
+
+.modal-container.max-w-7xl {
+  max-width: 80rem !important;
+}
+
+
+/* ==========================================================================
+   CAMPUSFLOW MODERN SAAS REDESIGN SYSTEM (new_ui FIDELITY)
+   Matching Screen 1 through Screen 15 Design Language & Specifications:
+   1. BUTTON COLOR MANDATE: Zero green or red action buttons!
+      - Primary action buttons: SaaS Royal Blue / Iris (#2563EB, hover #1D4ED8)
+      - Outline / Secondary buttons: Crisp White (#FFFFFF, border #CBD5E1, text #334155)
+      - Reject / Destructive action buttons: Neutral Slate Outline (#CBD5E1, text #475569) or Solid Slate (#334155)
+   2. OPTION SELECTIONS: Active state #2563EB; Inactive rich Blue hover (#EFF6FF, border #BFDBFE, text #1D4ED8)
+   3. SCREEN SPECIFIC POLISH: Student Workspace, TG Workspace, HOD Clearances, Offline/Error
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   A. GLOBAL ACTION BUTTONS COLOR OVERRIDE (ZERO GREEN / ZERO RED)
+   -------------------------------------------------------------------------- */
+
+/* 1. Primary Solid Action Buttons that were Green (Approve, Sanction, View Order, Confirm, etc.) */
+button[class*="bg-emerald-600"],
+button[class*="bg-emerald-700"],
+button[class*="bg-emerald-800"],
+button[class*="bg-green-600"],
+button[class*="bg-green-700"],
+button[class*="bg-emerald-500"],
+button.bg-emerald-600,
+button.bg-emerald-700,
+button.btn-success,
+.btn-success,
+button:has(svg)[class*="bg-emerald"] {
+  background: #2563EB !important;
+  background-color: #2563EB !important;
+  border: 1px solid #1D4ED8 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 1px 2px 0 rgba(37, 99, 235, 0.25) !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+button[class*="bg-emerald-600"]:hover,
+button[class*="bg-emerald-700"]:hover,
+button[class*="bg-emerald-800"]:hover,
+button[class*="bg-green-600"]:hover,
+button[class*="bg-green-700"]:hover,
+button.bg-emerald-600:hover,
+button.bg-emerald-700:hover,
+button.btn-success:hover,
+.btn-success:hover {
+  background: #1D4ED8 !important;
+  background-color: #1D4ED8 !important;
+  border-color: #1E40AF !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+
+button[class*="bg-emerald-600"]:active,
+button[class*="bg-emerald-700"]:active,
+button.btn-success:active {
+  transform: scale(0.98) !important;
+}
+
+button[class*="bg-emerald-600"] svg,
+button[class*="bg-emerald-700"] svg,
+button[class*="bg-green-600"] svg,
+button.btn-success svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* 2. Secondary / Outline Action Buttons that were Green (Attendance Clearances, Apply for Leave, etc.) */
+button[class*="bg-emerald-50"],
+button[class*="bg-[#ECFDF5]"],
+button[class*="bg-[#ecfdf5]"],
+button[class*="bg-[#EFFAF3]"],
+button[class*="border-emerald-300"],
+button[class*="border-emerald-200"],
+button[class*="border-[#A7F3D0]"],
+button[class*="text-emerald-800"],
+button[class*="text-emerald-700"] {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #0F172A !important;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.15s ease !important;
+}
+
+button[class*="bg-emerald-50"]:hover,
+button[class*="bg-[#ECFDF5]"]:hover,
+button[class*="bg-[#ecfdf5]"]:hover,
+button[class*="bg-[#EFFAF3]"]:hover,
+button[class*="text-emerald-800"]:hover,
+button[class*="text-emerald-700"]:hover {
+  background: #EFF6FF !important;
+  background-color: #EFF6FF !important;
+  border-color: #93C5FD !important;
+  color: #1D4ED8 !important;
+  box-shadow: 0 2px 6px 0 rgba(37, 99, 235, 0.1) !important;
+  transform: translateY(-1px) !important;
+}
+
+button[class*="bg-emerald-50"] svg,
+button[class*="bg-[#ECFDF5]"] svg,
+button[class*="bg-[#ecfdf5]"] svg,
+button[class*="text-emerald-800"] svg,
+button[class*="text-emerald-700"] svg {
+  color: #2563EB !important;
+  stroke: #2563EB !important;
+}
+
+/* 3. Reject / Destructive Outline Buttons that were Red (Reject button on HOD / TG review) */
+button[class*="text-rose-600"],
+button[class*="text-rose-700"],
+button[class*="text-red-600"],
+button[class*="border-rose-300"],
+button[class*="border-rose-200"],
+button[class*="bg-rose-50"],
+button.btn-danger-outline,
+.btn-danger-outline {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #475569 !important;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.15s ease !important;
+}
+
+button[class*="text-rose-600"]:hover,
+button[class*="text-rose-700"]:hover,
+button[class*="text-red-600"]:hover,
+button[class*="border-rose-300"]:hover,
+button[class*="border-rose-200"]:hover,
+button[class*="bg-rose-50"]:hover,
+button.btn-danger-outline:hover {
+  background: #F1F5F9 !important;
+  background-color: #F1F5F9 !important;
+  border-color: #94A3B8 !important;
+  color: #0F172A !important;
+  box-shadow: 0 2px 4px 0 rgba(15, 23, 42, 0.06) !important;
+}
+
+button[class*="text-rose-600"] svg,
+button[class*="text-rose-700"] svg,
+button[class*="text-red-600"] svg,
+button.btn-danger-outline svg {
+  color: #64748B !important;
+  stroke: #64748B !important;
+}
+
+/* 4. Solid Destructive Buttons that were Red -> Replace with modern dark slate */
+button[class*="bg-rose-600"],
+button[class*="bg-rose-700"],
+button[class*="bg-red-600"],
+button[class*="bg-red-700"],
+button.btn-danger,
+.btn-danger {
+  background: #334155 !important;
+  background-color: #334155 !important;
+  border: 1px solid #1E293B !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.12) !important;
+}
+
+button[class*="bg-rose-600"]:hover,
+button[class*="bg-rose-700"]:hover,
+button[class*="bg-red-600"]:hover,
+button.btn-danger:hover,
+.btn-danger:hover {
+  background: #1E293B !important;
+  background-color: #1E293B !important;
+  border-color: #0F172A !important;
+  color: #FFFFFF !important;
+}
+
+/* 5. Override inline green styled buttons to Royal Blue (Zero Green Buttons Mandate) */
+button[style*="059669"],
+button[style*="5, 150, 105"],
+button[style*="rgb(5, 150, 105)"] {
+  background: #2563EB !important;
+  background-color: #2563EB !important;
+  border-color: #1D4ED8 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 1px 2px 0 rgba(37, 99, 235, 0.25) !important;
+}
+
+button[style*="059669"]:hover,
+button[style*="5, 150, 105"]:hover,
+button[style*="rgb(5, 150, 105)"]:hover {
+  background: #1D4ED8 !important;
+  background-color: #1D4ED8 !important;
+  border-color: #1E40AF !important;
+  color: #FFFFFF !important;
+}
+
+/* --------------------------------------------------------------------------
+   B. OPTION SELECTIONS & FILTER PILLS POLISH
+   -------------------------------------------------------------------------- */
+
+/* Active Selected Filter Pill / Tab / Segmented Chip: Clean SaaS Royal Blue */
+[role="tab"][aria-selected="true"],
+button[class*="bg-blue-600"],
+span.filter-pill.active,
+span.tab-pill.active,
+.tab-active,
+.filter-pill.active {
+  background-color: #2563EB !important;
+  background: #2563EB !important;
+  border-color: #1D4ED8 !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px 0 rgba(37, 99, 235, 0.28) !important;
+}
+
+[role="tab"][aria-selected="true"] svg,
+button[class*="bg-blue-600"] svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* Inactive Filter Pills & Tabs: Crisp Option Look with Rich Blue Hover */
+button[class*="border-slate-200"][class*="text-slate-700"]:hover,
+button.filter-pill:not(.active):hover,
+button[role="tab"]:not([aria-selected="true"]):not([class*="bg-blue-600"]):hover,
+.filter-bar button:not([class*="bg-blue-600"]):hover,
+.action-bar button:not([class*="bg-blue-600"]):hover,
+span.filter-pill:not(.active):hover,
+span.tab-pill:not(.active):hover {
+  color: #1D4ED8 !important;
+  background-color: #EFF6FF !important;
+  border-color: #BFDBFE !important;
+  box-shadow: 0 1px 2px 0 rgba(37, 99, 235, 0.08) !important;
+  transition: all 150ms ease !important;
+}
+
+/* Toolbar Filter dropdown containers (Semester, Section) */
+div[class*="rounded-full"]:has(select),
+.filter-bar div[class*="rounded-full"],
+.action-bar div[class*="rounded-full"] {
+  border-radius: 9999px !important;
+  box-shadow: none !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  padding: 0.25rem 0.75rem !important;
+  transition: all 150ms ease !important;
+}
+
+div[class*="rounded-full"]:has(select):hover,
+.filter-bar div[class*="rounded-full"]:hover,
+.action-bar div[class*="rounded-full"]:hover {
+  border-color: #3B82F6 !important;
+  background-color: #F8FAFC !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08) !important;
+}
+
+/* Toolbar Select inputs */
+.filter-bar select,
+.action-bar select,
+div[class*="rounded-full"]:has(select) select,
+select.filter-select {
+  color: #1D4ED8 !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: color 150ms ease !important;
+}
+
+.filter-bar select:hover,
+.action-bar select:hover {
+  color: #1E40AF !important;
+}
+
+/* Form Controls Select Dropdowns */
+form select,
+.modal-container select,
+select.form-select,
+select.input-field {
+  color: #0F172A !important;
+  font-weight: 500 !important;
+  background-color: #FFFFFF !important;
+  border-radius: 8px !important;
+}
+
+select:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+}
+
+select option {
+  color: #0F172A !important;
+  background-color: #FFFFFF !important;
+  padding: 0.45rem !important;
+  font-weight: 500 !important;
+}
+
+select option:checked,
+select option:hover {
+  background-color: #EFF6FF !important;
+  color: #1D4ED8 !important;
+  font-weight: 600 !important;
+}
+
+/* --------------------------------------------------------------------------
+   C. SCREEN 3 & SCREEN 4: STUDENT DASHBOARD & WORKSPACE (DESKTOP & MOBILE)
+   Matching Screen 3.png (Desktop 1280px) and Screen 4 (Mobile 375px)
+   -------------------------------------------------------------------------- */
+
+/* Enable & Style Sidebar for Student Portal (Desktop Web) */
+@media (min-width: 640px) {
+
+  .app-container:has(header a[href*="/student"]) .sidebar,
+  .app-container:has(header a[href="/student"]) .sidebar,
+  .app-container:has(.sidebar a[href="/student"]) .sidebar,
+  .app-container:has(.sidebar a[href*="/student"]) .sidebar,
+  .app-container:has(header a[href*="/student"]) .sidebar-container,
+  .app-container:has(header a[href="/student"]) .sidebar-container,
+  .app-container:has(.sidebar a[href="/student"]) .sidebar-container,
+  .app-container:has(.sidebar a[href*="/student"]) .sidebar-container {
+    display: flex !important;
+    background-color: #FFFFFF !important;
+    border-right: 1px solid #E2E8F0 !important;
+    box-shadow: none !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s ease !important;
+  }
+
+  /* Toggle Menu Button in Header */
+  header:has(a[href*="/student"]) button[aria-label="Toggle Navigation Menu"],
+  header:has(a[href="/student"]) button[aria-label="Toggle Navigation Menu"],
+  .app-container:has(.sidebar a[href="/student"]) header button[aria-label="Toggle Navigation Menu"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 8px !important;
+    border: 1px solid #E2E8F0 !important;
+    background: #FFFFFF !important;
+    color: #64748B !important;
+    transition: all 0.15s ease !important;
+    cursor: pointer !important;
+  }
+
+  header:has(a[href*="/student"]) button[aria-label="Toggle Navigation Menu"]:hover,
+  header:has(a[href="/student"]) button[aria-label="Toggle Navigation Menu"]:hover,
+  .app-container:has(.sidebar a[href="/student"]) header button[aria-label="Toggle Navigation Menu"]:hover {
+    background: #F8FAFC !important;
+    color: #0F172A !important;
+    border-color: #CBD5E1 !important;
+  }
+}
+
+/* Desktop Sidebar Layout */
+@media (min-width: 1024px) {
+
+  .app-container.student-portal-mode .sidebar,
+  .app-container:has(header a[href*="/student"]) .sidebar {
+    display: flex !important;
+    width: var(--sidebar-width) !important;
+  }
+
+  .app-container.student-portal-mode .main-content.sidebar-open,
+  .app-container:has(header a[href*="/student"]) .main-content.sidebar-open {
+    margin-left: var(--sidebar-width) !important;
+    width: calc(100% - var(--sidebar-width)) !important;
+    max-width: calc(100% - var(--sidebar-width)) !important;
+  }
+
+  .app-container.student-portal-mode .main-content.sidebar-closed,
+  .app-container:has(header a[href*="/student"]) .main-content.sidebar-closed {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .app-container:has(header a[href*="/student"]) .content-container,
+  .app-container:has(header a[href="/student"]) .content-container,
+  .app-container.student-portal-mode .content-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 1.5rem !important;
+    background-color: transparent !important;
+  }
+}
+
+/* Mobile Sidebar Layout */
+@media (max-width: 1023px) {
+
+  .app-container:has(header a[href*="/student"]) .sidebar,
+  .app-container:has(header a[href="/student"]) .sidebar,
+  .app-container:has(.sidebar a[href="/student"]) .sidebar {
+    width: 280px !important;
+    z-index: 100 !important;
+  }
+
+  .app-container:has(header a[href*="/student"]) .sidebar.sidebar-open,
+  .app-container:has(header a[href="/student"]) .sidebar.sidebar-open,
+  .app-container:has(.sidebar a[href="/student"]) .sidebar.sidebar-open {
+    transform: translateX(0) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .app-container:has(header a[href*="/student"]) .sidebar.sidebar-closed,
+  .app-container:has(header a[href="/student"]) .sidebar.sidebar-closed,
+  .app-container:has(.sidebar a[href="/student"]) .sidebar.sidebar-closed {
+    transform: translateX(-100%) !important;
+  }
+
+  .app-container:has(header a[href*="/student"]) .main-content,
+  .app-container:has(header a[href="/student"]) .main-content,
+  .app-container:has(.sidebar a[href="/student"]) .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Sidebar Brand Header */
+.app-container:has(header a[href*="/student"]) .sidebar .sidebar-brand-box,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .sidebar-brand-box {
+  padding: 18px 20px !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  height: 80px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
+}
+
+.app-container:has(header a[href*="/student"]) .sidebar .sidebar-brand-box>div:first-child>div:first-child,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .sidebar-brand-box>div:first-child>div:first-child {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  background: #2563EB !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 2px 0 rgba(67, 56, 202, 0.2) !important;
+}
+
+.app-container:has(header a[href*="/student"]) .sidebar .sidebar-brand-box img,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .sidebar-brand-box img {
+  display: none !important;
+}
+
+.app-container:has(header a[href*="/student"]) .sidebar .sidebar-brand-box>div:first-child>div:first-child::after,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .sidebar-brand-box>div:first-child>div:first-child::after {
+  content: "" !important;
+  width: 20px !important;
+  height: 20px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.42 10.922a1 1 0 0 0-.019-.838L12.83 2.18a2 2 0 0 0-1.66 0L2.6 10.08a1 1 0 0 0 0 1.832l8.57 7.908a2 2 0 0 0 1.66 0l8.57-7.908a1 1 0 0 0 .02-.99z'/%3E%3Cpath d='M22 10v6'/%3E%3Cpath d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  display: block !important;
+}
+
+.app-container:has(header a[href*="/student"]) .sidebar .sidebar-brand-box span.font-heading,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .sidebar-brand-box span.font-heading {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.2 !important;
+}
+
+.app-container:has(header a[href*="/student"]) .sidebar .sidebar-brand-box span.text-blue-700,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .sidebar-brand-box span.text-blue-700 {
+  background: #EEF2FF !important;
+  color: #2563EB !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+  border: 1px solid #E0E7FF !important;
+  display: inline-block !important;
+  margin-top: 2px !important;
+  width: fit-content !important;
+}
+
+/* Sidebar Nav Links */
+.app-container:has(header a[href*="/student"]) .sidebar nav,
+.app-container:has(.sidebar a[href="/student"]) .sidebar nav {
+  padding: 16px 12px !important;
+  gap: 6px !important;
+}
+
+.app-container:has(header a[href*="/student"]) .sidebar .nav-link,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .nav-link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 14px !important;
+  border-radius: 8px !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  transition: all 0.15s ease !important;
+  text-decoration: none !important;
+  min-height: 44px !important;
+}
+
+.app-container.student-portal-mode .sidebar .nav-link:hover,
+.app-container:has(header a[href*="/student"]) .sidebar .nav-link:hover,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .nav-link:hover {
+  background-color: #EEF2FF !important;
+  color: #312E81 !important;
+}
+
+.app-container.student-portal-mode .sidebar .nav-link.active,
+.app-container:has(header a[href*="/student"]) .sidebar .nav-link.active,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .nav-link.active {
+  background: linear-gradient(180deg, #4F46E5 0%, #4338CA 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.32) !important;
+}
+
+.app-container:has(header a[href*="/student"]) .sidebar .nav-link.active svg,
+.app-container:has(header a[href*="/student"]) .sidebar .nav-link.bg-blue-600 svg,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .nav-link.active svg,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .nav-link.bg-blue-600 svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+.app-container:has(header a[href*="/student"]) .sidebar .nav-link:not(.active) svg,
+.app-container:has(.sidebar a[href="/student"]) .sidebar .nav-link:not(.active) svg {
+  color: #64748B !important;
+}
+
+/* Sidebar Bottom User Profile Card */
+.app-container.student-portal-mode .sidebar div.p-3\.5.m-3.rounded-2xl,
+.app-container:has(header a[href*="/student"]) .sidebar div.p-3\.5.m-3.rounded-2xl,
+.app-container:has(.sidebar a[href="/student"]) .sidebar div.p-3\.5.m-3.rounded-2xl {
+  background: #F8FAFC !important;
+  border: 1px solid #E0E7FF !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  margin: 12px !important;
+}
+
+
+/* ==========================================================================
+   CampusFlow Lite – Student Portal Layout Styles (Screen 3 & Screen 4)
+   ========================================================================== */
+.app-container.student-portal-mode {
+  background-color: #F8FAFC !important;
+  min-height: 100vh !important;
+}
+
+.student-portal-mode .content-container {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 1.5rem !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 640px) {
+  .student-portal-mode .content-container {
+    padding: 1rem !important;
+    padding-bottom: 5rem !important;
+  }
+}
+
+/* Consideration & Leave Modal Period Selection Chips (P1-P7) */
+button[class*="period-chip"],
+div[class*="period-select"] button,
+.modal-container button[class*="border"]:has(span:only-child) {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  transition: all 0.15s ease !important;
+}
+
+button[class*="period-chip"]:hover,
+div[class*="period-select"] button:hover {
+  background-color: #EFF6FF !important;
+  border-color: #93C5FD !important;
+  color: #1D4ED8 !important;
+}
+
+/* File upload dropzone in Consideration modal */
+.document-uploader,
+div[class*="border-dashed"] {
+  background-color: #f8faff !important;
+  border: 1.5px dashed #c7d2fe !important;
+  border-radius: 14px !important;
+  transition: all 0.2s ease !important;
+}
+
+.document-uploader:hover,
+div[class*="border-dashed"]:hover {
+  background-color: #eef2ff !important;
+  border-color: #818cf8 !important;
+}
+
+/* --------------------------------------------------------------------------
+   D. SCREEN 5, 6, 7 & 8: TUTOR GUARDIAN PORTAL (CAMPUSFLOW INDIGO)
+   Matching Screen 5.png (Desktop), Screen 6.png (Mobile),
+   Screen 7.png (Review Drawer), and Screen 8.png (Review Sheet)
+   -------------------------------------------------------------------------- */
+
+/* Desktop Sidebar Layout for TG Portal */
+.app-container.tg-portal-mode,
+.app-container:has(header a[href*="/tg"]),
+.app-container:has(header a[href="/tg"]) {
+  background-color: #F8FAFC !important;
+}
+
+@media (min-width: 1024px) {
+
+  .app-container.tg-portal-mode .sidebar,
+  .app-container:has(header a[href*="/tg"]) .sidebar,
+  .app-container:has(header a[href="/tg"]) .sidebar {
+    display: flex !important;
+    width: var(--sidebar-width) !important;
+  }
+
+  .app-container.tg-portal-mode .main-content.sidebar-open,
+  .app-container:has(header a[href*="/tg"]) .main-content.sidebar-open,
+  .app-container:has(header a[href="/tg"]) .main-content.sidebar-open {
+    margin-left: var(--sidebar-width) !important;
+    width: calc(100% - var(--sidebar-width)) !important;
+    max-width: calc(100% - var(--sidebar-width)) !important;
+  }
+
+  .app-container.tg-portal-mode .main-content.sidebar-closed,
+  .app-container:has(header a[href*="/tg"]) .main-content.sidebar-closed,
+  .app-container:has(header a[href="/tg"]) .main-content.sidebar-closed {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Ensure header logo squircle uses clean React icon without legacy overlay */
+header a[href*="/tg"]>div:first-child::after,
+header a[href="/tg"]>div:first-child::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* CampusFlow Indigo CSS Variables for TG Portal */
+.tg-portal-mode {
+  --primary: 243 75% 59%;
+  --primary-foreground: 210 40% 98%;
+  --ring: 243 75% 59%;
+}
+
+/* E. SCREEN 9,
+10,
+11 & 12: HOD DASHBOARD & CLEARANCES -------------------------------------------------------------------------- */
+
+/* HOD Campus Hero Banner */
+div.lg\:col-span-6.relative.rounded-3xl:has(img[src*="oriental"]) {
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* 6 Key Stat & Action Cards on HOD Dashboard */
+div.xl\:grid-cols-6>div[role="button"],
+div.grid-cols-1.sm\:grid-cols-2.md\:grid-cols-3.xl\:grid-cols-6>div {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+div.xl\:grid-cols-6>div[role="button"]:hover,
+div.grid-cols-1.sm\:grid-cols-2.md\:grid-cols-3.xl\:grid-cols-6>div:hover {
+  border-color: #93C5FD !important;
+  box-shadow: 0 8px 18px -3px rgba(37, 99, 235, 0.09) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Add Faculty & Add Student Cards on HOD Dashboard */
+div[role="button"] div[class*="bg-emerald-50"]:has(svg.lucide-graduation-cap),
+div[role="button"] div[class*="bg-emerald-50"]:has(svg.lucide-user-plus) {
+  background-color: #EFF6FF !important;
+  border-color: #DBEAFE !important;
+  color: #2563EB !important;
+  border-radius: 12px !important;
+}
+
+div[role="button"] div[class*="bg-emerald-50"]:has(svg.lucide-graduation-cap) svg,
+div[role="button"] div[class*="bg-emerald-50"]:has(svg.lucide-user-plus) svg {
+  color: #2563EB !important;
+}
+
+div[role="button"]:hover span[class*="group-hover:text-emerald-700"] {
+  color: #1D4ED8 !important;
+}
+
+/* Semester Distribution & Section Overview Cards on HOD Dashboard */
+div.p-6.rounded-3xl.bg-white.border {
+  border-radius: 20px !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+}
+
+/* 8 Semester progress cards */
+div.p-3.rounded-xl.bg-slate-50.border {
+  background-color: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+  border-radius: 12px !important;
+  transition: all 0.15s ease !important;
+}
+
+div.p-3.rounded-xl.bg-slate-50.border:hover {
+  background-color: #EFF6FF !important;
+  border-color: #93C5FD !important;
+  color: #1D4ED8 !important;
+}
+
+/* 4 Section Cards (CSE-A, CSE-B, CSE-C, CSE-D) */
+div.p-4.rounded-2xl.bg-slate-50.border {
+  background-color: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+  border-radius: 14px !important;
+}
+
+/* HOD Attendance Clearances Application Item Cards */
+div.bg-white.rounded-3xl.border:has(div.w-10.h-10) {
+  border-radius: 20px !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Requested Lectures Box */
+div.p-3.rounded-xl.bg-\[\#f0f8ff\] {
+  background-color: #EFF6FF !important;
+  border: 1px solid #BFDBFE !important;
+  border-radius: 12px !important;
+}
+
+/* Sanctioned Lectures Stepper Box */
+div.rounded-xl.bg-\[\#faf5ff\],
+div.rounded-xl:has(button[aria-label="Increase periods"]) {
+  background-color: #FAF5FF !important;
+  border: 1px solid #E9D5FF !important;
+  border-radius: 12px !important;
+}
+
+/* Stepper [-] count [+] box */
+div.border.border-purple-200.rounded-lg.bg-white {
+  border-radius: 8px !important;
+  border-color: #CBD5E1 !important;
+}
+
+/* Justifications Framed Box */
+div.rounded-2xl.border.bg-white.p-3\.5:has(span.text-\[10px\].uppercase) {
+  border-radius: 14px !important;
+  border-color: #E2E8F0 !important;
+  background-color: #FFFFFF !important;
+}
+
+/* Approved Banner in HOD Clearances */
+div.rounded-xl.border.bg-\[\#ecfdf5\]\/80 {
+  background-color: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+}
+
+div.rounded-xl.border.bg-\[\#ecfdf5\]\/80>div span {
+  color: #0F172A !important;
+}
+
+div.rounded-xl.border.bg-\[\#ecfdf5\]\/80 button span {
+  color: #FFFFFF !important;
+}
+
+div.rounded-xl.border.bg-\[\#ecfdf5\]\/80 svg.lucide-check-circle-2 {
+  color: #10B981 !important;
+}
+
+/* Semantic Status Badges Polish - High Contrast and Distinct */
+.badge-emerald,
+span[class*="bg-emerald-50"],
+span[class*="bg-emerald-100"] {
+  background-color: #ECFDF5 !important;
+  border-color: #A7F3D0 !important;
+  color: #065F46 !important;
+}
+
+.badge-amber,
+span[class*="bg-amber-50"],
+span[class*="bg-amber-100"] {
+  background-color: #FFFBEB !important;
+  border-color: #FDE68A !important;
+  color: #92400E !important;
+}
+
+.badge-rose,
+span[class*="bg-rose-50"],
+span[class*="bg-rose-100"] {
+  background-color: #FFF1F2 !important;
+  border-color: #FECDD3 !important;
+  color: #9F1239 !important;
+}
+
+.badge-blue,
+span[class*="bg-blue-50"],
+span[class*="bg-blue-100"] {
+  background-color: #EFF6FF !important;
+  border-color: #BFDBFE !important;
+  color: #1E40AF !important;
+}
+
+/* --------------------------------------------------------------------------
+   F. SCREEN 13: MOBILE ERROR & OFFLINE INTERCEPTION CARD
+   -------------------------------------------------------------------------- */
+
+article.text-center.bg-card.border:has(svg.lucide-wifi-off),
+div.max-w-md:has(svg.lucide-wifi-off),
+div.max-w-lg:has(svg.lucide-alert-triangle) {
+  border-radius: 20px !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important;
+  background-color: #FFFFFF !important;
+  padding: 2rem !important;
+}
+
+div.rounded-full:has(svg.lucide-wifi-off),
+div.rounded-2xl:has(svg.lucide-alert-triangle) {
+  background-color: #FEE2E2 !important;
+  border: 1px solid #FECDD3 !important;
+  color: #DC2626 !important;
+}
+
+div.rounded-full:has(svg.lucide-wifi-off) svg,
+div.rounded-2xl:has(svg.lucide-alert-triangle) svg {
+  color: #DC2626 !important;
+}
+
+/* ==========================================================================
+   Mobile Bottom Navigation Bar & Responsive Sidebar Control
+   Matching Screen 4 (Student Mobile) & Screen 6 (TG Mobile)
+   ========================================================================== */
+
+/* 1. Mobile Viewports (max-width: 639px): Hide Sidebar Drawer, Enable Bottom Navigation */
+@media (max-width: 639px) {
+
+  /* Hide sidebar drawer on mobile for Student and TG (navigation moved down to footer) */
+  .app-container:has(header a[href*="/student"]) .sidebar,
+  .app-container:has(header a[href="/student"]) .sidebar,
+  .app-container:has(.sidebar a[href="/student"]) .sidebar,
+  .app-container:has(.sidebar a[href*="/student"]) .sidebar,
+  .app-container:has(header a[href*="/student"]) .sidebar-container,
+  .app-container:has(header a[href="/student"]) .sidebar-container,
+  .app-container:has(.sidebar a[href="/student"]) .sidebar-container,
+  .app-container:has(.sidebar a[href*="/student"]) .sidebar-container,
+  .app-container:has(header a[href*="/tg"]) .sidebar,
+  .app-container:has(header a[href="/tg"]) .sidebar,
+  .app-container:has(.sidebar a[href="/tg"]) .sidebar,
+  /* Hide sidebar on mobile for student, TG, and HOD */
+  .app-container.student-portal-mode .sidebar,
+  .app-container:has(header a[href*="/student"]) .sidebar,
+  .app-container:has(header a[href="/student"]) .sidebar,
+  .app-container:has(.sidebar a[href="/student"]) .sidebar,
+  .app-container.tg-portal-mode .sidebar,
+  .app-container:has(header a[href*="/tg"]) .sidebar,
+  .app-container:has(header a[href="/tg"]) .sidebar,
+  .app-container:has(.sidebar a[href="/tg"]) .sidebar,
+  .app-container.hod-portal-mode .sidebar,
+  .app-container:has(header a[href*="/hod"]) .sidebar,
+  .app-container:has(header a[href="/hod"]) .sidebar,
+  .app-container:has(.sidebar a[href="/hod"]) .sidebar {
+    display: none !important;
+  }
+
+  /* Full width main content on mobile with clearance for bottom navigation footer */
+  .main-content,
+  .main-content.sidebar-open,
+  .main-content.sidebar-closed,
+  .app-container:has(header a[href*="/student"]) .main-content,
+  .app-container:has(header a[href="/student"]) .main-content,
+  .app-container:has(.sidebar a[href="/student"]) .main-content,
+  .app-container:has(header a[href*="/tg"]) .main-content,
+  .app-container:has(header a[href="/tg"]) .main-content,
+  .app-container:has(.sidebar a[href="/tg"]) .main-content,
+  .app-container.hod-portal-mode .main-content,
+  .app-container:has(header a[href*="/hod"]) .main-content,
+  .app-container:has(header a[href="/hod"]) .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-bottom: 5.5rem !important;
+  }
+
+  /* Hide toggle menu button in header on mobile for student and TG */
+  header:has(a[href*="/student"]) button[aria-label="Toggle Navigation Menu"],
+  header:has(a[href="/student"]) button[aria-label="Toggle Navigation Menu"],
+  header:has(a[href*="/tg"]) button[aria-label="Toggle Navigation Menu"],
+  header:has(a[href="/tg"]) button[aria-label="Toggle Navigation Menu"] {
+    display: none !important;
+  }
+
+  /* Student Mobile Bottom Navigation (Screen 4: 4-Column Icon Grid) */
+  .student-mobile-nav {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 58px !important;
+    background-color: #FFFFFF !important;
+    border-top: 1px solid #E2E8F0 !important;
+    z-index: 50 !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    align-items: center !important;
+    padding: 0 0.5rem !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .student-mobile-nav .mobile-nav-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    min-height: 48px !important;
+    color: #64748B !important;
+    text-decoration: none !important;
+    transition: all 0.15s ease !important;
+    cursor: pointer !important;
+  }
+
+  .student-mobile-nav .mobile-nav-btn:hover,
+  .student-mobile-nav .mobile-nav-btn.active,
+  .student-mobile-nav .mobile-nav-btn.text-primary {
+    color: #2563EB !important;
+  }
+
+  .student-mobile-nav .mobile-nav-btn svg {
+    width: 22px !important;
+    height: 22px !important;
+    stroke-width: 2px !important;
+  }
+
+  /* TG Mobile Bottom Navigation (Screen 6: 3 Tabs with Icon & Text Label) */
+  .tg-mobile-nav {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    min-height: 64px !important;
+    height: 64px !important;
+    background-color: #FFFFFF !important;
+    border-top: 1px solid #E2E8F0 !important;
+    z-index: 50 !important;
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    padding: 0 0.5rem !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .tg-mobile-nav .mobile-nav-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.25rem !important;
+    min-width: 4.5rem !important;
+    min-height: 48px !important;
+    color: #64748B !important;
+    text-decoration: none !important;
+    transition: all 0.15s ease !important;
+    cursor: pointer !important;
+  }
+
+  .tg-mobile-nav .mobile-nav-btn:hover,
+  .tg-mobile-nav .mobile-nav-btn.active,
+  .tg-mobile-nav .mobile-nav-btn.text-primary {
+    color: #4F46E5 !important;
+  }
+
+  .tg-mobile-nav .mobile-nav-btn svg {
+    width: 20px !important;
+    height: 20px !important;
+    stroke-width: 2px !important;
+  }
+
+  .tg-mobile-nav .mobile-nav-btn span {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+  }
+
+  /* HOD Mobile Bottom Navigation (Screen 10 / Screen 22: 5 Tabs with Icon & Text) */
+  .hod-mobile-nav {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 4.25rem !important;
+    min-height: 4.25rem !important;
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-top: 1px solid #E2E8F0 !important;
+    z-index: 50 !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    align-items: center !important;
+    padding: 0 0.25rem !important;
+    box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.06) !important;
+    box-sizing: border-box !important;
+  }
+
+  .hod-mobile-nav .mobile-nav-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.25rem !important;
+    height: 100% !important;
+    width: 100% !important;
+    text-decoration: none !important;
+    color: #64748B !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease !important;
+    cursor: pointer !important;
+    padding: 0.25rem 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .hod-mobile-nav .mobile-nav-btn svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .hod-mobile-nav .mobile-nav-btn:hover {
+    color: #2563EB !important;
+  }
+
+  .hod-mobile-nav .mobile-nav-btn.active {
+    color: #2563EB !important;
+    font-weight: 700 !important;
+  }
+
+  .hod-mobile-nav .mobile-nav-btn.active svg {
+    stroke: #2563EB !important;
+    transform: translateY(-1px) !important;
+  }
+}
+
+/* 2. Desktop Viewports (min-width: 640px): Hide Student & TG Mobile Bottom Navigation */
+@media (min-width: 640px) {
+  .student-mobile-nav,
+  .tg-mobile-nav {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-bottom-nav,
+  .hod-mobile-nav {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   CampusFlow – Screen 3 & Screen 4 Tokens & Utilities (CampusFlow Indigo)
+   ========================================================================== */
+:root {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-foreground: #FFFFFF;
+  --border: #E0E7FF;
+  --secondary: #EEF2FF;
+  --secondary-foreground: #4338CA;
+  --accent: #ECFDF5;
+  --accent-foreground: #065F46;
+  --border-accent: #A7F3D0;
+}
+
+.bg-background {
+  background-color: #F8FAFC !important;
+}
+
+.text-foreground {
+  color: #0F172A !important;
+}
+
+.bg-card {
+  background-color: #FFFFFF !important;
+}
+
+.border-border {
+  border-color: #E0E7FF !important;
+}
+
+.border-t-border {
+  border-top-color: #E0E7FF !important;
+}
+
+.border-b-border {
+  border-bottom-color: #E0E7FF !important;
+}
+
+.border-l-border {
+  border-left-color: #E0E7FF !important;
+}
+
+.border-r-border {
+  border-right-color: #E0E7FF !important;
+}
+
+.border-x-border {
+  border-left-color: #E0E7FF !important;
+  border-right-color: #E0E7FF !important;
+}
+
+.border-y-border {
+  border-top-color: #E0E7FF !important;
+  border-bottom-color: #E0E7FF !important;
+}
+
+.bg-muted {
+  background-color: #F1F5F9 !important;
+}
+
+.bg-muted\/30 {
+  background-color: rgba(241, 245, 249, 0.4) !important;
+}
+
+.bg-muted\/40 {
+  background-color: rgba(241, 245, 249, 0.5) !important;
+}
+
+.bg-muted\/50 {
+  background-color: #F8FAFC !important;
+}
+
+.text-muted-foreground {
+  color: #64748B !important;
+}
+
+.bg-primary {
+  background-color: #4F46E5 !important;
+}
+
+.text-primary {
+  color: #4F46E5 !important;
+}
+
+.border-primary {
+  border-color: #4F46E5 !important;
+}
+
+.border-primary\/20 {
+  border-color: rgba(79, 70, 229, 0.2) !important;
+}
+
+.border-primary\/40 {
+  border-color: rgba(79, 70, 229, 0.4) !important;
+}
+
+.hover\:border-primary\/40:hover {
+  border-color: rgba(79, 70, 229, 0.4) !important;
+}
+
+.bg-primary\/10 {
+  background-color: rgba(79, 70, 229, 0.1) !important;
+}
+
+.bg-primary\/20 {
+  background-color: rgba(79, 70, 229, 0.18) !important;
+}
+
+.bg-primary\/30 {
+  background-color: rgba(79, 70, 229, 0.25) !important;
+}
+
+.hover\:bg-primary\/90:hover {
+  background-color: #4338CA !important;
+}
+
+.text-primary-foreground {
+  color: #FFFFFF !important;
+}
+
+.bg-secondary {
+  background-color: #EEF2FF !important;
+}
+
+.text-secondary-foreground {
+  color: #4338CA !important;
+}
+
+.bg-accent {
+  background-color: #ECFDF5 !important;
+}
+
+.text-accent-foreground {
+  color: #065F46 !important;
+}
+
+.border-accent {
+  border-color: #A7F3D0 !important;
+}
+
+/* Grid columns & layouts */
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.grid-cols-\[1fr_400px\] {
+  grid-template-columns: 1fr 400px !important;
+}
+
+@media (max-width: 1024px) {
+  .grid-cols-\[1fr_400px\] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Sizing Tokens */
+.size-3 {
+  width: 0.75rem !important;
+  height: 0.75rem !important;
+}
+
+.size-3\.5 {
+  width: 0.875rem !important;
+  height: 0.875rem !important;
+}
+
+.size-4 {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.size-5 {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+.size-6 {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+.size-8 {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.size-9 {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+}
+
+.size-10 {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+}
+
+.size-11 {
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+}
+
+.size-12 {
+  width: 3rem !important;
+  height: 3rem !important;
+}
+
+.size-16 {
+  width: 4rem !important;
+  height: 4rem !important;
+}
+
+.min-h-10 {
+  min-height: 2.5rem !important;
+}
+
+.min-h-11 {
+  min-height: 2.75rem !important;
+}
+
+.min-h-12 {
+  min-height: 3rem !important;
+}
+
+.min-h-16 {
+  min-height: 4rem !important;
+}
+
+.min-w-0 {
+  min-width: 0 !important;
+}
+
+.shrink-0 {
+  flex-shrink: 0 !important;
+}
+
+.max-w-7xl {
+  max-width: 80rem !important;
+}
+
+.max-w-2xl {
+  max-width: 42rem !important;
+}
+
+/* Typography & Display */
+.tracking-tight {
+  letter-spacing: -0.025em !important;
+}
+
+.tracking-wide {
+  letter-spacing: 0.025em !important;
+}
+
+.tracking-wider {
+  letter-spacing: 0.05em !important;
+}
+
+.tracking-widest {
+  letter-spacing: 0.1em !important;
+}
+
+.whitespace-nowrap {
+  white-space: nowrap !important;
+}
+
+.text-ellipsis {
+  text-overflow: ellipsis !important;
+}
+
+.overflow-hidden {
+  overflow: hidden !important;
+}
+
+.truncate {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums !important;
+}
+
+.shadow-xs {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+}
+
+.shadow-2xs {
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Responsive Media Queries */
+@media (min-width: 640px) {
+  .sm\:inline {
+    display: inline !important;
+  }
+
+  .sm\:block {
+    display: block !important;
+  }
+
+  .sm\:flex {
+    display: flex !important;
+  }
+
+  .sm\:hidden {
+    display: none !important;
+  }
+
+  .sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .sm\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .sm\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:inline {
+    display: inline !important;
+  }
+
+  .md\:block {
+    display: block !important;
+  }
+
+  .md\:flex {
+    display: flex !important;
+  }
+
+  .md\:hidden {
+    display: none !important;
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .md\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:inline {
+    display: inline !important;
+  }
+
+  .lg\:block {
+    display: block !important;
+  }
+
+  .lg\:flex {
+    display: flex !important;
+  }
+
+  .lg\:hidden {
+    display: none !important;
+  }
+
+  .lg\:grid {
+    display: grid !important;
+  }
+
+  .lg\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .lg\:col-span-1 {
+    grid-column: span 1 / span 1 !important;
+  }
+
+  .lg\:col-span-2 {
+    grid-column: span 2 / span 2 !important;
+  }
+}
+
+/* ==========================================================================
+   CampusFlow Academic Indigo & Active Selector Theme Utilities
+   ========================================================================== */
+.schedule-preset-btn {
+  background-color: #FFFFFF;
+  color: #334155;
+  border: 1px solid #E2E8F0;
+  transition: all 0.15s ease-in-out;
+}
+
+.schedule-preset-btn:hover {
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
+}
+
+.schedule-preset-btn.active,
+button.schedule-preset-btn.active {
+  background-color: #4F46E5 !important;
+  color: #FFFFFF !important;
+  border-color: #4F46E5 !important;
+  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.25) !important;
+}
+
+.bg-indigo-600 {
+  background-color: #4F46E5 !important;
+}
+
+.bg-indigo-700 {
+  background-color: #4338CA !important;
+}
+
+.hover\:bg-indigo-700:hover {
+  background-color: #4338CA !important;
+}
+
+.border-indigo-600 {
+  border-color: #4F46E5 !important;
+}
+
+.border-indigo-200 {
+  border-color: #C7D2FE !important;
+}
+
+.text-indigo-600 {
+  color: #4F46E5 !important;
+}
+
+.text-indigo-700 {
+  color: #4338CA !important;
+}
+
+.bg-indigo-50 {
+  background-color: #EEF2FF !important;
+}
+
+.notif-badge-count {
+  position: absolute !important;
+  top: -4px !important;
+  right: -4px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  border-radius: 9999px !important;
+  background-color: #4F46E5 !important;
+  color: #FFFFFF !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  border: 2px solid #FFFFFF !important;
+  pointer-events: none !important;
+  z-index: 10 !important;
 }

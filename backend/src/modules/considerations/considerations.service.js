@@ -471,9 +471,9 @@ export const getTGQueue = async (user, query) => {
     ],
   };
 
-  if (query.status) {
+  if (query.status && query.status.toUpperCase() !== 'ALL') {
     filter.status = query.status.toUpperCase();
-  } else {
+  } else if (!query.status && query.all !== 'true') {
     filter.status = 'PENDING';
   }
 
@@ -514,7 +514,7 @@ export const getTGQueue = async (user, query) => {
       .populate('studentAudits.auditedBy', 'name role')
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: 1 }),
+      .sort({ createdAt: -1 }),
     ConsiderationRequest.countDocuments(filter),
   ]);
 
@@ -619,6 +619,127 @@ export const getHODQueue = async (query = {}, user = null) => {
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 }),
+    ConsiderationRequest.countDocuments(filter),
+  ]);
+
+  return {
+    requests,
+    meta: buildPaginationMeta(total, page, limit),
+  };
+};
+
+export const getTGRecommendationsHistory = async (query = {}, user = null) => {
+  const { page, limit, skip } = parsePagination(query);
+  const conditions = [];
+
+  // Deduplicate group considerations: only master request is returned
+  conditions.push({
+    $or: [
+      { isGroup: false },
+      { isGroup: { $exists: false } },
+      { isGroupMaster: true },
+    ],
+  });
+
+  // Department Scoping:
+  let targetDepartment = null;
+  if (user?.role === 'HOD') {
+    targetDepartment = user.departmentId;
+  } else if (query.department) {
+    targetDepartment = query.department;
+  }
+
+  if (targetDepartment) {
+    const deptStudents = await Student.find({ department: targetDepartment }).select('_id');
+    conditions.push({ student: { $in: deptStudents.map((s) => s._id) } });
+  }
+
+  // Must have TG recommendation / approval (strictly excludes pending items not approved by TG, or items rejected by TG)
+  conditions.push({
+    $or: [
+      { status: 'RECOMMENDED_BY_TG' },
+      { 'history.status': 'RECOMMENDED_BY_TG' },
+    ],
+  });
+  // Strictly exclude applications rejected by TG (i.e. not approved by TG)
+  conditions.push({
+    history: {
+      $not: {
+        $elemMatch: {
+          status: 'REJECTED',
+          actorRole: { $in: ['TG'] },
+        },
+      },
+    },
+  });
+
+  // Status or history filter
+  if (query.status && query.status !== 'ALL') {
+    const s = query.status.toUpperCase();
+    if (s === 'AWAITING_HOD' || s === 'RECOMMENDED_BY_TG') {
+      conditions.push({ status: 'RECOMMENDED_BY_TG' });
+    } else if (s === 'APPROVED' || s === 'APPROVED_BY_HOD') {
+      conditions.push({ status: 'APPROVED_BY_HOD' });
+    } else if (s === 'REJECTED') {
+      conditions.push({ status: { $in: ['REJECTED', 'REJECTED_BY_HOD', 'REJECTED_BY_TG'] } });
+    } else {
+      conditions.push({ status: s });
+    }
+  }
+
+  // Type filter
+  if (query.type && query.type !== 'ALL') {
+    conditions.push({ eventType: query.type.toUpperCase() });
+  }
+
+  const filter = conditions.length > 0 ? { $and: conditions } : {};
+
+  const [requests, total] = await Promise.all([
+    ConsiderationRequest.find(filter)
+      .populate({
+        path: 'student',
+        populate: [
+          { path: 'user', select: 'name email phone profileImage' },
+          { path: 'section', select: 'name code year semester' },
+          { path: 'department', select: 'name code' },
+        ],
+      })
+      .populate({
+        path: 'groupMembers',
+        populate: [
+          { path: 'user', select: 'name email phone' },
+          { path: 'section', select: 'name code year semester' },
+          { path: 'department', select: 'name code' },
+        ],
+      })
+      .populate({
+        path: 'sectionStudents',
+        populate: [
+          { path: 'user', select: 'name email phone' },
+          { path: 'section', select: 'name code year semester' },
+        ],
+      })
+      .populate({
+        path: 'groupLeader',
+        populate: [{ path: 'user', select: 'name email' }],
+      })
+      .populate({
+        path: 'tg',
+        populate: { path: 'user', select: 'name email phone' },
+      })
+      .populate('tgReview.reviewedBy', 'name email role')
+      .populate('hodReview.reviewedBy', 'name email role')
+      .populate({
+        path: 'studentAudits.student',
+        populate: [
+          { path: 'user', select: 'name email phone' },
+          { path: 'section', select: 'name code year semester' },
+        ],
+      })
+      .populate('studentAudits.auditedBy', 'name role')
+      .skip(skip)
+      .limit(limit)
+      .sort({ updatedAt: -1, createdAt: -1 }),
     ConsiderationRequest.countDocuments(filter),
   ]);
 
@@ -777,6 +898,7 @@ export const tgReview = async (id, user, { decision, remarks }) => {
 
   request.status = newStatus;
   request.tgReview = {
+    decision,
     remarks: remarks || '',
     reviewedAt: now,
     reviewedBy: user._id,
@@ -1315,6 +1437,7 @@ export default {
   getStudentConsiderations,
   getTGQueue,
   getHODQueue,
+  getTGRecommendationsHistory,
   getConsiderationById,
   cancelConsideration,
   tgReview,

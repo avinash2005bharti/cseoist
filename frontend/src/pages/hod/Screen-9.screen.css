@@ -1,0 +1,862 @@
+/* ==========================================================================
+   CampusFlow Lite – Screen 9 (Desktop) & Screen 10 (Mobile) HOD Dashboard CSS
+   Design Source: new_ui / Screen 9.png & Screen 10.png & flowstep-prompts/hod.txt
+   Theme: CampusFlow SaaS Royal Blue (#2563EB), Soft Indigo (#EEF2FF),
+          Cyan Accent (#CFF4FC), Slate Neutral Surface & High-Contrast Typography
+   ========================================================================== */
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --muted: #F8FAFC;
+  --muted-foreground: #64748B;
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EEF2FF;
+  --secondary-foreground: #1D4ED8;
+  --accent: #CFF4FC;
+  --accent-foreground: #055160;
+  --border: #E2E8F0;
+  --border-subtle: #E2E8F0;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --destructive: #E11D48;
+  --destructive-foreground: #FFFFFF;
+  --color-primary: #2563EB;
+  --color-chart-1: #2563EB;
+  --color-chart-2: #06B6D4;
+  --color-chart-3: #F59E0B;
+  --color-chart-4: #F97316;
+  --color-chart-5: #EC4899;
+  --color-chart-6: #4F46E5;
+  --color-chart-7: #06B6D4;
+  --color-chart-8: #F59E0B;
+  --color-secondary: #EEF2FF;
+  --color-muted: #F1F5F9;
+}
+
+[data-appearance="light"] {
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+/* ==========================================================================
+   HOD Layout Containers & Grid Proportions
+   ========================================================================== */
+
+/* Main content wrapper on HOD Dashboard */
+.app-container.hod-portal-mode .hod-content-container {
+  max-width: 80rem !important; /* max-w-7xl */
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 2rem !important;
+  width: 100% !important;
+}
+
+@media (max-width: 768px) {
+  .app-container.hod-portal-mode .hod-content-container {
+    padding: 1rem !important;
+  }
+}
+
+/* 1. Split Hero Section (Side-by-side on desktop >= 1024px, stacked on mobile) */
+.hod-hero-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 1.5rem !important;
+  align-items: stretch !important;
+}
+
+@media (min-width: 1024px) {
+  .hod-hero-grid {
+    grid-template-columns: 1.35fr 0.85fr !important;
+  }
+}
+
+/* 2. Middle Row: 6 KPI & Quick Action Cards */
+.hod-kpi-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.75rem !important;
+}
+
+@media (min-width: 640px) {
+  .hod-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .hod-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .hod-kpi-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+}
+
+/* 3. Bottom Row: 50-50 Split (Semester Distribution & Section Overview) */
+.hod-bottom-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 1.5rem !important;
+  align-items: stretch !important;
+}
+
+@media (min-width: 1100px) {
+  .hod-bottom-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ==========================================================================
+   Card Surfaces & Elements
+   ========================================================================== */
+
+.hod-card {
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 1rem !important; /* 16px */
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Mobile Hero Action Bar (Screen 10) */
+.hod-mobile-action-bar {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.625rem !important;
+  width: 100% !important;
+}
+
+@media (min-width: 640px) {
+  .hod-mobile-action-bar {
+    display: none !important;
+  }
+}
+
+.hod-mobile-action-bar .hod-datetime-pill {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background-color: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 0.5rem !important;
+  padding: 0.625rem 0.875rem !important;
+  font-size: 0.875rem !important;
+  color: #64748B !important;
+  min-height: 44px !important;
+}
+
+.hod-mobile-action-bar .hod-btn-outline {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  min-height: 44px !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 0.5rem !important;
+  color: #0F172A !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+
+.hod-mobile-action-bar .hod-btn-outline:hover {
+  background-color: #EFF6FF !important;
+  border-color: #93C5FD !important;
+  color: #1D4ED8 !important;
+}
+
+.hod-mobile-action-bar .hod-btn-primary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  min-height: 44px !important;
+  background-color: #2563EB !important;
+  border: 1px solid #2563EB !important;
+  border-radius: 0.5rem !important;
+  color: #FFFFFF !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2) !important;
+}
+
+.hod-mobile-action-bar .hod-btn-primary:hover {
+  background-color: #1D4ED8 !important;
+}
+
+/* Desktop Hero Gradient Banner (Screen 9) */
+.hod-desktop-banner {
+  display: none !important;
+}
+
+@media (min-width: 1024px) {
+  .hod-desktop-banner {
+    background: linear-gradient(135deg, #1E40AF 0%, #2563EB 38%, #3B82F6 70%, #60A5FA 100%) !important;
+    border-radius: 1rem !important;
+    border: 1px solid #93C5FD !important;
+    position: relative !important;
+    overflow: hidden !important;
+    min-height: 260px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+}
+
+.hod-banner-stripes {
+  height: 6px !important;
+  width: 100% !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  display: flex !important;
+  z-index: 10 !important;
+}
+
+.hod-banner-stripes .stripe-purple {
+  width: 33.33% !important;
+  background-color: #6366F1 !important;
+}
+
+.hod-banner-stripes .stripe-cyan {
+  width: 33.33% !important;
+  background-color: #06B6D4 !important;
+}
+
+.hod-banner-stripes .stripe-amber {
+  width: 33.34% !important;
+  background-color: #F59E0B !important;
+}
+
+/* Action Cards */
+.hod-action-card {
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.hod-action-card:hover {
+  border-color: #93C5FD !important;
+  box-shadow: 0 6px 16px -2px rgba(37, 99, 235, 0.08) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Semester Mini Cards */
+.hod-sem-card {
+  background-color: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 0.625rem !important; /* 10px */
+  transition: all 0.15s ease !important;
+}
+
+.hod-sem-card:hover {
+  background-color: #EEF2FF !important;
+  border-color: #93C5FD !important;
+}
+
+.hod-sem-card.selected {
+  background-color: #EEF2FF !important;
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35) !important;
+}
+
+/* Section Overview Cards */
+.hod-section-card {
+  background-color: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.hod-section-card:hover {
+  background-color: #EEF2FF !important;
+  border-color: #93C5FD !important;
+  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.06) !important;
+}
+
+/* Active Status Pill */
+.hod-active-pill {
+  background-color: #CFF4FC !important;
+  color: #055160 !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  border-radius: 0.375rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.375rem !important;
+  padding: 0.25rem 0.5rem !important;
+}
+
+.hod-active-pill-dot {
+  width: 0.375rem !important;
+  height: 0.375rem !important;
+  border-radius: 9999px !important;
+  background-color: #2563EB !important;
+}
+
+/* Distribution 2-column layout on Desktop */
+.hod-distribution-layout {
+  display: grid !important;
+  grid-template-columns: 180px 1fr !important;
+  gap: 1.5rem !important;
+  align-items: center !important;
+}
+
+@media (max-width: 900px) {
+  .hod-distribution-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+}
+
+/* Section Overview Grid */
+.hod-section-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.875rem !important;
+}
+
+@media (min-width: 640px) {
+  .hod-section-grid {
+    gap: 1rem !important;
+  }
+}
+
+/* Strict containment and zero-overflow guarantees */
+.app-container.hod-portal-mode,
+.app-container.hod-portal-mode .main-content,
+.app-container.hod-portal-mode .hod-content-container,
+.hod-hero-grid,
+.hod-kpi-grid,
+.hod-bottom-grid,
+.hod-card {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 640px) {
+  .hod-card {
+    padding: 1rem !important;
+  }
+}
+
+.hod-hero-image-box {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 9rem !important;
+  border-radius: 0.75rem !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border: 1px solid #E2E8F0 !important;
+  margin-top: 0.25rem !important;
+}
+
+.hod-hero-image-box img {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* ==========================================================================
+   Desktop HOD Sidebar Integration & Layout Offset (>= 1024px)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .app-container.hod-portal-mode .sidebar.sidebar-open,
+  .app-container.hod-portal-mode .sidebar-container.sidebar-open,
+  .app-container:has(header a[href*="/hod"]) .sidebar.sidebar-open,
+  .app-container:has(header a[href="/hod"]) .sidebar.sidebar-open {
+    width: var(--sidebar-width) !important;
+    display: flex !important;
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    z-index: 30 !important;
+    transform: translateX(0) !important;
+    box-shadow: 1px 0 0 0 #E2E8F0 !important;
+    background-color: #FFFFFF !important;
+  }
+
+  .app-container.hod-portal-mode .main-content.sidebar-open,
+  .app-container:has(header a[href*="/hod"]) .main-content.sidebar-open,
+  .app-container:has(header a[href="/hod"]) .main-content.sidebar-open {
+    margin-left: var(--sidebar-width) !important;
+    width: calc(100% - var(--sidebar-width)) !important;
+    max-width: calc(100% - var(--sidebar-width)) !important;
+    transition: margin-left 0.28s cubic-bezier(0.16, 1, 0.3, 1), width 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .app-container.hod-portal-mode .main-content.sidebar-closed,
+  .app-container:has(header a[href*="/hod"]) .main-content.sidebar-closed,
+  .app-container:has(header a[href="/hod"]) .main-content.sidebar-closed {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    transition: margin-left 0.28s cubic-bezier(0.16, 1, 0.3, 1), width 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .app-container.hod-portal-mode .sidebar .nav-link.active,
+  .app-container:has(header a[href*="/hod"]) .sidebar .nav-link.active {
+    background-color: #2563EB !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22) !important;
+  }
+
+  .app-container.hod-portal-mode .sidebar .nav-link.active svg,
+  .app-container:has(header a[href*="/hod"]) .sidebar .nav-link.active svg {
+    stroke: #FFFFFF !important;
+  }
+}
+
+/* ==========================================================================
+   Mobile Navigation: Hide Sidebar Drawer, Full Width Content, Bottom Nav
+   ========================================================================== */
+@media (max-width: 1023px) {
+  .app-container.hod-portal-mode .sidebar,
+  .app-container.hod-portal-mode .sidebar-container,
+  .app-container:has(header a[href*="/hod"]) .sidebar,
+  .app-container:has(header a[href="/hod"]) .sidebar,
+  .app-container:has(header a[href*="/hod"]) .sidebar-container,
+  .app-container:has(header a[href="/hod"]) .sidebar-container {
+    display: none !important;
+  }
+
+  .app-container.hod-portal-mode .main-content,
+  .app-container.hod-portal-mode .main-content.sidebar-open,
+  .app-container.hod-portal-mode .main-content.sidebar-closed {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-bottom: 5.5rem !important;
+  }
+}
+
+/* Bottom Navigation Bar for HOD on Mobile (<1024px) */
+.hod-mobile-nav {
+  display: none !important;
+}
+
+@media (max-width: 1023px) {
+  .hod-mobile-nav {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 4.25rem !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 50 !important;
+    background-color: rgba(255, 255, 255, 0.96) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-top: 1px solid #E2E8F0 !important;
+    box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.06) !important;
+    padding: 0 0.25rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .hod-mobile-nav .mobile-nav-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.25rem !important;
+    height: 100% !important;
+    width: 100% !important;
+    text-decoration: none !important;
+    color: #64748B !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    transition: all 0.15s ease !important;
+    cursor: pointer !important;
+    padding: 0.25rem 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .hod-mobile-nav .mobile-nav-btn svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .hod-mobile-nav .mobile-nav-btn:hover {
+    color: #2563EB !important;
+  }
+
+  .hod-mobile-nav .mobile-nav-btn.active {
+    color: #2563EB !important;
+    font-weight: 700 !important;
+  }
+
+  .hod-mobile-nav .mobile-nav-btn.active svg {
+    stroke: #2563EB !important;
+    transform: translateY(-1px) !important;
+  }
+}
+
+/* ==========================================================================
+   Semester Distribution: Color Dots, Percentage Badges & Circular Donut
+   ========================================================================== */
+.hod-sem-color-dot {
+  width: 10px !important;
+  height: 10px !important;
+  min-width: 10px !important;
+  min-height: 10px !important;
+  border-radius: 9999px !important;
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12) !important;
+}
+
+.hod-sem-pct-pill {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  padding: 2px 6px !important;
+  border-radius: 9999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
+}
+
+/* ==========================================================================
+   Header Notification Bell & Unread Count Badge
+   ========================================================================== */
+.notif-bell-btn {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  border-radius: 10px !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  color: #64748B !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+  transition: all 0.15s ease !important;
+}
+
+.notif-bell-btn:hover {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+.notif-bell-btn svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.notif-badge-count {
+  position: absolute !important;
+  top: -4px !important;
+  right: -4px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  border-radius: 9999px !important;
+  background-color: #EF4444 !important;
+  color: #FFFFFF !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  border: 2px solid #FFFFFF !important;
+  pointer-events: none !important;
+  z-index: 10 !important;
+}
+
+/* ==========================================================================
+   Sidebar Collapse Button inside Sidebar Header Box
+   ========================================================================== */
+.sidebar-collapse-btn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  border-radius: 8px !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #64748B !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+.sidebar-collapse-btn:hover {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+/* ==========================================================================
+   Circular Donut Center - Transparent Background (Zero Overlap on Donut Ring)
+   ========================================================================== */
+.hod-donut-center {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 104px !important;
+  height: 104px !important;
+  max-width: 104px !important;
+  max-height: 104px !important;
+  border-radius: 9999px !important;
+  background: transparent !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  pointer-events: none !important;
+  box-sizing: border-box !important;
+  padding: 4px !important;
+  overflow: hidden !important;
+  z-index: 5 !important;
+}
+
+.hod-donut-count {
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  color: #0F172A !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  user-select: none !important;
+}
+
+.hod-donut-label {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #64748B !important;
+  line-height: 1.15 !important;
+  margin-top: 4px !important;
+  text-align: center !important;
+  max-width: 86px !important;
+  user-select: none !important;
+  display: block !important;
+}
+
+/* ==========================================================================
+   Desktop Action Controls: Attendance Clearances & Send Notice Buttons
+   ========================================================================== */
+.hod-btn-clearances-highlight {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  padding: 0.625rem 1rem !important;
+  border-radius: 0.75rem !important;
+  background: linear-gradient(135deg, #EFF6FF 0%, #EEF2FF 100%) !important;
+  border: 2px solid #3B82F6 !important;
+  color: #1D4ED8 !important;
+  font-weight: 700 !important;
+  font-size: 0.8125rem !important;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+.hod-btn-clearances-highlight:hover {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #1D4ED8 !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+.hod-btn-clearances-highlight:hover svg {
+  color: #FFFFFF !important;
+  transform: scale(1.1) !important;
+}
+
+.hod-btn-clearances-highlight:hover .clearances-badge {
+  background-color: #FFFFFF !important;
+  color: #1D4ED8 !important;
+  border-color: transparent !important;
+}
+
+.clearances-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0.125rem 0.5rem !important;
+  border-radius: 9999px !important;
+  font-size: 0.625rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  background-color: #DBEAFE !important;
+  color: #1E40AF !important;
+  border: 1px solid #BFDBFE !important;
+  transition: all 0.2s ease !important;
+}
+
+.hod-btn-send-notice {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  padding: 0.625rem 1rem !important;
+  border-radius: 0.75rem !important;
+  background-color: #2563EB !important;
+  color: #FFFFFF !important;
+  border: 1px solid #1D4ED8 !important;
+  font-weight: 700 !important;
+  font-size: 0.8125rem !important;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+.hod-btn-send-notice:hover {
+  background-color: #1D4ED8 !important;
+  box-shadow: 0 6px 16px rgba(29, 78, 216, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+.hod-btn-send-notice svg {
+  color: #FFFFFF !important;
+}
+
+/* Promote & Next Semester Button Styling matching Screen 25 & Screen 26 */
+.hod-btn-promote,
+.hod-btn-move-next,
+.hod-btn-primary-blue {
+  background-color: #2563EB !important;
+  color: #FFFFFF !important;
+  border: 1px solid #1D4ED8 !important;
+  transition: all 0.15s ease !important;
+}
+
+.hod-btn-promote:hover,
+.hod-btn-move-next:hover,
+.hod-btn-primary-blue:hover {
+  background-color: #1D4ED8 !important;
+  border-color: #1E40AF !important;
+}
+
+.hod-btn-promote:disabled,
+.hod-btn-move-next:disabled,
+.hod-btn-primary-blue:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+}
+
+/* Screen 25 Indigo Year, Semester and Quick Jump Pills */
+.hod-pill-indigo {
+  background-color: #4C4EE4 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #4345D1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 36px !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+  transition: all 0.15s ease !important;
+}
+
+.hod-pill-indigo:hover {
+  background-color: #3E40D3 !important;
+  box-shadow: 0 2px 6px rgba(76, 78, 228, 0.35) !important;
+}
+
+.hod-pill-indigo.is-active {
+  background-color: #4C4EE4 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #4C4EE4 !important;
+}
+
+.hod-jump-circle {
+  width: 24px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  border-radius: 9999px !important;
+  padding: 0 !important;
+}
+
+/* Section Overview Section Cards Track & Items (Screen 26.png) */
+.hod-section-cards-track {
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 0.75rem !important;
+  overflow-x: auto !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-height: 105px !important;
+  flex-shrink: 0 !important;
+}
+
+@media (min-width: 640px) {
+  .hod-section-cards-track {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+.hod-section-card-btn {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 125px !important;
+  min-height: 85px !important;
+  padding: 0.75rem 0.875rem !important;
+  border-radius: 1rem !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-sizing: border-box !important;
+}
+
+@media (min-width: 640px) {
+  .hod-section-card-btn {
+    min-width: 0 !important;
+  }
+}
+
+.hod-section-card-btn:hover {
+  background-color: #F8FAFC !important;
+  border-color: #CBD5E1 !important;
+}
+
+.hod-section-card-btn.is-selected {
+  background-color: #FFFFFF !important;
+  border: 2px solid #2563EB !important;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12) !important;
+}

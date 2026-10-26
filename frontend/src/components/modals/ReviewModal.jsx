@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useERP } from '../../context/ERPContext.jsx';
 import { considerationApi, leaveApi } from '../../api';
 import { X, CheckCircle2, AlertTriangle, AlertCircle, ShieldCheck, FileText, Eye, Users, UserCheck } from 'lucide-react';
-import { Button, FormField, Input, Textarea } from '../common';
+import '../../pages/hod/Screen-21.screen.css';
 
 export default function ReviewModal({
   type = 'CONSIDERATION', // 'CONSIDERATION' | 'LEAVE'
@@ -15,7 +15,9 @@ export default function ReviewModal({
 
   const [decision, setDecision] = useState(role === 'TG' ? 'RECOMMEND' : 'APPROVE');
   const [remarks, setRemarks] = useState('');
-  const [approvedPeriods, setApprovedPeriods] = useState(item.requestedPeriods || 1);
+  const [approvedPeriods, setApprovedPeriods] = useState(
+    item.approvedPeriods || (Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : (item.requestedPeriods || 1))
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -24,11 +26,6 @@ export default function ReviewModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-
-    if (isReject && (!remarks.trim() || remarks.trim().length < 5)) {
-      setError('Please provide detailed rejection remarks (minimum 5 characters).');
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -71,34 +68,39 @@ export default function ReviewModal({
     }
   };
 
+  const studentName = item.student?.user?.name || item.student?.name || item.applicant?.name || 'Student';
+  const rollNo = item.student?.rollNumber || item.applicant?.rollNumber || item.student?.enrollmentNumber || item.applicant?.enrollmentNumber || 'N/A';
+  const justificationText = item.description || item.reason || 'Participated in an approved academic / department activity.';
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div
-        className="modal-container max-w-md w-[95%]"
+    <div className="hod-drawer-backdrop" onClick={onClose}>
+      <aside
+        className="hod-review-drawer"
         onClick={(e) => e.stopPropagation()}
+        aria-label="Review Application Drawer"
       >
-        <div className="modal-header">
-          <div className="flex items-center gap-2.5">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-              role === 'TG' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
-            }`}>
-              <ShieldCheck size={18} />
-            </div>
-            <div>
-              <h3 className="modal-title">
-                {role === 'TG' ? 'Tutor Guardian Review' : 'Head of Department Review'}
-              </h3>
-              <p className="modal-subtitle">
-                {item.eventTitle || `${item.leaveType} Leave (${item.totalDays} days)`}
-              </p>
-            </div>
+        {/* Drawer Header (Screen 7 & 8) */}
+        <div className="hod-drawer-header">
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 m-0 leading-tight">
+              Review {type === 'CONSIDERATION' ? 'Consideration' : 'Leave'} Application
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1 m-0 truncate">
+              {studentName} • Roll {rollNo}
+            </p>
           </div>
-          <button onClick={onClose} className="modal-close-btn" aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+            aria-label="Close"
+          >
             <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 mt-2">
+        {/* Drawer Body (Scrollable) */}
+        <form onSubmit={handleSubmit} className="hod-drawer-body">
           {error && (
             <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
               <AlertCircle size={15} className="shrink-0" />
@@ -106,12 +108,22 @@ export default function ReviewModal({
             </div>
           )}
 
+          {/* Student Justification (Screen 7 & 8 exact layout) */}
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              STUDENT JUSTIFICATION
+            </div>
+            <p className="text-xs sm:text-sm text-slate-800 font-normal mt-2 m-0 leading-relaxed">
+              {justificationText}
+            </p>
+          </div>
+
           {/* Supporting Attachment if present */}
           {(() => {
             const att = item.attachments?.[0] || (item.documentFileId ? { fileId: item.documentFileId, name: item.documentOriginalName } : null);
             if (!att) return null;
             return (
-              <div className="p-3 rounded-xl bg-blue-50/80 border border-blue-200 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   <FileText size={16} className="text-blue-600 shrink-0" />
                   <span className="text-xs font-bold text-slate-800 truncate">{att.name || 'Student_Certificate.pdf'}</span>
@@ -119,7 +131,7 @@ export default function ReviewModal({
                 <button
                   type="button"
                   onClick={() => viewAttachment(att.fileId, att.name || 'Document')}
-                  className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors shrink-0"
+                  className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors shrink-0 cursor-pointer"
                 >
                   <Eye size={13} />
                   <span>View Proof</span>
@@ -188,106 +200,164 @@ export default function ReviewModal({
             );
           })()}
 
-          {/* Decision Buttons */}
-          <FormField label="Decision Action" required>
-            <div className="grid grid-cols-2 gap-2.5">
+          {/* Decision Section (Screen 7 & 8 Options) */}
+          <div>
+            <div className="font-bold text-xs uppercase tracking-wider text-slate-600 mb-2.5">
+              Review Decision
+            </div>
+            <div className="grid gap-2.5">
               {role === 'TG' ? (
                 <>
-                  <button
-                    type="button"
+                  <label
                     onClick={() => setDecision('RECOMMEND')}
-                    className={`py-2.5 px-3 rounded-xl text-xs font-bold border-2 transition-all flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 ${
-                      decision === 'RECOMMEND'
-                        ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm'
-                        : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100'
-                    }`}
+                    className={`hod-decision-card ${decision === 'RECOMMEND' ? 'selected-approve' : ''}`}
                   >
-                    <CheckCircle2 size={15} className={decision === 'RECOMMEND' ? 'text-white' : 'text-emerald-700'} />
-                    <span>Recommend to HOD</span>
-                  </button>
-                  <button
-                    type="button"
+                    <input
+                      type="radio"
+                      name="reviewDecision"
+                      checked={decision === 'RECOMMEND'}
+                      onChange={() => setDecision('RECOMMEND')}
+                      className="size-4 accent-blue-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className={decision === 'RECOMMEND' ? 'text-blue-600' : 'text-slate-400'} />
+                      <span className="font-bold text-sm text-slate-900">Recommend to HOD</span>
+                    </div>
+                  </label>
+
+                  <label
                     onClick={() => setDecision('REJECT')}
-                    className={`py-2.5 px-3 rounded-xl text-xs font-bold border-2 transition-all flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-1 ${
-                      decision === 'REJECT'
-                        ? 'bg-rose-700 text-white border-rose-700 shadow-sm'
-                        : 'bg-rose-50 text-rose-900 border-rose-300 hover:bg-rose-100'
-                    }`}
+                    className={`hod-decision-card ${decision === 'REJECT' ? 'selected-reject' : ''}`}
                   >
-                    <AlertTriangle size={15} className={decision === 'REJECT' ? 'text-white' : 'text-rose-700'} />
-                    <span>Reject</span>
-                  </button>
+                    <input
+                      type="radio"
+                      name="reviewDecision"
+                      checked={decision === 'REJECT'}
+                      onChange={() => setDecision('REJECT')}
+                      className="size-4 accent-slate-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle size={16} className={decision === 'REJECT' ? 'text-slate-700' : 'text-slate-400'} />
+                      <span className="font-bold text-sm text-slate-900">Reject</span>
+                    </div>
+                  </label>
                 </>
               ) : (
                 <>
-                  <button
-                    type="button"
+                  <label
                     onClick={() => setDecision('APPROVE')}
-                    className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
-                      decision === 'APPROVE'
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`hod-decision-card ${decision === 'APPROVE' ? 'selected-approve' : ''}`}
                   >
-                    <CheckCircle2 size={15} />
-                    <span>Approve</span>
-                  </button>
-                  <button
-                    type="button"
+                    <input
+                      type="radio"
+                      name="reviewDecision"
+                      checked={decision === 'APPROVE'}
+                      onChange={() => setDecision('APPROVE')}
+                      className="size-4 accent-blue-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className={decision === 'APPROVE' ? 'text-blue-600' : 'text-slate-400'} />
+                      <span className="font-bold text-sm text-slate-900">Approve Application</span>
+                    </div>
+                  </label>
+
+                  <label
                     onClick={() => setDecision('REJECT')}
-                    className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
-                      decision === 'REJECT'
-                        ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`hod-decision-card ${decision === 'REJECT' ? 'selected-reject' : ''}`}
                   >
-                    <AlertTriangle size={15} />
-                    <span>Reject</span>
-                  </button>
+                    <input
+                      type="radio"
+                      name="reviewDecision"
+                      checked={decision === 'REJECT'}
+                      onChange={() => setDecision('REJECT')}
+                      className="size-4 accent-slate-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle size={16} className={decision === 'REJECT' ? 'text-slate-700' : 'text-slate-400'} />
+                      <span className="font-bold text-sm text-slate-900">Reject Application</span>
+                    </div>
+                  </label>
                 </>
               )}
             </div>
-          </FormField>
+          </div>
 
-          {/* Approved Lectures for HOD Consideration approval */}
+          {/* Sanctioned Lectures Stepper for HOD Consideration approval */}
           {type === 'CONSIDERATION' && role !== 'TG' && decision === 'APPROVE' && (
-            <FormField label={`Lectures to Approve (Requested: ${item.requestedPeriods})`} required>
-              <Input
-                type="number"
-                min="1"
-                max={item.requestedPeriods}
-                value={approvedPeriods}
-                onChange={(e) => setApprovedPeriods(e.target.value)}
-                required
-              />
-            </FormField>
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+              <div>
+                <span className="block text-xs font-bold text-slate-900 leading-tight">
+                  Sanctioned Lectures
+                </span>
+                <span className="block text-[11px] font-medium text-slate-500 mt-0.5">
+                  Requested: {Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : (item.requestedPeriods || 1)} periods
+                </span>
+              </div>
+
+              <div className="hod-stepper-control">
+                <button
+                  type="button"
+                  onClick={() => setApprovedPeriods((p) => Math.max(1, Number(p) - 1))}
+                  className="hod-stepper-btn"
+                  aria-label="Decrease"
+                >
+                  –
+                </button>
+                <span className="hod-stepper-count">
+                  {approvedPeriods}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setApprovedPeriods((p) => Math.min(Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : (item.requestedPeriods || 8), Number(p) + 1))}
+                  className="hod-stepper-btn"
+                  aria-label="Increase"
+                >
+                  +
+                </button>
+              </div>
+            </div>
           )}
 
-          <FormField label={isReject ? 'Rejection Remarks (Mandatory, min 5 chars)' : 'Review Remarks (Optional)'} required={isReject}>
-            <Textarea
+          {/* Remarks Section */}
+          <div>
+            <label className="font-bold text-xs uppercase tracking-wider text-slate-600 block mb-2">
+              {isReject ? 'Rejection Remarks (Optional)' : 'Review Remarks (Optional)'}
+            </label>
+            <textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
-              placeholder={isReject ? 'State reason for rejection...' : 'Optional notes or guidance for student...'}
-              rows={3}
-              required={isReject}
+              placeholder={isReject ? 'State reason for rejection (optional)...' : 'Add remarks for the student or HOD records'}
+              className="hod-drawer-textarea"
+              required={false}
             />
-          </FormField>
+          </div>
 
-          <div className="modal-footer mt-2">
-            <Button variant="outline" size="sm" onClick={onClose} disabled={submitting}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant={isReject ? 'danger' : 'primary'}
-              size="sm"
-              loading={submitting}
+          {/* Drawer Footer (Sticky bottom) */}
+          <div className="hod-drawer-footer mt-auto pt-4 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={submitting}
+              className="hod-btn-reject"
             >
-              {decision === 'RECOMMEND' ? 'Confirm Recommendation' : decision === 'APPROVE' ? 'Confirm Approval' : 'Confirm Rejection'}
-            </Button>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="hod-btn-approve"
+            >
+              {submitting
+                ? 'Submitting...'
+                : decision === 'RECOMMEND'
+                ? 'Confirm Recommendation'
+                : decision === 'APPROVE'
+                ? 'Confirm Approval'
+                : 'Confirm Rejection'}
+            </button>
           </div>
         </form>
-      </div>
+      </aside>
     </div>
   );
 }

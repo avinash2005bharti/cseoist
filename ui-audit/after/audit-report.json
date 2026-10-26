@@ -1,0 +1,1010 @@
+[
+  {
+    "page": "login",
+    "path": "/login",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\login-1440px.png"
+  },
+  {
+    "page": "login",
+    "path": "/login",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\login-1024px.png"
+  },
+  {
+    "page": "login",
+    "path": "/login",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "bodyScrollWidth": 768,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\login-768px.png"
+  },
+  {
+    "page": "login",
+    "path": "/login",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\login-375px.png"
+  },
+  {
+    "page": "register",
+    "path": "/register",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\register-1440px.png"
+  },
+  {
+    "page": "register",
+    "path": "/register",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\register-1024px.png"
+  },
+  {
+    "page": "register",
+    "path": "/register",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "bodyScrollWidth": 768,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\register-768px.png"
+  },
+  {
+    "page": "register",
+    "path": "/register",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\register-375px.png"
+  },
+  {
+    "page": "hod-dashboard",
+    "path": "/hod",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1434,
+      "clientWidth": 1434,
+      "bodyScrollWidth": 1434,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-dashboard-1440px.png"
+  },
+  {
+    "page": "hod-dashboard",
+    "path": "/hod",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-dashboard-1024px.png"
+  },
+  {
+    "page": "hod-dashboard",
+    "path": "/hod",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 762,
+      "clientWidth": 762,
+      "bodyScrollWidth": 762,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-dashboard-768px.png"
+  },
+  {
+    "page": "hod-dashboard",
+    "path": "/hod",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-dashboard-375px.png"
+  },
+  {
+    "page": "hod-considerations",
+    "path": "/hod/considerations",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1434,
+      "clientWidth": 1434,
+      "bodyScrollWidth": 1434,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-considerations-1440px.png"
+  },
+  {
+    "page": "hod-considerations",
+    "path": "/hod/considerations",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-considerations-1024px.png"
+  },
+  {
+    "page": "hod-considerations",
+    "path": "/hod/considerations",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 762,
+      "clientWidth": 762,
+      "bodyScrollWidth": 762,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-considerations-768px.png"
+  },
+  {
+    "page": "hod-considerations",
+    "path": "/hod/considerations",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-considerations-375px.png"
+  },
+  {
+    "page": "hod-leaves",
+    "path": "/hod/leaves",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-leaves-1440px.png"
+  },
+  {
+    "page": "hod-leaves",
+    "path": "/hod/leaves",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "bodyScrollWidth": 1024,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-leaves-1024px.png"
+  },
+  {
+    "page": "hod-leaves",
+    "path": "/hod/leaves",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "bodyScrollWidth": 768,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-leaves-768px.png"
+  },
+  {
+    "page": "hod-leaves",
+    "path": "/hod/leaves",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-leaves-375px.png"
+  },
+  {
+    "page": "hod-sections",
+    "path": "/hod/sections",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1434,
+      "clientWidth": 1434,
+      "bodyScrollWidth": 1434,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-sections-1440px.png"
+  },
+  {
+    "page": "hod-sections",
+    "path": "/hod/sections",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-sections-1024px.png"
+  },
+  {
+    "page": "hod-sections",
+    "path": "/hod/sections",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 762,
+      "clientWidth": 762,
+      "bodyScrollWidth": 762,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-sections-768px.png"
+  },
+  {
+    "page": "hod-sections",
+    "path": "/hod/sections",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-sections-375px.png"
+  },
+  {
+    "page": "hod-mentorship",
+    "path": "/hod/mentorship",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1434,
+      "clientWidth": 1434,
+      "bodyScrollWidth": 1434,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-mentorship-1440px.png"
+  },
+  {
+    "page": "hod-mentorship",
+    "path": "/hod/mentorship",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-mentorship-1024px.png"
+  },
+  {
+    "page": "hod-mentorship",
+    "path": "/hod/mentorship",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 762,
+      "clientWidth": 762,
+      "bodyScrollWidth": 762,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-mentorship-768px.png"
+  },
+  {
+    "page": "hod-mentorship",
+    "path": "/hod/mentorship",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-mentorship-375px.png"
+  },
+  {
+    "page": "hod-students",
+    "path": "/hod/students",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1434,
+      "clientWidth": 1434,
+      "bodyScrollWidth": 1434,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-students-1440px.png"
+  },
+  {
+    "page": "hod-students",
+    "path": "/hod/students",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-students-1024px.png"
+  },
+  {
+    "page": "hod-students",
+    "path": "/hod/students",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 762,
+      "clientWidth": 762,
+      "bodyScrollWidth": 762,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-students-768px.png"
+  },
+  {
+    "page": "hod-students",
+    "path": "/hod/students",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-students-375px.png"
+  },
+  {
+    "page": "hod-teachers",
+    "path": "/hod/teachers",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1434,
+      "clientWidth": 1434,
+      "bodyScrollWidth": 1434,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-teachers-1440px.png"
+  },
+  {
+    "page": "hod-teachers",
+    "path": "/hod/teachers",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-teachers-1024px.png"
+  },
+  {
+    "page": "hod-teachers",
+    "path": "/hod/teachers",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 762,
+      "clientWidth": 762,
+      "bodyScrollWidth": 762,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-teachers-768px.png"
+  },
+  {
+    "page": "hod-teachers",
+    "path": "/hod/teachers",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-teachers-375px.png"
+  },
+  {
+    "page": "hod-reports",
+    "path": "/hod/reports",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1434,
+      "clientWidth": 1434,
+      "bodyScrollWidth": 1434,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-reports-1440px.png"
+  },
+  {
+    "page": "hod-reports",
+    "path": "/hod/reports",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-reports-1024px.png"
+  },
+  {
+    "page": "hod-reports",
+    "path": "/hod/reports",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 762,
+      "clientWidth": 762,
+      "bodyScrollWidth": 762,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-reports-768px.png"
+  },
+  {
+    "page": "hod-reports",
+    "path": "/hod/reports",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\hod-reports-375px.png"
+  },
+  {
+    "page": "student-dashboard",
+    "path": "/student",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1434,
+      "clientWidth": 1434,
+      "bodyScrollWidth": 1434,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-dashboard-1440px.png"
+  },
+  {
+    "page": "student-dashboard",
+    "path": "/student",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-dashboard-1024px.png"
+  },
+  {
+    "page": "student-dashboard",
+    "path": "/student",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 762,
+      "clientWidth": 762,
+      "bodyScrollWidth": 762,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-dashboard-768px.png"
+  },
+  {
+    "page": "student-dashboard",
+    "path": "/student",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-dashboard-375px.png"
+  },
+  {
+    "page": "student-requests",
+    "path": "/student/requests",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1434,
+      "clientWidth": 1434,
+      "bodyScrollWidth": 1434,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-requests-1440px.png"
+  },
+  {
+    "page": "student-requests",
+    "path": "/student/requests",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-requests-1024px.png"
+  },
+  {
+    "page": "student-requests",
+    "path": "/student/requests",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 762,
+      "clientWidth": 762,
+      "bodyScrollWidth": 762,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-requests-768px.png"
+  },
+  {
+    "page": "student-requests",
+    "path": "/student/requests",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-requests-375px.png"
+  },
+  {
+    "page": "student-considerations",
+    "path": "/student/considerations",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-considerations-1440px.png"
+  },
+  {
+    "page": "student-considerations",
+    "path": "/student/considerations",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-considerations-1024px.png"
+  },
+  {
+    "page": "student-considerations",
+    "path": "/student/considerations",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 762,
+      "clientWidth": 762,
+      "bodyScrollWidth": 762,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-considerations-768px.png"
+  },
+  {
+    "page": "student-considerations",
+    "path": "/student/considerations",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-considerations-375px.png"
+  },
+  {
+    "page": "student-leaves",
+    "path": "/student/leaves",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-leaves-1440px.png"
+  },
+  {
+    "page": "student-leaves",
+    "path": "/student/leaves",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1024,
+      "clientWidth": 1024,
+      "bodyScrollWidth": 1024,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-leaves-1024px.png"
+  },
+  {
+    "page": "student-leaves",
+    "path": "/student/leaves",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "bodyScrollWidth": 768,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-leaves-768px.png"
+  },
+  {
+    "page": "student-leaves",
+    "path": "/student/leaves",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-leaves-375px.png"
+  },
+  {
+    "page": "student-profile",
+    "path": "/student/profile",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-profile-1440px.png"
+  },
+  {
+    "page": "student-profile",
+    "path": "/student/profile",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-profile-1024px.png"
+  },
+  {
+    "page": "student-profile",
+    "path": "/student/profile",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "bodyScrollWidth": 768,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-profile-768px.png"
+  },
+  {
+    "page": "student-profile",
+    "path": "/student/profile",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\student-profile-375px.png"
+  },
+  {
+    "page": "tg-dashboard",
+    "path": "/tg",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-dashboard-1440px.png"
+  },
+  {
+    "page": "tg-dashboard",
+    "path": "/tg",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-dashboard-1024px.png"
+  },
+  {
+    "page": "tg-dashboard",
+    "path": "/tg",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "bodyScrollWidth": 768,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-dashboard-768px.png"
+  },
+  {
+    "page": "tg-dashboard",
+    "path": "/tg",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-dashboard-375px.png"
+  },
+  {
+    "page": "tg-requests",
+    "path": "/tg/requests",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-requests-1440px.png"
+  },
+  {
+    "page": "tg-requests",
+    "path": "/tg/requests",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-requests-1024px.png"
+  },
+  {
+    "page": "tg-requests",
+    "path": "/tg/requests",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "bodyScrollWidth": 768,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-requests-768px.png"
+  },
+  {
+    "page": "tg-requests",
+    "path": "/tg/requests",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-requests-375px.png"
+  },
+  {
+    "page": "tg-students",
+    "path": "/tg/students",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflow": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "windowInnerWidth": 1440,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-students-1440px.png"
+  },
+  {
+    "page": "tg-students",
+    "path": "/tg/students",
+    "viewport": "1024px",
+    "width": 1024,
+    "overflow": {
+      "scrollWidth": 1018,
+      "clientWidth": 1018,
+      "bodyScrollWidth": 1018,
+      "windowInnerWidth": 1024,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-students-1024px.png"
+  },
+  {
+    "page": "tg-students",
+    "path": "/tg/students",
+    "viewport": "768px",
+    "width": 768,
+    "overflow": {
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "bodyScrollWidth": 768,
+      "windowInnerWidth": 768,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-students-768px.png"
+  },
+  {
+    "page": "tg-students",
+    "path": "/tg/students",
+    "viewport": "375px",
+    "width": 375,
+    "overflow": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "bodyScrollWidth": 375,
+      "windowInnerWidth": 375,
+      "hasOverflow": false
+    },
+    "screenshot": "ui-audit\\after\\tg-students-375px.png"
+  }
+]

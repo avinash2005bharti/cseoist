@@ -1,0 +1,220 @@
+/* ==========================================================================
+   CampusFlow Lite – Screen 19 (Desktop) & Screen 20 (Mobile)
+   Attendance Consideration & Leave Clearances Ledger
+   Palette: CampusFlow Indigo & Calm Cyan Accent
+   ========================================================================== */
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EEF2FF;
+  --secondary-foreground: #4F46E5;
+  --accent: #E0F2FE;
+  --accent-foreground: #0369A1;
+  --border: #E2E8F0;
+  --border-border: #E2E8F0;
+  --input: #CBD5E1;
+  --ring: #4F46E5;
+  --chart-3: #D97706;
+}
+
+[data-appearance="light"] {
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+/* Background utilities */
+.bg-background {
+  background-color: #F8FAFC !important;
+}
+
+.bg-card {
+  background-color: #FFFFFF !important;
+}
+
+.bg-muted {
+  background-color: #F1F5F9 !important;
+}
+
+.bg-primary {
+  background-color: #4F46E5 !important;
+}
+
+.bg-primary:hover {
+  background-color: #4338CA !important;
+}
+
+.bg-secondary {
+  background-color: #EEF2FF !important;
+}
+
+.bg-accent {
+  background-color: #E0F2FE !important;
+}
+
+.bg-accent\/40 {
+  background-color: rgba(224, 242, 254, 0.4) !important;
+}
+
+.bg-chart-3\/10 {
+  background-color: rgba(217, 119, 6, 0.1) !important;
+}
+
+/* Text colors */
+.text-foreground {
+  color: #0F172A !important;
+}
+
+.text-muted-foreground {
+  color: #64748B !important;
+}
+
+.text-primary {
+  color: #4F46E5 !important;
+}
+
+.text-primary-foreground {
+  color: #FFFFFF !important;
+}
+
+.text-secondary-foreground {
+  color: #4F46E5 !important;
+}
+
+.text-accent-foreground {
+  color: #0369A1 !important;
+}
+
+/* Borders */
+.border-border {
+  border-color: #E2E8F0 !important;
+}
+
+.border-input {
+  border-color: #CBD5E1 !important;
+}
+
+.border-chart-3 {
+  border-color: #D97706 !important;
+}
+
+/* Icon / Box Sizes */
+.size-4 {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.size-5 {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+.size-6 {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+.size-7 {
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+}
+
+.size-8 {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.size-9 {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+}
+
+.size-10 {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+}
+
+.size-11 {
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+}
+
+.size-12 {
+  width: 3rem !important;
+  height: 3rem !important;
+}
+
+.size-16 {
+  width: 4rem !important;
+  height: 4rem !important;
+}
+
+/* 7-column ledger grid matching Screen 19 with ample width for Date & Time */
+.ledger-grid-cols-7 {
+  display: grid !important;
+  grid-template-columns: 1.6fr 1.05fr 0.6fr 1.15fr 1.3fr 1.9fr 0.9fr !important;
+}
+
+/* Ledger Search Input with dedicated icon padding cushion */
+.ledger-search-input {
+  padding-left: 2.75rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Min-heights */
+.min-h-11 {
+  min-height: 2.75rem !important;
+}
+
+.min-h-56 {
+  min-height: 14rem !important;
+}
+
+/* Modal Custom Scrollbar */
+.ledger-modal-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.ledger-modal-scroll::-webkit-scrollbar-track {
+  background: #F1F5F9;
+  border-radius: 9999px;
+}
+
+.ledger-modal-scroll::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+.ledger-modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Ledger Modal Overlay (highest z-index to sit on top of all sidebars & headers) */
+.ledger-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  background-color: rgba(15, 23, 42, 0.5) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  overflow-y: auto !important;
+  padding: 1.5rem !important;
+}
+
+@media (max-width: 640px) {
+  .ledger-modal-overlay {
+    padding: 0.75rem !important;
+    align-items: flex-start !important;
+  }
+}

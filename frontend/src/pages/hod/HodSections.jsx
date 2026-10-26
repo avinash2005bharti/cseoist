@@ -350,6 +350,7 @@ export default function HodSections() {
           onSuccess={(result) => {
             setMoveModalData(null);
             fetchSections();
+            window.dispatchEvent(new Event('campusflow_sections_changed'));
             if (result?.newSemester && semesterFilter !== 'ALL') {
               setSemesterFilter(String(result.newSemester));
             }

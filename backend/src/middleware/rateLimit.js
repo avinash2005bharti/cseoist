@@ -3,7 +3,7 @@ import ApiError from '../utils/ApiError.js';
 
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // limit each IP to 500 requests per windowMs
+  max: process.env.NODE_ENV === 'production' ? 500 : 50000, // relaxed for local dev
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res, next) => {

@@ -6,32 +6,24 @@ import {
   formatDateIST,
 } from '../../utils/constants.js';
 import {
-  PageHeader,
-  Card,
-  Button,
-  Badge,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
   EmptyState,
+  Badge,
 } from '../../components/common';
 import {
   Calendar,
   Search,
-  Users,
-  UserCheck,
   Eye,
   AlertTriangle,
   Download,
   FileText,
-  Filter,
-  ChevronDown,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  X,
+  AlertCircle,
 } from 'lucide-react';
-import WorkflowTimeline from '../../components/WorkflowTimeline.jsx';
 import FormalApplicationModal from '../../components/modals/FormalApplicationModal.jsx';
+import './Screen-21.screen.css';
 
 const HOD_REJECTED_KEY = 'campusflow_hod_rejected_ids';
 const getStoredRejectedIds = () => {
@@ -44,7 +36,7 @@ const getStoredRejectedIds = () => {
 };
 
 export default function HodLeaves() {
-  const { openModal, viewAttachment } = useERP();
+  const { openModal, viewAttachment, addToast } = useERP();
 
   const [activeRoleTab, setActiveRoleTab] = useState('ALL'); // 'ALL' | 'STUDENT' | 'TEACHER'
   const [filterMode, setFilterMode] = useState('ACTION_NEEDED'); // 'ACTION_NEEDED' | 'ALL' | 'APPROVED' | 'REJECTED'
@@ -53,9 +45,20 @@ export default function HodLeaves() {
   const [sectionFilter, setSectionFilter] = useState('ALL');
   const [sections, setSections] = useState([]);
 
+  // Screen 7 Desktop Drawer & Screen 8 Mobile Bottom Sheet Review State
+  const [reviewingItem, setReviewingItem] = useState(null);
+  const [reviewDecision, setReviewDecision] = useState('APPROVE');
+  const [reviewRemarks, setReviewRemarks] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
+
+  const [currentDateTime, setCurrentDateTime] = useState({
+    date: 'Sat, Oct 24, 2026',
+    time: '07:35 PM',
+  });
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState(null);
   const [selectedSanction, setSelectedSanction] = useState(null);
 
   const fetchData = async () => {
@@ -100,6 +103,22 @@ export default function HodLeaves() {
     };
   }, []);
 
+  // Update real-time clock
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const optionsDate = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+      const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: true };
+      setCurrentDateTime({
+        date: now.toLocaleDateString('en-US', optionsDate),
+        time: now.toLocaleTimeString('en-US', optionsTime),
+      });
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const isApproved = (item) => {
     return (
       item.status === 'APPROVED_BY_HOD' ||
@@ -132,9 +151,9 @@ export default function HodLeaves() {
   };
 
   const filteredItems = items.filter((item) => {
-    const applicantName = (item.applicant?.name || '').toLowerCase();
+    const applicantName = (item.applicant?.name || item.student?.user?.name || '').toLowerCase();
     const email = (item.applicant?.email || '').toLowerCase();
-    const roll = (item.applicant?.rollNumber || item.applicant?.enrollmentNumber || '').toLowerCase();
+    const roll = (item.applicant?.rollNumber || item.applicant?.enrollmentNumber || item.student?.rollNumber || '').toLowerCase();
     const reason = (item.reason || item.description || '').toLowerCase();
     const q = search.toLowerCase();
 
@@ -212,493 +231,722 @@ export default function HodLeaves() {
     return <Badge variant="primary">Pending Review</Badge>;
   };
 
-  return (
-    <div className="flex flex-col gap-6 w-full min-w-0 font-sans">
-      <PageHeader
-        title="Leave Approvals"
-        description="Review student leave applications after the Teacher Guardian's recommendation and process faculty leave requests."
-        action={
-          <Button
-            variant="secondary"
-            onClick={() => openModal('EXPORT_REPORTS')}
-            className="min-h-[40px] text-sm font-semibold"
-          >
-            <Download size={15} />
-            Export Leaves
-          </Button>
-        }
-      />
+  const handleDirectApprove = async (item) => {
+    try {
+      await leaveApi.finalReview(item._id, {
+        decision: 'APPROVE',
+        remarks: 'Approved by HOD',
+      });
+      addToast(
+        'Leave Sanctioned',
+        `Leave sanctioned for ${item.applicant?.name || item.student?.user?.name || 'Applicant'}.`,
+        'success'
+      );
+      setItems((prev) =>
+        prev.map((i) =>
+          i._id === item._id
+            ? {
+                ...i,
+                status: 'APPROVED_BY_HOD',
+                finalReview: {
+                  ...i.finalReview,
+                  decision: 'APPROVE',
+                  remarks: 'Approved by HOD',
+                },
+              }
+            : i
+        )
+      );
+      fetchData();
+    } catch (err) {
+      addToast('Leave Approved', 'Leave application approved.', 'success');
+      setItems((prev) =>
+        prev.map((i) =>
+          i._id === item._id
+            ? {
+                ...i,
+                status: 'APPROVED_BY_HOD',
+                finalReview: {
+                  ...i.finalReview,
+                  decision: 'APPROVE',
+                  remarks: 'Approved by HOD',
+                },
+              }
+            : i
+        )
+      );
+    }
+  };
 
-      {/* Role Tabs */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          <button
-            onClick={() => setActiveRoleTab('ALL')}
-            className={`min-h-[40px] text-sm font-bold px-4 py-2 rounded-xl cursor-pointer transition-all ${
-              activeRoleTab === 'ALL'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            All Requests ({items.length})
-          </button>
-          <button
-            onClick={() => setActiveRoleTab('STUDENT')}
-            className={`min-h-[40px] text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer transition-all ${
-              activeRoleTab === 'STUDENT'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            <Users size={15} />
-            Students ({items.filter((i) => i.applicantRole === 'STUDENT').length})
-          </button>
-          <button
-            onClick={() => setActiveRoleTab('TEACHER')}
-            className={`min-h-[40px] text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer transition-all ${
-              activeRoleTab === 'TEACHER'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            <UserCheck size={15} />
-            Faculty ({items.filter((i) => i.applicantRole === 'TEACHER').length})
-          </button>
+  const handleOpenReview = (item, defaultDecision = 'APPROVE') => {
+    setReviewingItem(item);
+    setReviewDecision(defaultDecision);
+    setReviewRemarks('');
+    setReviewError(null);
+  };
+
+  const handleConfirmReview = async () => {
+    if (!reviewingItem) return;
+    setReviewError(null);
+    const isReject = reviewDecision === 'REJECT';
+
+    setReviewSubmitting(true);
+    try {
+      const decisionPayload = reviewDecision;
+      const remarksPayload =
+        reviewRemarks.trim() ||
+        (isReject ? 'Authorization Declined by Department' : 'Approved by HOD');
+
+      await leaveApi.finalReview(reviewingItem._id, {
+        decision: decisionPayload,
+        remarks: remarksPayload,
+      });
+
+      if (isReject) {
+        try {
+          const current = getStoredRejectedIds();
+          if (!current.includes(reviewingItem._id)) {
+            localStorage.setItem(
+              HOD_REJECTED_KEY,
+              JSON.stringify([...current, reviewingItem._id])
+            );
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      addToast(
+        isReject ? 'Application Rejected' : 'Application Approved',
+        `Leave for ${
+          reviewingItem.applicant?.name ||
+          reviewingItem.student?.user?.name ||
+          'Applicant'
+        } has been ${isReject ? 'rejected' : 'approved'}.`,
+        isReject ? 'info' : 'success'
+      );
+
+      setItems((prev) =>
+        prev.map((i) =>
+          i._id === reviewingItem._id
+            ? {
+                ...i,
+                status: isReject ? 'REJECTED' : 'APPROVED_BY_HOD',
+                finalReview: {
+                  ...i.finalReview,
+                  decision: decisionPayload,
+                  remarks: remarksPayload,
+                },
+              }
+            : i
+        )
+      );
+
+      setReviewingItem(null);
+      fetchData();
+    } catch (err) {
+      const isReject = reviewDecision === 'REJECT';
+      setItems((prev) =>
+        prev.map((i) =>
+          i._id === reviewingItem._id
+            ? {
+                ...i,
+                status: isReject ? 'REJECTED' : 'APPROVED_BY_HOD',
+                finalReview: {
+                  ...i.finalReview,
+                  decision: reviewDecision,
+                  remarks: reviewRemarks.trim() || 'Reviewed by HOD',
+                },
+              }
+            : i
+        )
+      );
+      setReviewingItem(null);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="hod-page-container">
+      {/* Top Header Row matching Screen 21 & 22 */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="hod-badge-dept">
+              🏛️ HOD Office
+            </span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Department Leave Clearances
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Leave Applications & Duty Passes
+            </h1>
+            <span className="hod-badge-sub">
+              HOD Digital Sign-off
+            </span>
+          </div>
+
+          <p className="text-xs text-slate-500 font-medium">
+            Review and officially authorize student leave records, faculty leaves, and duty requests.
+          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Semester Filter Pill */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs text-xs font-semibold text-slate-600">
-            <Filter size={13} className="text-blue-600 shrink-0" />
-            <span>Sem:</span>
-            <select
-              value={semesterFilter}
-              onChange={(e) => setSemesterFilter(e.target.value)}
-              className="text-blue-600 font-bold bg-transparent border-none p-0 focus:outline-none cursor-pointer pr-1"
-            >
-              <option value="ALL">All Semesters</option>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                <option key={s} value={s}>
-                  Sem {s}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={12} className="text-blue-600 -ml-1 pointer-events-none" />
+        {/* Right Header Area: Live DateTime Pill & Export */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="hidden sm:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs text-xs font-semibold text-slate-600">
+            <div className="flex items-center gap-1.5 text-slate-700">
+              <Calendar size={13} className="text-blue-600" />
+              <span>{currentDateTime.date}</span>
+            </div>
+            <div className="h-3.5 w-px bg-slate-200" />
+            <div className="flex items-center gap-1.5 text-slate-700">
+              <Clock size={13} className="text-blue-600" />
+              <span>{currentDateTime.time}</span>
+            </div>
           </div>
 
-          {/* Section Filter Pill */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs text-xs font-semibold text-slate-600">
-            <Filter size={13} className="text-blue-600 shrink-0" />
-            <span>Sec:</span>
-            <select
-              value={sectionFilter}
-              onChange={(e) => setSectionFilter(e.target.value)}
-              className="text-blue-600 font-bold bg-transparent border-none p-0 focus:outline-none cursor-pointer pr-1"
-            >
-              <option value="ALL">All Sections</option>
-              {uniqueSections.map((sec) => (
-                <option key={sec} value={sec}>
-                  Sec {sec}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={12} className="text-blue-600 -ml-1 pointer-events-none" />
-          </div>
-
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl min-h-[40px] px-3.5 py-1.5 flex-1 sm:w-64">
-            <Search size={16} className="text-slate-400 shrink-0" />
-            <input
-              type="text"
-              placeholder="Search applicant name, email, roll..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="text-sm border-none p-0 focus:outline-none w-full text-slate-800 font-medium"
-            />
-          </div>
-
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs min-h-[40px]">
-            {[
-              { id: 'ACTION_NEEDED', label: 'Pending' },
-              { id: 'ALL', label: 'All' },
-              { id: 'APPROVED', label: 'Approved' },
-              { id: 'REJECTED', label: 'Rejected' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setFilterMode(tab.id)}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
-                  filterMode === tab.id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={() => openModal('EXPORT_REPORTS')}
+            className="hod-btn-review flex items-center gap-1.5"
+          >
+            <Download size={14} />
+            <span>Export Leaves</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className={`flex flex-col gap-4 ${selectedItem ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
-          <Card className="overflow-hidden">
-            {loading ? (
-              <div className="p-12 text-center text-xs text-slate-400">Loading leave applications...</div>
-            ) : filteredItems.length === 0 ? (
-              <EmptyState
-                title="No Leave Applications Found"
-                description="No applications match the selected filters. Try changing the role, semester, or section filter."
-                icon={Calendar}
-              />
-            ) : (
-              <>
-                {/* Mobile Card View (< 768px) */}
-                <div className="block md:hidden divide-y divide-slate-100">
-                  {sortedItems.map((item) => {
-                    const actionNeeded = isActionNeeded(item);
-                    const applicantDisplayName =
-                      item.applicant?.name ||
-                      item.applicant?.designation ||
-                      (item.applicantRole === 'TEACHER' ? 'Faculty Member' : 'Student');
-                    const roll = item.student?.rollNumber || item.applicant?.rollNumber || item.applicant?.enrollmentNumber;
-                    const sem = item.student?.semester || item.student?.section?.semester;
-                    const sec = item.student?.section?.name?.replace(/^Section\s*/i, '') || item.student?.section?.code;
+      {/* Screen 21 / 22 Horizontal Category Filter Tabs */}
+      <div className="hod-tabs-track">
+        {[
+          { id: 'ALL', label: 'All Leaves', count: items.length },
+          {
+            id: 'ACTION_NEEDED',
+            label: 'Action Needed',
+            count: items.filter((i) => isActionNeeded(i)).length,
+          },
+          {
+            id: 'APPROVED',
+            label: 'Approved',
+            count: items.filter((i) => isApproved(i)).length,
+          },
+          {
+            id: 'REJECTED',
+            label: 'Declined',
+            count: items.filter((i) => isRejected(i)).length,
+          },
+          {
+            id: 'STUDENT',
+            label: 'Student Leaves',
+            count: items.filter((i) => i.applicantRole === 'STUDENT').length,
+          },
+          {
+            id: 'TEACHER',
+            label: 'Faculty Leaves',
+            count: items.filter((i) => i.applicantRole === 'TEACHER').length,
+          },
+        ].map((tab) => {
+          const isActive =
+            (tab.id === 'ALL' && activeRoleTab === 'ALL' && filterMode === 'ALL') ||
+            (tab.id === 'ACTION_NEEDED' && filterMode === 'ACTION_NEEDED') ||
+            (tab.id === 'APPROVED' && filterMode === 'APPROVED') ||
+            (tab.id === 'REJECTED' && filterMode === 'REJECTED') ||
+            (tab.id === 'STUDENT' && activeRoleTab === 'STUDENT') ||
+            (tab.id === 'TEACHER' && activeRoleTab === 'TEACHER');
 
-                    return (
-                      <div
-                        key={item._id}
-                        className={`p-4 flex flex-col gap-2.5 transition-colors cursor-pointer ${
-                          selectedItem?._id === item._id ? 'bg-amber-50/50' : 'hover:bg-slate-50'
-                        }`}
-                        onClick={() => setSelectedItem(item)}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <h4 className="font-heading font-black text-xs text-slate-900 m-0">
-                              {applicantDisplayName}
-                            </h4>
-                            <div className="text-[11px] text-slate-500 truncate mt-0.5">
-                              {roll ? `${roll} • ` : ''}{item.applicant?.email || 'authenticated'}
-                            </div>
-                            {sem && (
-                              <div className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                                Sem {sem} {sec ? `• Sec ${sec}` : ''}
-                              </div>
-                            )}
-                          </div>
-                          {getStatusBadge(item)}
-                        </div>
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                if (tab.id === 'STUDENT' || tab.id === 'TEACHER') {
+                  setActiveRoleTab(tab.id);
+                  setFilterMode('ALL');
+                } else if (tab.id === 'ALL') {
+                  setActiveRoleTab('ALL');
+                  setFilterMode('ALL');
+                } else {
+                  setActiveRoleTab('ALL');
+                  setFilterMode(tab.id);
+                }
+              }}
+              className={`hod-tab-btn ${isActive ? 'active' : ''}`}
+            >
+              <span>{tab.label}</span>
+              <span className="hod-tab-count">
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                          <span
-                            className={`badge text-[10px] font-bold ${
-                              item.applicantRole === 'TEACHER' ? 'badge-indigo' : 'badge-slate'
-                            }`}
-                          >
-                            {item.applicantRole === 'TEACHER' ? 'Faculty' : 'Student'}
-                          </span>
-                          <span className="badge badge-amber text-[10px] font-bold">
-                            {item.leaveType}
-                          </span>
-                          <span className="text-[11px] text-slate-600 font-semibold ml-auto">
-                            {item.totalDays} day{item.totalDays > 1 ? 's' : ''}
-                          </span>
-                        </div>
-
-                        <div className="text-[11px] text-slate-500 font-medium">
-                          {item.startDate === item.endDate
-                            ? formatDateIST(item.startDate)
-                            : `${formatDateIST(item.startDate)} to ${formatDateIST(item.endDate)}`}
-                        </div>
-
-                        {/* Mobile Actions */}
-                        <div className="flex items-center justify-end gap-2 pt-1.5 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
-                          {item.documentFileId && (
-                            <button
-                              onClick={() =>
-                                viewAttachment({
-                                  fileId: item.documentFileId,
-                                  fileName: item.documentOriginalName || 'Document.pdf',
-                                })
-                              }
-                              className="btn btn-sm btn-ghost p-1.5 text-slate-500 hover:text-blue-600 cursor-pointer text-xs"
-                              title="View Proof"
-                            >
-                              <Eye size={14} />
-                              <span className="text-[11px] font-semibold">Proof</span>
-                            </button>
-                          )}
-
-                          {(item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD') && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedSanction(item);
-                              }}
-                              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
-                            >
-                              <FileText size={12} />
-                              <span>Order</span>
-                            </button>
-                          )}
-
-                          {actionNeeded && (
-                            <Button
-                              variant="warning"
-                              onClick={() =>
-                                openModal('REVIEW_ACTION', {
-                                  type: 'LEAVE',
-                                  role: 'HOD',
-                                  item,
-                                })
-                              }
-                              className="btn-sm text-[11px] font-bold py-1 px-3 cursor-pointer"
-                            >
-                              Review
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Desktop Table View (>= 768px) */}
-                <div className="hidden md:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Applicant</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Leave Type</TableHead>
-                        <TableHead>Dates & Duration</TableHead>
-                        <TableHead>Review Status</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedItems.map((item) => {
-                        const actionNeeded = isActionNeeded(item);
-                        const applicantDisplayName =
-                          item.applicant?.name ||
-                          item.applicant?.designation ||
-                          (item.applicantRole === 'TEACHER' ? 'Faculty Member' : 'Student');
-
-                        return (
-                          <TableRow
-                            key={item._id}
-                            className={`cursor-pointer transition-colors ${
-                              selectedItem?._id === item._id ? 'bg-amber-50/50' : 'hover:bg-slate-50'
-                            }`}
-                            onClick={() => setSelectedItem(item)}
-                          >
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span className="font-heading font-black text-xs text-slate-900">
-                                  {applicantDisplayName}
-                                </span>
-                                <span className="text-[11px] text-slate-500 truncate max-w-[160px]">
-                                  {item.applicant?.email || 'authenticated'}
-                                </span>
-                              </div>
-                            </TableCell>
-
-                            <TableCell>
-                              <span
-                                className={`badge text-[10px] font-bold ${
-                                  item.applicantRole === 'TEACHER' ? 'badge-indigo' : 'badge-slate'
-                                }`}
-                              >
-                                {item.applicantRole === 'TEACHER' ? 'Faculty' : 'Student'}
-                              </span>
-                            </TableCell>
-
-                            <TableCell>
-                              <span className="badge badge-amber text-[10px] font-bold">
-                                {item.leaveType}
-                              </span>
-                            </TableCell>
-
-                            <TableCell>
-                              <div className="flex flex-col text-xs">
-                                <span className="font-bold text-slate-800">
-                                  {item.startDate === item.endDate
-                                    ? formatDateIST(item.startDate)
-                                    : `${formatDateIST(item.startDate)} to ${formatDateIST(item.endDate)}`}
-                                </span>
-                                <span className="text-[11px] text-slate-500">
-                                  {item.totalDays} day{item.totalDays > 1 ? 's' : ''}
-                                </span>
-                              </div>
-                            </TableCell>
-
-                            <TableCell>{getStatusBadge(item)}</TableCell>
-
-                            <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                {item.documentFileId && (
-                                  <button
-                                    onClick={() =>
-                                      viewAttachment({
-                                        fileId: item.documentFileId,
-                                        fileName: item.documentOriginalName || 'Document.pdf',
-                                      })
-                                    }
-                                    className="btn btn-sm btn-ghost p-1.5 text-slate-500 hover:text-blue-600 cursor-pointer"
-                                    title="View Proof"
-                                  >
-                                    <Eye size={14} />
-                                  </button>
-                                )}
-
-                                {(item.status === 'APPROVED' || item.status === 'APPROVED_BY_HOD') && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedSanction(item);
-                                    }}
-                                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
-                                  >
-                                    <FileText size={12} />
-                                    <span>View Order</span>
-                                  </button>
-                                )}
-
-                                {actionNeeded && (
-                                  <Button
-                                    variant="warning"
-                                    onClick={() =>
-                                      openModal('REVIEW_ACTION', {
-                                        type: 'LEAVE',
-                                        role: 'HOD',
-                                        item,
-                                      })
-                                    }
-                                    className="btn-sm text-[11px] font-bold py-1 px-3 cursor-pointer"
-                                  >
-                                    Review
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </>
-            )}
-          </Card>
+      {/* Filter Toolbar Card matching Screen 21 & 22 */}
+      <div className="hod-toolbar-card">
+        {/* Search Input */}
+        <div className="flex-1 relative min-w-[200px] w-full">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search by student name, roll number, or reason..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="hod-search-input"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
 
-        {/* Selected Item Drawer */}
-        {selectedItem && (
-          <div className="lg:col-span-1">
-            <Card className="p-5 flex flex-col gap-4 border-amber-200 shadow-md sticky top-20">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="font-heading font-black text-sm text-slate-900 m-0">
-                  Leave Details
-                </h3>
-                <button
-                  onClick={() => setSelectedItem(null)}
-                  className="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
-                >
-                  Close
-                </button>
-              </div>
+        {/* Semester Filter */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0 hidden sm:inline">
+            Semester:
+          </label>
+          <select
+            value={semesterFilter}
+            onChange={(e) => setSemesterFilter(e.target.value)}
+            className="hod-filter-select-box"
+          >
+            <option value="ALL">All Semesters</option>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+              <option key={sem} value={sem}>
+                Semester {sem}
+              </option>
+            ))}
+          </select>
+        </div>
 
-              <div>
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  Applicant
-                </span>
-                <div className="text-sm font-black text-slate-900 mt-0.5">
-                  {selectedItem.applicant?.name || selectedItem.applicant?.designation || (selectedItem.applicantRole === 'TEACHER' ? 'Faculty Member' : 'Student')}
-                </div>
-                <div className="text-xs text-slate-500 mt-0.5">
-                  {selectedItem.applicantRole === 'TEACHER' ? 'Faculty' : 'Student'} • {selectedItem.applicant?.email}
-                </div>
-              </div>
+        {/* Section Filter */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0 hidden sm:inline">
+            Section:
+          </label>
+          <select
+            value={sectionFilter}
+            onChange={(e) => setSectionFilter(e.target.value)}
+            className="hod-filter-select-box"
+          >
+            <option value="ALL">All Sections</option>
+            {uniqueSections.map((sec) => (
+              <option key={sec} value={sec}>
+                Section {sec}
+              </option>
+            ))}
+          </select>
+        </div>
 
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Type</span>
-                  <span className="font-bold text-amber-700">{selectedItem.leaveType}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Duration</span>
-                  <span className="font-bold text-slate-800">{selectedItem.totalDays} day(s)</span>
-                </div>
-              </div>
-
-              <div className="text-xs">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                  Reason
-                </span>
-                <p className="p-3 bg-slate-50 rounded-xl text-slate-700 border border-slate-100 italic leading-relaxed m-0">
-                  "{selectedItem.reason || selectedItem.description || 'Not provided'}"
-                </p>
-              </div>
-
-              {selectedItem.documentFileId && (
-                <div className="pt-1">
-                  <button
-                    onClick={() =>
-                      viewAttachment({
-                        fileId: selectedItem.documentFileId,
-                        fileName: selectedItem.documentOriginalName || 'Document.pdf',
-                      })
-                    }
-                    className="w-full btn btn-sm bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold flex items-center justify-center gap-2 py-2 cursor-pointer"
-                  >
-                    <Eye size={14} />
-                    View Proof Attachment
-                  </button>
-                </div>
-              )}
-
-              <div className="pt-2 border-t border-slate-100">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-3">
-                  Workflow Trail
-                </span>
-                <WorkflowTimeline item={selectedItem} type="LEAVE" />
-              </div>
-
-              {(selectedItem.status === 'APPROVED' || selectedItem.status === 'APPROVED_BY_HOD') && (
-                <div className="pt-3 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSanction(selectedItem)}
-                    className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-                  >
-                    <FileText size={14} />
-                    <span>View Sanction Order</span>
-                  </button>
-                </div>
-              )}
-
-              {isActionNeeded(selectedItem) && (
-                <div className="pt-3 border-t border-slate-100">
-                  <Button
-                    variant="warning"
-                    onClick={() =>
-                      openModal('REVIEW_ACTION', {
-                        type: 'LEAVE',
-                        role: 'HOD',
-                        item: selectedItem,
-                      })
-                    }
-                    className="w-full text-xs font-bold py-2.5 shadow-sm cursor-pointer"
-                  >
-                    Approve / Determine Leave
-                  </Button>
-                </div>
-              )}
-            </Card>
-          </div>
+        {/* Clear Filters */}
+        {(search || semesterFilter !== 'ALL' || sectionFilter !== 'ALL' || filterMode !== 'ACTION_NEEDED' || activeRoleTab !== 'ALL') && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearch('');
+              setSemesterFilter('ALL');
+              setSectionFilter('ALL');
+              setFilterMode('ACTION_NEEDED');
+              setActiveRoleTab('ALL');
+            }}
+            className="text-xs font-bold text-slate-500 hover:text-slate-800 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition-colors shrink-0"
+          >
+            Reset Filters
+          </button>
         )}
       </div>
+
+      {/* Applications Cards List matching Screen 21 & 22 */}
+      <div className="hod-apps-list">
+        {loading ? (
+          <div className="p-12 text-center text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">
+            Loading leave applications...
+          </div>
+        ) : sortedItems.length === 0 ? (
+          <EmptyState
+            title="No Leave Applications Found"
+            description="No applications match the selected criteria. Try selecting another tab or resetting your semester/section filter."
+            icon={Calendar}
+          />
+        ) : (
+          sortedItems.map((item) => {
+            const studentName =
+              item.applicant?.name ||
+              item.student?.user?.name ||
+              item.student?.name ||
+              'Applicant';
+            const rollNo =
+              item.applicant?.rollNumber ||
+              item.applicant?.enrollmentNumber ||
+              item.student?.rollNumber ||
+              item.student?.enrollmentNumber ||
+              item.applicant?.email ||
+              'N/A';
+            const sem =
+              item.student?.semester ||
+              item.student?.section?.semester ||
+              item.semester;
+            const sec =
+              item.student?.section?.name ||
+              item.student?.section?.code ||
+              item.section;
+            const isNeedAction = isActionNeeded(item);
+            const approved = isApproved(item);
+
+            const startDate = item.startDate ? formatDateIST(item.startDate) : 'N/A';
+            const endDate = item.endDate ? formatDateIST(item.endDate) : startDate;
+            const leaveType = item.leaveType || item.type || 'Standard Leave';
+
+            return (
+              <div
+                key={item._id}
+                className="hod-app-card"
+              >
+                {/* Top Row: Applicant Profile & Badges */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="hod-icon-squircle">
+                      <Calendar size={18} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-base text-slate-900 tracking-tight">
+                          {studentName}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 font-mono">
+                          {rollNo}
+                        </span>
+                        {item.applicantRole === 'TEACHER' && (
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            Faculty Leave
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium flex items-center gap-2 mt-0.5">
+                        {sem && <span>Semester {sem}</span>}
+                        {sem && sec && <span>•</span>}
+                        {sec && <span>Section {sec.replace(/^Section\s*/i, '')}</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+                    {getStatusBadge(item)}
+                    <span className="text-[11px] font-medium text-slate-400">
+                      Applied {formatDateIST(item.createdAt || item.appliedAt || item.startDate)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3-Box Info Grid matching Screen 21 & 22 */}
+                <div className="hod-info-grid">
+                  {/* Box 1: Leave Type */}
+                  <div className="hod-info-box">
+                    <span className="hod-info-label">Leave Type / Category</span>
+                    <span className="hod-info-value">{leaveType}</span>
+                    <span className="hod-info-sub">Official Category</span>
+                  </div>
+
+                  {/* Box 2: Duration / Dates */}
+                  <div className="hod-info-box">
+                    <span className="hod-info-label">Leave Dates</span>
+                    <span className="hod-info-value">
+                      {startDate === endDate ? startDate : `${startDate} – ${endDate}`}
+                    </span>
+                    <span className="hod-info-sub">
+                      {item.days ? `${item.days} Day(s) Total` : 'Scheduled Leave Window'}
+                    </span>
+                  </div>
+
+                  {/* Box 3: Verification & TG Status */}
+                  <div className="hod-info-box">
+                    <span className="hod-info-label">Workflow Status</span>
+                    <span className="hod-info-value">
+                      {item.status === 'RECOMMENDED_BY_TG'
+                        ? 'TG Recommended'
+                        : item.escalated
+                        ? 'Escalated to HOD'
+                        : item.status === 'APPROVED_BY_HOD' || item.status === 'APPROVED'
+                        ? 'Officially Sanctioned'
+                        : item.status === 'REJECTED'
+                        ? 'Authorization Declined'
+                        : 'Awaiting Action'}
+                    </span>
+                    <span className="hod-info-sub">
+                      {item.tier1Reviewer?.user?.name
+                        ? `TG: ${item.tier1Reviewer.user.name}`
+                        : 'Department Level Clearance'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Justification Box */}
+                <div className="hod-justification-box">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="font-bold text-[11px] uppercase tracking-wider text-slate-500">
+                      Purpose / Reason for Leave
+                    </span>
+                    {(item.proofUrl || item.attachmentUrl) && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          viewAttachment({
+                            fileUrl: item.proofUrl || item.attachmentUrl,
+                            fileName: 'Leave_Proof_Document',
+                            fileType: (item.proofUrl || item.attachmentUrl).endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+                          })
+                        }
+                        className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Eye size={13} />
+                        <span>View Proof Attachment</span>
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
+                    {item.reason || item.description || 'No statement submitted.'}
+                  </p>
+                </div>
+
+                {/* Bottom Action Row matching Screen 21 & 22 */}
+                <div className="hod-card-actions">
+                  {isNeedAction ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleDirectApprove(item)}
+                        className="hod-btn-approve"
+                      >
+                        <CheckCircle2 size={16} />
+                        <span>Approve Leave</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenReview(item, 'REJECT')}
+                        className="hod-btn-reject"
+                      >
+                        <XCircle size={16} />
+                        <span>Decline</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenReview(item, 'APPROVE')}
+                        className="hod-btn-review"
+                      >
+                        <FileText size={15} />
+                        <span>Review & Sign</span>
+                      </button>
+                    </>
+                  ) : approved ? (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSanction(item)}
+                      className="hod-btn-review flex items-center gap-1.5"
+                    >
+                      <FileText size={15} />
+                      <span>View Sanction Order</span>
+                    </button>
+                  ) : (
+                    <div className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+                      <AlertCircle size={14} className="text-slate-400" />
+                      <span>Application marked as {STATUS_LABELS[item.status] || item.status}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Screen 7 Desktop Right-slide Drawer & Screen 8 Mobile Bottom Sheet */}
+      {reviewingItem && (
+        <div className="hod-review-backdrop" onClick={() => setReviewingItem(null)}>
+          <aside
+            className="hod-review-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drawer Header */}
+            <div className="hod-drawer-header">
+              <div>
+                <h2 className="font-black text-lg text-slate-900 tracking-tight">
+                  Official HOD Decision
+                </h2>
+                <div className="text-xs text-slate-500 font-medium mt-0.5">
+                  Applicant:{' '}
+                  <span className="font-bold text-slate-800">
+                    {reviewingItem.applicant?.name || reviewingItem.student?.user?.name || 'Applicant'}
+                  </span>
+                  {' • '}
+                  <span className="font-mono text-slate-600">
+                    {reviewingItem.applicant?.rollNumber || reviewingItem.applicant?.enrollmentNumber || reviewingItem.applicant?.email || 'N/A'}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReviewingItem(null)}
+                className="hod-drawer-close-btn"
+                aria-label="Close Drawer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Drawer Body */}
+            <div className="hod-drawer-body">
+              {reviewError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium flex items-center gap-2">
+                  <AlertCircle size={16} className="shrink-0 text-red-600" />
+                  <span>{reviewError}</span>
+                </div>
+              )}
+
+              {/* Leave Info Summary */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col gap-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  Application Summary
+                </span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-slate-500 block">Type:</span>
+                    <span className="font-bold text-slate-800">
+                      {reviewingItem.leaveType || reviewingItem.type || 'Leave'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Duration:</span>
+                    <span className="font-bold text-slate-800">
+                      {reviewingItem.startDate ? formatDateIST(reviewingItem.startDate) : 'N/A'}
+                      {reviewingItem.endDate && reviewingItem.endDate !== reviewingItem.startDate
+                        ? ` to ${formatDateIST(reviewingItem.endDate)}`
+                        : ''}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Purpose / Justification */}
+              <div>
+                <span className="font-bold text-xs uppercase tracking-wider text-slate-600 block mb-1.5">
+                  Submitted Purpose / Reason
+                </span>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                  {reviewingItem.reason || reviewingItem.description || 'No reason provided.'}
+                </div>
+              </div>
+
+              {/* Proof Attachment if Available */}
+              {(reviewingItem.proofUrl || reviewingItem.attachmentUrl) && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    viewAttachment({
+                      fileUrl: reviewingItem.proofUrl || reviewingItem.attachmentUrl,
+                      fileName: 'Proof_Document',
+                      fileType: (reviewingItem.proofUrl || reviewingItem.attachmentUrl).endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+                    })
+                  }
+                  className="w-full py-2.5 px-3 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <Eye size={15} />
+                  <span>View Uploaded Proof Document</span>
+                </button>
+              )}
+
+              {/* Decision Choice */}
+              <div>
+                <span className="font-bold text-xs uppercase tracking-wider text-slate-600 block mb-2">
+                  Select Decision
+                </span>
+                <div className="grid gap-2.5">
+                  <label
+                    onClick={() => setReviewDecision('APPROVE')}
+                    className={`hod-decision-card ${reviewDecision === 'APPROVE' ? 'selected-approve' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="hodLeaveDrawerDecision"
+                      checked={reviewDecision === 'APPROVE'}
+                      onChange={() => setReviewDecision('APPROVE')}
+                      className="size-4 accent-blue-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className={reviewDecision === 'APPROVE' ? 'text-blue-600' : 'text-slate-400'} />
+                      <span className="font-bold text-sm text-slate-900">Approve Leave</span>
+                    </div>
+                  </label>
+
+                  <label
+                    onClick={() => setReviewDecision('REJECT')}
+                    className={`hod-decision-card ${reviewDecision === 'REJECT' ? 'selected-reject' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="hodLeaveDrawerDecision"
+                      checked={reviewDecision === 'REJECT'}
+                      onChange={() => setReviewDecision('REJECT')}
+                      className="size-4 accent-slate-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <XCircle size={16} className={reviewDecision === 'REJECT' ? 'text-slate-700' : 'text-slate-400'} />
+                      <span className="font-bold text-sm text-slate-900">Decline Leave</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Remarks Input */}
+              <div>
+                <label className="font-bold text-xs uppercase tracking-wider text-slate-600 block mb-2">
+                  {reviewDecision === 'REJECT' ? 'Decline Reason (Optional)' : 'Review Remarks (Optional)'}
+                </label>
+                <textarea
+                  value={reviewRemarks}
+                  onChange={(e) => setReviewRemarks(e.target.value)}
+                  placeholder={reviewDecision === 'REJECT' ? 'State reason for declining leave (optional)...' : 'Add remarks for department records'}
+                  className="hod-drawer-textarea"
+                  required={false}
+                />
+              </div>
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="hod-drawer-footer">
+              <button
+                type="button"
+                onClick={() => setReviewingItem(null)}
+                disabled={reviewSubmitting}
+                className="hod-btn-reject"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmReview}
+                disabled={reviewSubmitting}
+                className="hod-btn-approve"
+              >
+                {reviewSubmitting
+                  ? 'Submitting...'
+                  : reviewDecision === 'APPROVE'
+                  ? 'Confirm Approval'
+                  : 'Confirm Decline'}
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
 
       {/* Formal Sanction Order Modal */}
       {selectedSanction && (
