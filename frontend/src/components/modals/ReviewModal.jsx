@@ -120,18 +120,39 @@ export default function ReviewModal({
 
           {/* Supporting Attachment if present */}
           {(() => {
-            const att = item.attachments?.[0] || (item.documentFileId ? { fileId: item.documentFileId, name: item.documentOriginalName } : null);
-            if (!att) return null;
+            const att =
+              (Array.isArray(item.attachments) && item.attachments[0]) ||
+              item.attachment ||
+              (item.documentFileId ? { fileId: item.documentFileId, name: item.documentOriginalName } : null) ||
+              (item.attachmentUrl || item.proofUrl ? { fileId: item.attachmentUrl || item.proofUrl, url: item.attachmentUrl || item.proofUrl, name: 'Proof_Document' } : null);
+            if (!att) {
+              return (
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-slate-500 text-xs font-medium">
+                  <div className="flex items-center gap-2">
+                    <FileText size={15} className="text-slate-400 shrink-0" />
+                    <span>No student proof document attached</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Not Uploaded</span>
+                </div>
+              );
+            }
             return (
-              <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
-                  <FileText size={16} className="text-blue-600 shrink-0" />
-                  <span className="text-xs font-bold text-slate-800 truncate">{att.name || 'Student_Certificate.pdf'}</span>
+              <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200 flex items-center justify-between shadow-2xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+                    <FileText size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-blue-950 block truncate">{att.name || 'Student_Proof_Document'}</span>
+                    <span className="text-[11px] font-medium text-blue-700 block mt-0.5">
+                      {att.size ? `${(att.size / 1024).toFixed(0)} KB • ` : ''}Student Supporting Attachment
+                    </span>
+                  </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => viewAttachment(att.fileId, att.name || 'Document')}
-                  className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors shrink-0 cursor-pointer"
+                  onClick={() => viewAttachment(att, att.name || 'Document')}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors shrink-0 cursor-pointer"
                 >
                   <Eye size={13} />
                   <span>View Proof</span>

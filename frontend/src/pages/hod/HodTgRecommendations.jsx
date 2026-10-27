@@ -123,6 +123,50 @@ const storeRejectedId = (id) => {
   }
 };
 
+export const getAttachment = (item) => {
+  if (!item) return null;
+  if (Array.isArray(item.attachments) && item.attachments.length > 0) {
+    const first = item.attachments[0];
+    if (typeof first === 'object' && first) {
+      return {
+        fileId: first.fileId || first.url,
+        url: first.url,
+        name: first.name || first.originalName || 'Proof_Document',
+        size: first.size,
+        mimeType: first.mimeType,
+      };
+    }
+    if (typeof first === 'string' && first.trim()) {
+      return { fileId: first, url: first, name: 'Proof_Document' };
+    }
+  }
+  if (item.attachment && typeof item.attachment === 'object') {
+    return {
+      fileId: item.attachment.fileId || item.attachment.url,
+      url: item.attachment.url,
+      name: item.attachment.name || 'Proof_Document',
+      size: item.attachment.size,
+      mimeType: item.attachment.mimeType,
+    };
+  }
+  if (item.documentFileId) {
+    return {
+      fileId: item.documentFileId,
+      url: item.documentUrl || '',
+      name: item.documentOriginalName || 'Proof_Document',
+    };
+  }
+  if (item.attachmentUrl || item.proofUrl) {
+    const rawUrl = item.attachmentUrl || item.proofUrl;
+    return {
+      fileId: rawUrl,
+      url: rawUrl,
+      name: 'Proof_Document',
+    };
+  }
+  return null;
+};
+
 export default function HodTgRecommendations() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -876,11 +920,43 @@ export default function HodTgRecommendations() {
                     </div>
                   </div>
 
-                  {item.tgReview?.reviewedAt && (
-                    <span className="text-[11px] font-bold text-indigo-700 shrink-0 whitespace-nowrap self-start">
-                      {formatDateSlash(item.tgReview.reviewedAt)}
-                    </span>
-                  )}
+                  {/* Red Circled Area in Image 2: Document Attachment Details & Review Date */}
+                  <div className="flex items-center gap-2 shrink-0 self-start flex-wrap sm:flex-nowrap justify-end">
+                    {(() => {
+                      const att = getAttachment(item);
+                      if (att) {
+                        return (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              viewAttachment(att, att.name || 'Proof_Document');
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer"
+                            title={`View attached proof document: ${att.name || 'Document'}`}
+                          >
+                            <FileText size={13} className="shrink-0" />
+                            <span className="truncate max-w-[130px] sm:max-w-[180px]">
+                              {att.name || 'View Proof'}
+                            </span>
+                            <Eye size={12} className="shrink-0 opacity-80" />
+                          </button>
+                        );
+                      }
+                      return (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/70 text-slate-500 text-[11px] font-medium border border-indigo-100">
+                          <FileText size={12} className="text-slate-400" />
+                          <span>No Attachment</span>
+                        </span>
+                      );
+                    })()}
+
+                    {item.tgReview?.reviewedAt && (
+                      <span className="text-[11px] font-bold text-indigo-700 shrink-0 whitespace-nowrap self-center bg-indigo-100/60 px-2 py-1 rounded-md border border-indigo-200/50">
+                        {formatDateSlash(item.tgReview.reviewedAt)}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Main Card Content */}
@@ -1005,19 +1081,25 @@ export default function HodTgRecommendations() {
                     </p>
 
                     {/* Proof Attachment link */}
-                    {item.attachmentUrl && (
-                      <div className="pt-2 mt-2 border-t border-slate-200/80 flex items-center justify-between">
-                        <button
-                          type="button"
-                          onClick={() => viewAttachment(item.attachmentUrl)}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
-                        >
-                          <Eye size={13} />
-                          <span>View Attached Proof</span>
-                        </button>
-                        <span className="text-[11px] text-slate-400">PDF / Image</span>
-                      </div>
-                    )}
+                    {(() => {
+                      const att = getAttachment(item);
+                      if (!att) return null;
+                      return (
+                        <div className="pt-2 mt-2 border-t border-slate-200/80 flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => viewAttachment(att, att.name || 'Document')}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
+                          >
+                            <FileText size={13} />
+                            <span>View Attached Proof: {att.name || 'Document'}</span>
+                          </button>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            {att.size ? `${(att.size / 1024).toFixed(0)} KB` : 'Attached Proof'}
+                          </span>
+                        </div>
+                      );
+                    })()}
 
                     {/* Group Members Section */}
                     {Boolean(item.isGroup && item.groupMembers && item.groupMembers.length > 0) && (
@@ -1220,22 +1302,45 @@ export default function HodTgRecommendations() {
               </div>
 
               {/* Supporting Attachment / Proof if present */}
-              {reviewingItem.attachmentUrl && (
-                <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <FileText size={16} className="text-blue-600 shrink-0" />
-                    <span className="text-xs font-bold text-slate-800 truncate">Attached Proof Document</span>
+              {(() => {
+                const att = getAttachment(reviewingItem);
+                if (att) {
+                  return (
+                    <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200 flex items-center justify-between shadow-2xs">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+                          <FileText size={16} />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs font-extrabold text-blue-950 block truncate">
+                            {att.name || 'Student_Proof_Document'}
+                          </span>
+                          <span className="text-[11px] font-medium text-blue-700 block mt-0.5">
+                            {att.size ? `${(att.size / 1024).toFixed(0)} KB • ` : ''}Student Supporting Proof Document
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => viewAttachment(att, att.name || 'Document')}
+                        className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors shrink-0 cursor-pointer"
+                      >
+                        <Eye size={13} />
+                        <span>View Proof</span>
+                      </button>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-slate-500 text-xs font-medium">
+                    <div className="flex items-center gap-2">
+                      <FileText size={15} className="text-slate-400 shrink-0" />
+                      <span>No student proof document attached</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Not Uploaded</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => viewAttachment(reviewingItem.attachmentUrl)}
-                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors shrink-0 cursor-pointer"
-                  >
-                    <Eye size={13} />
-                    <span>View Proof</span>
-                  </button>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Formal Sanction Certificate Preview Link */}
               <div className="flex items-center justify-between px-1">

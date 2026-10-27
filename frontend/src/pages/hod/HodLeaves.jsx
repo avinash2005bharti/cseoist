@@ -27,13 +27,48 @@ import FormalApplicationModal from '../../components/modals/FormalApplicationMod
 import './Screen-21.screen.css';
 
 const HOD_REJECTED_KEY = 'campusflow_hod_rejected_ids';
-const getStoredRejectedIds = () => {
-  try {
-    const raw = localStorage.getItem(HOD_REJECTED_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
+const getAttachment = (item) => {
+  if (!item) return null;
+  if (Array.isArray(item.attachments) && item.attachments.length > 0) {
+    const first = item.attachments[0];
+    if (typeof first === 'object' && first) {
+      return {
+        fileId: first.fileId || first.url,
+        url: first.url,
+        name: first.name || first.originalName || 'Proof_Document',
+        size: first.size,
+        mimeType: first.mimeType,
+      };
+    }
+    if (typeof first === 'string' && first.trim()) {
+      return { fileId: first, url: first, name: 'Proof_Document' };
+    }
   }
+  if (item.attachment && typeof item.attachment === 'object') {
+    return {
+      fileId: item.attachment.fileId || item.attachment.url,
+      url: item.attachment.url,
+      name: item.attachment.name || 'Proof_Document',
+      size: item.attachment.size,
+      mimeType: item.attachment.mimeType,
+    };
+  }
+  if (item.documentFileId) {
+    return {
+      fileId: item.documentFileId,
+      url: item.documentUrl || '',
+      name: item.documentOriginalName || 'Proof_Document',
+    };
+  }
+  if (item.proofUrl || item.attachmentUrl) {
+    const rawUrl = item.proofUrl || item.attachmentUrl;
+    return {
+      fileId: rawUrl,
+      url: rawUrl,
+      name: 'Proof_Document',
+    };
+  }
+  return null;
 };
 
 export default function HodLeaves() {
@@ -695,22 +730,20 @@ export default function HodLeaves() {
                     <span className="font-bold text-[11px] uppercase tracking-wider text-slate-500">
                       Purpose / Reason for Leave
                     </span>
-                    {(item.proofUrl || item.attachmentUrl) && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          viewAttachment({
-                            fileUrl: item.proofUrl || item.attachmentUrl,
-                            fileName: 'Leave_Proof_Document',
-                            fileType: (item.proofUrl || item.attachmentUrl).endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
-                          })
-                        }
-                        className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
-                      >
-                        <Eye size={13} />
-                        <span>View Proof Attachment</span>
-                      </button>
-                    )}
+                    {(() => {
+                      const att = getAttachment(item);
+                      if (!att) return null;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => viewAttachment(att, att.name || 'Leave_Proof_Document')}
+                          className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Eye size={13} />
+                          <span>View Proof ({att.name || 'Document'})</span>
+                        </button>
+                      );
+                    })()}
                   </div>
                   <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
                     {item.reason || item.description || 'No statement submitted.'}
@@ -966,22 +999,20 @@ export default function HodLeaves() {
               </div>
 
               {/* Proof Attachment if Available */}
-              {(reviewingItem.proofUrl || reviewingItem.attachmentUrl) && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    viewAttachment({
-                      fileUrl: reviewingItem.proofUrl || reviewingItem.attachmentUrl,
-                      fileName: 'Proof_Document',
-                      fileType: (reviewingItem.proofUrl || reviewingItem.attachmentUrl).endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
-                    })
-                  }
-                  className="w-full py-2.5 px-3 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-                >
-                  <Eye size={15} />
-                  <span>View Uploaded Proof Document</span>
-                </button>
-              )}
+              {(() => {
+                const att = getAttachment(reviewingItem);
+                if (!att) return null;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => viewAttachment(att, att.name || 'Proof_Document')}
+                    className="w-full py-2.5 px-3 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <Eye size={15} />
+                    <span>View Uploaded Proof Document: {att.name || 'Attachment'}</span>
+                  </button>
+                );
+              })()}
 
               {/* Decision Choice */}
               <div>
