@@ -332,9 +332,32 @@ export default function StudentDashboard() {
             <div className="font-semibold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors truncate">
               Apply for Consideration
             </div>
-            <div className="text-muted-foreground text-xs mt-0.5 sm:mt-1 truncate">
-              <span className="hidden sm:inline">24/7 Open</span>
-              <span className="sm:hidden">{windowStatus?.isTimeLimitEnabled === false ? '24/7 Open (Testing Mode)' : '24/7 Open'}</span>
+            <div className="text-muted-foreground text-xs mt-0.5 sm:mt-1 truncate flex items-center gap-1.5">
+              {windowStatus === null ? (
+                <span>Window: 9:00 AM – 4:00 PM IST</span>
+              ) : windowStatus?.isTimeLimitEnabled === false ? (
+                <>
+                  <span className="size-1.5 rounded-full bg-purple-600 shrink-0" />
+                  <span className="hidden sm:inline">24/7 Open (Testing Mode)</span>
+                  <span className="sm:hidden">24/7 Open</span>
+                </>
+              ) : (
+                <>
+                  <span
+                    className={`size-1.5 rounded-full shrink-0 ${
+                      windowStatus?.isOpen ? 'bg-emerald-600' : 'bg-amber-600'
+                    }`}
+                  />
+                  <span className="hidden sm:inline">
+                    {windowStatus?.isOpen
+                      ? 'Open: 9:00 AM – 4:00 PM IST'
+                      : 'Closed: 9:00 AM – 4:00 PM IST'}
+                  </span>
+                  <span className="sm:hidden">
+                    {windowStatus?.isOpen ? 'Open (9 AM – 4 PM)' : 'Closed (9 AM – 4 PM)'}
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <ArrowRight className="hidden sm:block text-muted-foreground ml-auto size-4 shrink-0 group-hover:text-foreground transition-colors" />
@@ -835,9 +858,24 @@ export default function StudentDashboard() {
                 <h2 className="font-bold text-xl text-slate-900 tracking-tight m-0">
                   Request consideration
                 </h2>
-                <p className="text-slate-500 text-sm mt-0.5 m-0">
-                  Submit an attendance consideration request
-                </p>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <p className="text-slate-500 text-sm m-0">
+                    Submit an attendance consideration request
+                  </p>
+                  {windowStatus?.isTimeLimitEnabled === false ? (
+                    <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                      24/7 Mode
+                    </span>
+                  ) : windowStatus?.isOpen ? (
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      Window: 9 AM – 4 PM
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                      Closed (9 AM – 4 PM)
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"

@@ -53,29 +53,17 @@ async function main() {
     });
     await cdp.send('Page.navigate', { url: `${APP_BASE}/tg` });
     await sleep(2000);
-    await captureScreenshot(cdp, path.join(OUTPUT_DIR, 'tg-dashboard-mobile.png'));
+    await captureScreenshot(cdp, path.join(OUTPUT_DIR, 'tg-dashboard-mobile.png'), { width: 375, height: 812 });
 
     // 3. Desktop TG Requests (1440x900)
-    await cdp.send('Emulation.setDeviceMetricsOverride', {
-      width: 1440,
-      height: 900,
-      deviceScaleFactor: 1,
-      mobile: false,
-    });
     await cdp.send('Page.navigate', { url: `${APP_BASE}/tg/requests` });
     await sleep(2000);
-    await captureScreenshot(cdp, path.join(OUTPUT_DIR, 'tg-requests-desktop.png'));
+    await captureScreenshot(cdp, path.join(OUTPUT_DIR, 'tg-requests-desktop.png'), { width: 1440, height: 900 });
 
     // 4. Mobile TG Requests (375x812)
-    await cdp.send('Emulation.setDeviceMetricsOverride', {
-      width: 375,
-      height: 812,
-      deviceScaleFactor: 2,
-      mobile: true,
-    });
     await cdp.send('Page.navigate', { url: `${APP_BASE}/tg/requests` });
     await sleep(2000);
-    await captureScreenshot(cdp, path.join(OUTPUT_DIR, 'tg-requests-mobile.png'));
+    await captureScreenshot(cdp, path.join(OUTPUT_DIR, 'tg-requests-mobile.png'), { width: 375, height: 812 });
 
     cdp.close();
     console.log('Done capturing current TG state!');

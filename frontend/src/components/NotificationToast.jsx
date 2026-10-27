@@ -74,15 +74,13 @@ export default function NotificationToast() {
               </div>
             </div>
             <button
+              type="button"
               onClick={() => removeToast(toast.id)}
-              className={`p-1 rounded-md shrink-0 transition-colors cursor-pointer ${
-                isRed
-                  ? 'text-rose-600 hover:text-rose-950 hover:bg-rose-200'
-                  : 'text-emerald-700 hover:text-emerald-950 hover:bg-emerald-200'
-              }`}
+              className="toast-close-btn shrink-0"
               aria-label="Close notification"
+              title="Dismiss notification"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           </div>
         );

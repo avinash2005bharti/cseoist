@@ -18,10 +18,20 @@ export const createLeaveSchema = z.object({
   attachments: z.array(attachmentSchema).optional().default([]),
 });
 
-export const tgReviewLeaveSchema = z.object({
-  decision: z.enum(['RECOMMEND', 'REJECT']),
-  remarks: z.string().optional().default(''),
-});
+export const tgReviewLeaveSchema = z
+  .object({
+    decision: z.enum(['RECOMMEND', 'REJECT']),
+    remarks: z.string().optional().default(''),
+  })
+  .refine(
+    (data) => {
+      if (data.decision === 'REJECT') {
+        return typeof data.remarks === 'string' && data.remarks.trim().length >= 5;
+      }
+      return true;
+    },
+    { message: 'Rejection remarks must be at least 5 characters long', path: ['remarks'] }
+  );
 
 export const finalReviewLeaveSchema = z.object({
   decision: z.preprocess((val) => {

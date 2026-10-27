@@ -449,23 +449,24 @@ export const getTGQueue = async (user, query) => {
 
   const { page, limit, skip } = parsePagination(query);
 
-  // Scope to the students of this TG's assigned sections/groups
+  // Scope strictly to students belonging to this TG's assigned sections
   const myGroups = await MentorGroup.find({ tg: user.teacherId, isActive: true });
   const mySectionIds = myGroups.map((g) => g.section).filter(Boolean);
-  const myExplicitStudentIds = myGroups.flatMap((g) => g.students || []);
+
+  if (mySectionIds.length === 0) {
+    return {
+      requests: [],
+      meta: buildPaginationMeta(0, page, limit),
+    };
+  }
 
   const myStudents = await Student.find({
-    $or: [
-      { _id: { $in: myExplicitStudentIds } },
-      { mentorGroup: { $in: myGroups.map((g) => g._id) } },
-      ...(mySectionIds.length > 0 ? [{ section: { $in: mySectionIds } }] : []),
-    ],
+    section: { $in: mySectionIds },
   }).select('_id');
   const myStudentIds = myStudents.map((s) => s._id);
 
   const filter = {
     $or: [
-      { tg: user.teacherId },
       { student: { $in: myStudentIds } },
       { sectionStudents: { $in: myStudentIds } },
     ],
@@ -884,8 +885,20 @@ export const tgReview = async (id, user, { decision, remarks }) => {
     throw ApiError.notFound('Consideration request not found');
   }
 
-  if (!user.isTG || !user.teacherId || request.tg?.toString() !== user.teacherId) {
+  if (!user.isTG || !user.teacherId) {
     throw ApiError.forbidden('You are only authorized to review requests from your assigned mentees');
+  }
+
+  const myGroups = await MentorGroup.find({ tg: user.teacherId, isActive: true });
+  const mySectionIds = myGroups.map((g) => g.section?.toString()).filter(Boolean);
+  const studentSecId = (request.student?.section?._id || request.student?.section)?.toString();
+
+  const isAssignedSection = studentSecId && mySectionIds.includes(studentSecId);
+  if (!isAssignedSection && request.tg?.toString() !== user.teacherId) {
+    throw ApiError.forbidden('You are only authorized to review requests from your assigned mentees');
+  }
+  if (!isAssignedSection) {
+    throw ApiError.forbidden('You are only authorized to review requests from students in your assigned section');
   }
 
   if (request.status !== 'PENDING') {
@@ -1204,6 +1217,16 @@ export const auditGroupStudent = async (id, user, { studentId, status, remarks }
     throw ApiError.forbidden('You are not authorized to audit students for this application');
   }
 
+  if (isTG && !isHOD && !isAdmin) {
+    const myGroups = await MentorGroup.find({ tg: user.teacherId, isActive: true });
+    const mySectionIds = myGroups.map((g) => g.section?.toString()).filter(Boolean);
+    const targetStudent = await Student.findById(studentId);
+    const targetSecId = (targetStudent?.section?._id || targetStudent?.section)?.toString();
+    if (!targetSecId || !mySectionIds.includes(targetSecId)) {
+      throw ApiError.forbidden('You are only authorized to audit students from your assigned section');
+    }
+  }
+
   // Valid members check
   const validMemberIds = [
     ...(request.groupMembers || []).map((m) => (m._id || m).toString()),
@@ -1377,7 +1400,18 @@ export const auditAllGroupStudents = async (id, user, { status = 'VERIFIED', rem
         ...(request.groupMembers || []),
       ];
 
-  const uniqueTargetIds = [...new Set(targetStudentIds.map((s) => (s._id || s).toString()))];
+  let uniqueTargetIds = [...new Set(targetStudentIds.map((s) => (s._id || s).toString()))];
+
+  if (isTG && !isHOD && !isAdmin) {
+    const myGroups = await MentorGroup.find({ tg: user.teacherId, isActive: true });
+    const mySectionIds = myGroups.map((g) => g.section?.toString()).filter(Boolean);
+    const validStudents = await Student.find({
+      _id: { $in: uniqueTargetIds },
+      section: { $in: mySectionIds },
+    }).select('_id');
+    const validIdSet = new Set(validStudents.map((s) => s._id.toString()));
+    uniqueTargetIds = uniqueTargetIds.filter((id) => validIdSet.has(id));
+  }
   const now = new Date();
   const auditStatus = status === 'EXCLUDED' ? 'EXCLUDED' : 'VERIFIED';
   const auditRemarks = remarks || (auditStatus === 'EXCLUDED' ? 'All excluded during audit' : 'All verified during audit');

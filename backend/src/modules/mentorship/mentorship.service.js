@@ -55,13 +55,17 @@ export const createMentorGroup = async (
   if (targetSectionId) {
     resolvedSectionDoc = await Section.findById(targetSectionId);
   } else if (targetCodeOrName) {
-    const cleanedCode = targetCodeOrName.replace(/Section\s*/i, '').trim();
+    const cleanedCode = targetCodeOrName.replace(/Section\s*/i, '').replace(/^CSE-/i, '').trim();
     resolvedSectionDoc = await Section.findOne({
       $or: [
         { code: targetCodeOrName },
         { code: `CSE-${cleanedCode}` },
+        { code: `CSE-${cleanedCode}-S${parsedSemester || 5}` },
         { name: targetCodeOrName },
         { name: `Section ${cleanedCode}` },
+        { name: new RegExp(`^Section\\s*${cleanedCode}$`, 'i') },
+        { code: new RegExp(`^CSE-${cleanedCode}(?:-S\\d+)?$`, 'i') },
+        { code: new RegExp(`-${cleanedCode}(?:-|$)`, 'i') },
       ],
     });
 
@@ -69,8 +73,11 @@ export const createMentorGroup = async (
       resolvedSectionDoc = await Section.findOne({
         department: department || teacher.department,
         $or: [
-          { code: new RegExp(cleanedCode, 'i') },
-          { name: new RegExp(cleanedCode, 'i') },
+          { code: `CSE-${cleanedCode}-S${parsedSemester || 5}` },
+          { code: `CSE-${cleanedCode}` },
+          { name: `Section ${cleanedCode}` },
+          { name: new RegExp(`^Section\\s*${cleanedCode}$`, 'i') },
+          { code: new RegExp(`^CSE-${cleanedCode}(?:-S\\d+)?$`, 'i') },
         ],
       });
     }
@@ -225,13 +232,17 @@ export const updateMentorGroup = async (
   if (targetSectionId) {
     resolvedSectionDoc = await Section.findById(targetSectionId);
   } else if (targetCodeOrName) {
-    const cleanedCode = targetCodeOrName.replace(/Section\s*/i, '').trim();
+    const cleanedCode = targetCodeOrName.replace(/Section\s*/i, '').replace(/^CSE-/i, '').trim();
     resolvedSectionDoc = await Section.findOne({
       $or: [
         { code: targetCodeOrName },
         { code: `CSE-${cleanedCode}` },
+        { code: `CSE-${cleanedCode}-S${parsedSemester || group.semester || 5}` },
         { name: targetCodeOrName },
         { name: `Section ${cleanedCode}` },
+        { name: new RegExp(`^Section\\s*${cleanedCode}$`, 'i') },
+        { code: new RegExp(`^CSE-${cleanedCode}(?:-S\\d+)?$`, 'i') },
+        { code: new RegExp(`-${cleanedCode}(?:-|$)`, 'i') },
       ],
     });
 
@@ -239,8 +250,11 @@ export const updateMentorGroup = async (
       resolvedSectionDoc = await Section.findOne({
         department: group.department,
         $or: [
-          { code: new RegExp(cleanedCode, 'i') },
-          { name: new RegExp(cleanedCode, 'i') },
+          { code: `CSE-${cleanedCode}-S${parsedSemester || group.semester || 5}` },
+          { code: `CSE-${cleanedCode}` },
+          { name: `Section ${cleanedCode}` },
+          { name: new RegExp(`^Section\\s*${cleanedCode}$`, 'i') },
+          { code: new RegExp(`^CSE-${cleanedCode}(?:-S\\d+)?$`, 'i') },
         ],
       });
     }
@@ -345,6 +359,18 @@ export const updateMentorGroupStudents = async (groupId, { addStudentIds = [], r
   }
 
   const before = group.toObject();
+
+  // Check if any students to add belong to a different section
+  if (addStudentIds.length > 0 && group.section) {
+    const mismatched = await Student.find({
+      _id: { $in: addStudentIds },
+      section: { $ne: group.section },
+    }).populate('user', 'name');
+    if (mismatched.length > 0) {
+      const names = mismatched.map((s) => s.user?.name || s.rollNumber).join(', ');
+      throw ApiError.badRequest(`Cannot assign students from another section to this cohort: ${names}`);
+    }
+  }
 
   // Check if any students to add are already in another active group
   if (addStudentIds.length > 0) {
@@ -470,6 +496,36 @@ export const getMyCohort = async (teacherId) => {
 
   if (!group) {
     throw ApiError.notFound('No active mentor group found for your account');
+  }
+
+  // Strict Section Letter Isolation:
+  // Ensure that every student in group.students strictly belongs to group.section
+  if (group.section) {
+    const groupSecId = (group.section._id || group.section).toString();
+    const validStudents = [];
+    const prunedIds = [];
+
+    for (const st of (group.students || [])) {
+      if (!st) continue;
+      const stSecId = (st.section?._id || st.section)?.toString();
+      if (stSecId === groupSecId) {
+        validStudents.push(st);
+      } else {
+        prunedIds.push(st._id);
+      }
+    }
+
+    if (prunedIds.length > 0) {
+      // Heal in database
+      await MentorGroup.findByIdAndUpdate(group._id, {
+        $pull: { students: { $in: prunedIds } },
+      });
+      await Student.updateMany(
+        { _id: { $in: prunedIds }, mentorGroup: group._id },
+        { $set: { mentorGroup: null } }
+      );
+      group.students = validStudents;
+    }
   }
 
   return group;

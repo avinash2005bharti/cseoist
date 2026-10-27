@@ -172,8 +172,8 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
   const sectionOptions = (() => {
     const optionsMap = new Map();
 
-    // Baseline standard sections A, B, C, D
-    ['A', 'B', 'C', 'D'].forEach((l) => {
+    // Baseline standard sections A, B, C, D, E
+    ['A', 'B', 'C', 'D', 'E'].forEach((l) => {
       optionsMap.set(l, {
         value: l,
         label: `Section ${l} (CSE-${l})`,

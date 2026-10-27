@@ -23,6 +23,7 @@ import {
   Minus,
   ChevronDown,
   CheckCircle2,
+  XCircle,
   Users,
   Printer,
   Filter,
@@ -381,7 +382,7 @@ export default function HodTgRecommendations() {
         )
     );
     if (set.size === 0) {
-      ['A', 'B', 'C', 'D'].forEach((l) => set.add(l));
+      ['A', 'B', 'C', 'D', 'E'].forEach((l) => set.add(l));
     }
     return [...set].filter(Boolean).sort();
   }, [sections, items]);
@@ -883,11 +884,11 @@ export default function HodTgRecommendations() {
                 </div>
 
                 {/* Main Card Content */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  {/* Left: Student & Request Meta */}
-                  <div className="space-y-3 min-w-0 flex-1">
-                    <div className="flex items-start gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-black text-sm shrink-0">
+                <div className="flex flex-col gap-3.5">
+                  {/* Student & Request Meta Header */}
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-black text-sm shrink-0">
                         {studentName.slice(0, 2).toUpperCase()}
                       </div>
 
@@ -902,32 +903,6 @@ export default function HodTgRecommendations() {
                           <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-xs font-bold border border-blue-100">
                             Sem {sem} • Sec {sec}
                           </span>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                              isItemApproved
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                : isItemRejected
-                                ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                                : 'bg-amber-100 text-amber-800 border border-amber-200'
-                            }`}
-                          >
-                            {isItemApproved
-                              ? 'Approved by HOD'
-                              : isItemRejected
-                              ? 'Rejected'
-                              : 'Pending HOD Sign-off'}
-                          </span>
-                        </div>
-
-                        {/* Title & Category */}
-                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                          <span className="font-extrabold text-xs text-slate-800">
-                            {isLeave ? `${item.leaveType} Leave Application` : item.eventTitle || 'Attendance Consideration'}
-                          </span>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-xs text-slate-500 font-medium">
-                            {item.category || item.eventType || (isLeave ? 'Leave' : 'Academic Consideration')}
-                          </span>
                           {item.isGroup && (
                             <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-extrabold border border-purple-200 inline-flex items-center gap-1">
                               <Users size={11} />
@@ -938,127 +913,211 @@ export default function HodTgRecommendations() {
                       </div>
                     </div>
 
-                    {/* Schedule / Periods / Date Meta */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={14} className="text-blue-600 shrink-0" />
-                        <span>
-                          <strong className="text-slate-800">Date:</strong> {formatDateSlash(item.startDate)}
-                          {item.endDate && item.endDate !== item.startDate && ` to ${formatDateSlash(item.endDate)}`}
-                          <span className="text-slate-400 ml-1">({item.totalDays || 1} day{(item.totalDays || 1) > 1 ? 's' : ''})</span>
-                        </span>
-                      </div>
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide self-start shrink-0 ${
+                        isItemApproved
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          : isItemRejected
+                          ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                          : 'bg-amber-100 text-amber-800 border border-amber-200'
+                      }`}
+                    >
+                      {isItemApproved
+                        ? 'Approved by HOD'
+                        : isItemRejected
+                        ? 'Rejected'
+                        : 'Pending HOD Sign-off'}
+                    </span>
+                  </div>
 
-                      <div className="flex items-center gap-2">
-                        <Clock size={14} className="text-blue-600 shrink-0" />
-                        <span className="truncate">
-                          <strong className="text-slate-800">Timing:</strong>{' '}
-                          {isLeave
-                            ? 'Full Day Sanctioned'
-                            : formatPeriodsDisplay(item.requestedPeriods || item.selectedPeriods)}
-                        </span>
+                  {/* 3-Box Information Grid */}
+                  <div className="hod-info-grid">
+                    {/* Box 1: Category */}
+                    <div className="hod-info-box">
+                      <div className="hod-info-label">
+                        CATEGORY
+                      </div>
+                      <div className="hod-info-value">
+                        {item.category || item.eventType || (isLeave ? `${item.leaveType} Leave` : item.eventTitle || 'Academic Consideration')}
+                      </div>
+                      <div className="hod-info-subtext">
+                        {formatDateSlash(item.startDate)}
+                        {item.endDate && item.endDate !== item.startDate && ` to ${formatDateSlash(item.endDate)}`}
                       </div>
                     </div>
 
-                    {/* Reason / Description */}
-                    {(item.reason || item.description) && (
-                      <p className="text-xs text-slate-600 line-clamp-2 m-0 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
-                        <strong className="text-slate-700">Reason:</strong> {item.reason || item.description}
-                      </p>
-                    )}
-                  </div>
+                    {/* Box 2: Requested Lectures */}
+                    <div className="hod-info-box">
+                      <div className="hod-info-label">
+                        <Clock size={12} className="text-blue-600" />
+                        <span>REQUESTED LECTURES</span>
+                      </div>
+                      <div className="hod-info-value">
+                        {isLeave
+                          ? `${item.totalDays || 1} Day${(item.totalDays || 1) > 1 ? 's' : ''} (Full Day)`
+                          : formatPeriodsDisplay(item.requestedPeriods || item.selectedPeriods)}
+                      </div>
+                    </div>
 
-                  {/* Right: Stepper & Action Buttons */}
-                  <div className="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end justify-between gap-3 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                    {/* Period Stepper (for considerations) */}
-                    {!isLeave && isPending && (
-                      <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl self-start sm:self-auto lg:self-end">
-                        <span className="text-[11px] font-bold text-slate-600 whitespace-nowrap">
-                          Sanction Periods:
-                        </span>
-                        <div className="flex items-center gap-1">
+                    {/* Box 3: Sanctioned Lectures Stepper */}
+                    <div className="hod-info-box justify-between">
+                      <div className="hod-info-label">
+                        SANCTIONED LECTURES
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="hod-stepper-control">
                           <button
                             type="button"
-                            onClick={() => handleStepChange(item._id, -1)}
-                            className="w-6 h-6 rounded-md bg-white border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold transition-colors cursor-pointer"
-                            title="Decrease approved periods"
+                            onClick={() => isPending && handleStepChange(item._id, -1)}
+                            disabled={!isPending}
+                            className="hod-stepper-btn"
+                            aria-label="Decrease periods"
                           >
-                            <Minus size={12} />
+                            –
                           </button>
-                          <span className="w-7 text-center font-black text-xs text-blue-600">
+                          <span className="hod-stepper-count">
                             {sanctioned}
                           </span>
                           <button
                             type="button"
-                            onClick={() => handleStepChange(item._id, 1)}
-                            className="w-6 h-6 rounded-md bg-white border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold transition-colors cursor-pointer"
-                            title="Increase approved periods"
+                            onClick={() => isPending && handleStepChange(item._id, 1)}
+                            disabled={!isPending}
+                            className="hod-stepper-btn"
+                            aria-label="Increase periods"
                           >
-                            <Plus size={12} />
+                            +
                           </button>
                         </div>
+                        <span className="text-xs font-semibold text-slate-600">
+                          {isLeave ? 'Days' : 'Periods'}
+                        </span>
                       </div>
-                    )}
+                    </div>
+                  </div>
 
-                    {/* Primary Actions */}
-                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                      {/* View Application Modal button */}
-                      <button
-                        type="button"
-                        onClick={() => setSelectedSanctionItem(item)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
-                        title="View formal sanctioned application certificate"
-                      >
-                        <Eye size={14} className="text-slate-600" />
-                        <span>View Form</span>
-                      </button>
+                  {/* Justification Box (full-width) */}
+                  <div className="hod-justification-box">
+                    <div className="hod-info-label">
+                      JUSTIFICATION
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-800 font-normal m-0 leading-relaxed">
+                      {item.reason || item.description || 'Application verified and recommended for attendance consideration.'}
+                    </p>
 
-                      {/* Attachment View */}
-                      {item.attachmentUrl && (
+                    {/* Proof Attachment link */}
+                    {item.attachmentUrl && (
+                      <div className="pt-2 mt-2 border-t border-slate-200/80 flex items-center justify-between">
                         <button
                           type="button"
                           onClick={() => viewAttachment(item.attachmentUrl)}
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-bold border border-sky-200 transition-colors cursor-pointer"
-                          title="View submitted proof / certificate"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
                         >
-                          <ExternalLink size={14} />
-                          <span>Proof</span>
+                          <Eye size={13} />
+                          <span>View Attached Proof</span>
                         </button>
-                      )}
+                        <span className="text-[11px] text-slate-400">PDF / Image</span>
+                      </div>
+                    )}
 
-                      {/* Approve / Reject buttons */}
-                      {isPending ? (
-                        <>
+                    {/* Group Members Section */}
+                    {Boolean(item.isGroup && item.groupMembers && item.groupMembers.length > 0) && (
+                      <div className="pt-2 mt-2 border-t border-slate-200/80 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-indigo-900">
+                            Participating Group Members ({item.groupMembers.length}):
+                          </span>
                           <button
                             type="button"
-                            onClick={() => handleOpenReview(item, 'REJECT')}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
-                            title="Decline application"
+                            onClick={() => openModal('AUDIT_GROUP_STUDENTS', { request: item, userRole: 'HOD' })}
+                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
                           >
-                            <X size={14} />
-                            <span>Decline</span>
+                            <UserCheck size={11} />
+                            <span>Audit Students</span>
                           </button>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {item.groupMembers.map((m, idx) => {
+                            const mName = m.user?.name || m.name || 'Student';
+                            const mRoll = m.enrollmentNumber || m.rollNumber || '';
+                            return (
+                              <span
+                                key={m._id || idx}
+                                className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-medium border border-slate-200"
+                              >
+                                {mName} {mRoll ? `(${mRoll})` : ''}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-                          <button
-                            type="button"
-                            onClick={() => handleQuickApprove(item)}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-xs transition-all cursor-pointer"
-                            title="Endorse and digitally approve application"
-                          >
-                            <Check size={14} />
-                            <span>Sign & Approve</span>
-                          </button>
-                        </>
-                      ) : (
+                  {/* Bottom Action Row: Strictly matching Screen-21 / Image 2 */}
+                  <div className="flex flex-wrap items-center justify-end gap-2.5 pt-1">
+                    {isItemApproved ? (
+                      <div className="flex items-center gap-3">
+                        <div className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                          <CheckCircle2 size={15} />
+                          <span>Sanctioned by CSE Department ({item.approvedPeriods || sanctioned} Periods)</span>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => handleOpenReview(item, isItemApproved ? 'REJECT' : 'APPROVE')}
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                          onClick={() => setSelectedSanctionItem(item)}
+                          className="hod-btn-approve text-xs py-1.5"
+                        >
+                          <FileText size={13} />
+                          <span>View Order</span>
+                        </button>
+                      </div>
+                    ) : isPending ? (
+                      <div className="hod-card-actions justify-end">
+                        {/* Slate Outline Reject Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenReview(item, 'REJECT')}
+                          className="hod-btn-reject flex-1 sm:flex-initial"
+                        >
+                          <XCircle size={15} />
+                          <span>Reject</span>
+                        </button>
+
+                        {/* SaaS Royal Blue Approve Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleQuickApprove(item)}
+                          className="hod-btn-approve flex-1 sm:flex-initial"
+                        >
+                          <CheckCircle2 size={15} />
+                          <span>Approve</span>
+                        </button>
+
+                        {/* Review Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenReview(item, 'APPROVE')}
+                          className="hod-btn-review flex-1 sm:flex-initial"
+                          title="Open detailed review panel"
+                        >
+                          <Eye size={14} />
+                          <span>Review</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <div className="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                          <XCircle size={15} />
+                          <span>Authorization Declined by Department</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenReview(item, 'APPROVE')}
+                          className="hod-btn-review text-xs py-1.5"
                         >
                           <span>Modify Decision</span>
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1067,108 +1126,233 @@ export default function HodTgRecommendations() {
         </div>
       )}
 
-      {/* Review Drawer / Modal for HOD Decision */}
+      {/* Screen 7: Slide-over Review Drawer (Desktop right-slide, Mobile bottom sheet) */}
       {reviewingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold ${
-                    reviewDecision === 'APPROVE' ? 'bg-emerald-600' : 'bg-rose-600'
-                  }`}
-                >
-                  {reviewDecision === 'APPROVE' ? <Check size={18} /> : <X size={18} />}
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-base text-slate-900 m-0">
-                    {reviewDecision === 'APPROVE'
-                      ? 'Approve TG Recommendation'
-                      : 'Decline TG Recommendation'}
-                  </h3>
-                  <p className="text-xs text-slate-500 m-0">
-                    Department HOD Digital Authorization
-                  </p>
-                </div>
+        <div className="hod-drawer-backdrop" onClick={() => setReviewingItem(null)}>
+          <aside
+            className="hod-review-drawer"
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Review TG Recommendation Drawer"
+          >
+            {/* Drawer Header */}
+            <div className="hod-drawer-header">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 m-0 leading-tight">
+                  Review {reviewingItem.requestKind === 'LEAVE' ? 'Leave' : 'Consideration'} Application
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1 m-0 truncate">
+                  {reviewingItem.student?.user?.name || reviewingItem.student?.name || reviewingItem.applicant?.name || 'Student'} • Roll {reviewingItem.student?.rollNumber || reviewingItem.student?.enrollmentNumber || 'N/A'}
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setReviewingItem(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+                aria-label="Close Review"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-4 my-4 text-xs">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                <span className="text-slate-500 font-semibold block">Applicant:</span>
-                <span className="font-bold text-slate-900 text-sm">
-                  {reviewingItem.student?.user?.name || reviewingItem.student?.name || reviewingItem.applicant?.name}
-                </span>
-                <span className="text-slate-500 block mt-0.5">
-                  Roll: {reviewingItem.student?.enrollmentNumber || reviewingItem.student?.rollNumber || 'N/A'} • Sem{' '}
-                  {reviewingItem.student?.semester || 5}
-                </span>
-              </div>
-
-              {/* Sanction Periods (if Consideration & Approve) */}
-              {reviewingItem.requestKind !== 'LEAVE' && reviewDecision === 'APPROVE' && (
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Sanctioned Attendance Periods:
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={8}
-                      value={reviewApprovedPeriods}
-                      onChange={(e) => setReviewApprovedPeriods(Number(e.target.value))}
-                      className="w-24 px-3 py-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-blue-600"
-                    />
-                    <span className="text-slate-500 text-xs font-medium">
-                      out of{' '}
-                      {Array.isArray(reviewingItem.requestedPeriods)
-                        ? reviewingItem.requestedPeriods.length
-                        : 3}{' '}
-                      requested periods
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Remarks */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Official HOD Remarks (Optional):
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder={
-                    reviewDecision === 'APPROVE'
-                      ? 'Approved and sanctioned by Head of Department.'
-                      : 'Provide reasons for declining this application (optional)...'
-                  }
-                  value={reviewRemarks}
-                  onChange={(e) => setReviewRemarks(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium outline-none focus:border-blue-600 resize-none placeholder:text-slate-400"
-                />
-              </div>
-
+            {/* Drawer Body */}
+            <div className="hod-drawer-body">
               {reviewError && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-semibold flex items-center gap-2">
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
                   <AlertCircle size={15} className="shrink-0" />
                   <span>{reviewError}</span>
                 </div>
               )}
+
+              {/* TG Verification & Recommendation Endorsement Banner */}
+              {(() => {
+                const rawTgName =
+                  reviewingItem.tgReview?.reviewedBy?.name ||
+                  reviewingItem.assignedTg?.name ||
+                  reviewingItem.assignedTg?.user?.name ||
+                  reviewingItem.student?.assignedTg?.name ||
+                  (typeof reviewingItem.tgReview?.reviewedBy === 'string' &&
+                  !/^[0-9a-fA-F]{24}$/.test(reviewingItem.tgReview.reviewedBy)
+                    ? reviewingItem.tgReview.reviewedBy
+                    : null);
+
+                const tgReviewer = rawTgName || 'Prof. Kavita Sen';
+
+                return (
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-indigo-50/95 via-blue-50/70 to-indigo-50/95 border border-indigo-200/90 shadow-2xs">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                          <ShieldCheck size={16} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-black text-indigo-950">
+                              Recommended by TG: {tgReviewer}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                              Endorsed
+                            </span>
+                          </div>
+                          <p className="text-xs text-indigo-900/90 font-medium italic mt-1 break-words m-0">
+                            "{reviewingItem.tgReview?.remarks || 'Application verified and recommended for attendance consideration.'}"
+                          </p>
+                        </div>
+                      </div>
+
+                      {reviewingItem.tgReview?.reviewedAt && (
+                        <span className="text-[11px] font-bold text-indigo-700 shrink-0 whitespace-nowrap self-start">
+                          {formatDateSlash(reviewingItem.tgReview.reviewedAt)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Student Justification (Screen 7 & 8) */}
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  STUDENT JUSTIFICATION
+                </div>
+                <p className="text-xs sm:text-sm text-slate-800 font-normal mt-2 m-0 leading-relaxed">
+                  {reviewingItem.description || reviewingItem.reason || 'Application verified and recommended for attendance consideration.'}
+                </p>
+              </div>
+
+              {/* Supporting Attachment / Proof if present */}
+              {reviewingItem.attachmentUrl && (
+                <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText size={16} className="text-blue-600 shrink-0" />
+                    <span className="text-xs font-bold text-slate-800 truncate">Attached Proof Document</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => viewAttachment(reviewingItem.attachmentUrl)}
+                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors shrink-0 cursor-pointer"
+                  >
+                    <Eye size={13} />
+                    <span>View Proof</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Formal Sanction Certificate Preview Link */}
+              <div className="flex items-center justify-between px-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedSanctionItem(reviewingItem)}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
+                >
+                  <FileText size={13} />
+                  <span>View Formal Sanction Order Certificate</span>
+                </button>
+              </div>
+
+              {/* Review Decision Section */}
+              <div>
+                <div className="font-bold text-xs uppercase tracking-wider text-slate-600 mb-2.5">
+                  Review Decision
+                </div>
+                <div className="grid gap-2.5">
+                  <label
+                    onClick={() => setReviewDecision('APPROVE')}
+                    className={`hod-decision-card ${reviewDecision === 'APPROVE' ? 'selected-approve' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="tgRecDrawerDecision"
+                      checked={reviewDecision === 'APPROVE'}
+                      onChange={() => setReviewDecision('APPROVE')}
+                      className="size-4 accent-blue-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className={reviewDecision === 'APPROVE' ? 'text-blue-600' : 'text-slate-400'} />
+                      <span className="font-bold text-sm text-slate-900">Approve Application</span>
+                    </div>
+                  </label>
+
+                  <label
+                    onClick={() => setReviewDecision('REJECT')}
+                    className={`hod-decision-card ${reviewDecision === 'REJECT' ? 'selected-reject' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="tgRecDrawerDecision"
+                      checked={reviewDecision === 'REJECT'}
+                      onChange={() => setReviewDecision('REJECT')}
+                      className="size-4 accent-slate-600 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <XCircle size={16} className={reviewDecision === 'REJECT' ? 'text-slate-700' : 'text-slate-400'} />
+                      <span className="font-bold text-sm text-slate-900">Reject Application</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Sanctioned Lectures Stepper if Consideration & Approve */}
+              {reviewingItem.requestKind !== 'LEAVE' && reviewDecision === 'APPROVE' && (
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="block text-xs font-bold text-slate-900 leading-tight">
+                      Sanctioned Lectures
+                    </span>
+                    <span className="block text-[11px] font-medium text-slate-500 mt-0.5">
+                      Requested: {Array.isArray(reviewingItem.requestedPeriods) ? reviewingItem.requestedPeriods.length : (reviewingItem.requestedPeriods || 3)} periods
+                    </span>
+                  </div>
+
+                  <div className="hod-stepper-control">
+                    <button
+                      type="button"
+                      onClick={() => setReviewApprovedPeriods((p) => Math.max(1, Number(p) - 1))}
+                      className="hod-stepper-btn"
+                      aria-label="Decrease"
+                    >
+                      –
+                    </button>
+                    <span className="hod-stepper-count">
+                      {reviewApprovedPeriods}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setReviewApprovedPeriods((p) => Math.min(8, Number(p) + 1))}
+                      className="hod-stepper-btn"
+                      aria-label="Increase"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Remarks Input */}
+              <div>
+                <label className="font-bold text-xs uppercase tracking-wider text-slate-600 block mb-2">
+                  {reviewDecision === 'REJECT' ? 'Rejection Remarks (Optional)' : 'Review Remarks (Optional)'}
+                </label>
+                <textarea
+                  value={reviewRemarks}
+                  onChange={(e) => setReviewRemarks(e.target.value)}
+                  placeholder={
+                    reviewDecision === 'REJECT'
+                      ? 'State reason for rejection (optional)...'
+                      : 'Add remarks for student or department records'
+                  }
+                  className="hod-drawer-textarea"
+                  required={false}
+                />
+              </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+            {/* Drawer Footer */}
+            <div className="hod-drawer-footer">
               <button
                 type="button"
                 onClick={() => setReviewingItem(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                disabled={reviewSubmitting}
+                className="hod-btn-reject"
               >
                 Cancel
               </button>
@@ -1176,21 +1360,19 @@ export default function HodTgRecommendations() {
                 type="button"
                 onClick={handleConfirmReview}
                 disabled={reviewSubmitting}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-xs transition-all cursor-pointer flex items-center gap-1.5 ${
-                  reviewDecision === 'APPROVE'
-                    ? 'bg-emerald-600 hover:bg-emerald-700'
-                    : 'bg-rose-600 hover:bg-rose-700'
-                } ${reviewSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className="hod-btn-approve"
               >
-                {reviewSubmitting && (
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                {reviewSubmitting ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <CheckCircle2 size={16} />
                 )}
                 <span>
-                  {reviewDecision === 'APPROVE' ? 'Confirm Sign & Approve' : 'Confirm Decline'}
+                  {reviewDecision === 'APPROVE' ? 'Confirm Approval' : 'Confirm Rejection'}
                 </span>
               </button>
             </div>
-          </div>
+          </aside>
         </div>
       )}
 

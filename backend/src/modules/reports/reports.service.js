@@ -117,21 +117,31 @@ export const getDashboardSummary = async (user) => {
 
   if (user.isTG) {
     const teacherId = user.teacherId;
+    const activeGroup = await MentorGroup.findOne({ tg: teacherId, isActive: true });
+    const sectionId = activeGroup?.section;
+    const myStudents = sectionId ? await Student.find({ section: sectionId }).select('_id') : [];
+    const myStudentIds = myStudents.map((s) => s._id);
+
     const [
       pendingConsiderations,
       pendingLeaves,
-      mentorGroup,
     ] = await Promise.all([
-      ConsiderationRequest.countDocuments({ tg: teacherId, status: 'PENDING' }),
-      LeaveApplication.countDocuments({ tg: teacherId, status: 'PENDING', applicantRole: 'STUDENT' }),
-      MentorGroup.findOne({ tg: teacherId, isActive: true }),
+      ConsiderationRequest.countDocuments({
+        status: 'PENDING',
+        $or: [{ student: { $in: myStudentIds } }, { sectionStudents: { $in: myStudentIds } }],
+      }),
+      LeaveApplication.countDocuments({
+        status: 'PENDING',
+        applicantRole: 'STUDENT',
+        student: { $in: myStudentIds },
+      }),
     ]);
 
     return {
       role: 'TG',
       pendingConsiderations,
       pendingLeaves,
-      totalMentees: mentorGroup?.students?.length || 0,
+      totalMentees: myStudentIds.length,
     };
   }
 
@@ -603,11 +613,11 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
     ? String(query.section).replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim().toUpperCase()
     : null;
 
-  if (user?.isTG && user?.teacherId) {
+  if (user?.isTG && user?.teacherId && user.role !== 'HOD' && user.role !== 'ADMIN') {
     const tgGroup = await MentorGroup.findOne({ tg: user.teacherId, isActive: true }).populate('section');
     if (tgGroup?.section) {
-      if (!targetSemester) targetSemester = tgGroup.section.semester;
-      if (!targetSection) targetSection = extractSectionLetter(tgGroup.section);
+      targetSemester = tgGroup.section.semester;
+      targetSection = extractSectionLetter(tgGroup.section);
     }
   }
 
@@ -625,10 +635,16 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
     studentScope.semester = targetSemester;
   }
   if (targetSection && targetSection !== 'ALL') {
+    const cleanLetter = targetSection.replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim();
     const matchingSections = await Section.find({
       $or: [
-        { name: new RegExp(targetSection, 'i') },
-        { code: new RegExp(targetSection, 'i') },
+        { code: `CSE-${cleanLetter}-S${targetSemester || ''}` },
+        { code: `CSE-${cleanLetter}` },
+        { name: `Section ${cleanLetter}` },
+        { name: new RegExp(`^Section\\s*${cleanLetter}$`, 'i') },
+        { code: new RegExp(`^CSE-${cleanLetter}(?:-S\\d+)?$`, 'i') },
+        { code: targetSection },
+        { name: targetSection },
       ],
       ...(targetSemester ? { semester: targetSemester } : {}),
     }).select('_id');
@@ -922,11 +938,11 @@ export const exportLeavesToExcel = async (query, res, user) => {
     : null;
 
   // If user is a TG and no explicit semester/section provided or TG scope should be strictly enforced
-  if (user?.isTG && user?.teacherId) {
+  if (user?.isTG && user?.teacherId && user.role !== 'HOD' && user.role !== 'ADMIN') {
     const tgGroup = await MentorGroup.findOne({ tg: user.teacherId, isActive: true }).populate('section');
     if (tgGroup?.section) {
-      if (!targetSemester) targetSemester = tgGroup.section.semester;
-      if (!targetSection) targetSection = extractSectionLetter(tgGroup.section);
+      targetSemester = tgGroup.section.semester;
+      targetSection = extractSectionLetter(tgGroup.section);
     }
     // TG reports exclusively contain student leaves
     filter.applicantRole = 'STUDENT';
@@ -944,10 +960,16 @@ export const exportLeavesToExcel = async (query, res, user) => {
     studentScope.semester = targetSemester;
   }
   if (targetSection && targetSection !== 'ALL') {
+    const cleanLetter = targetSection.replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim();
     const matchingSections = await Section.find({
       $or: [
-        { name: new RegExp(targetSection, 'i') },
-        { code: new RegExp(targetSection, 'i') },
+        { code: `CSE-${cleanLetter}-S${targetSemester || ''}` },
+        { code: `CSE-${cleanLetter}` },
+        { name: `Section ${cleanLetter}` },
+        { name: new RegExp(`^Section\\s*${cleanLetter}$`, 'i') },
+        { code: new RegExp(`^CSE-${cleanLetter}(?:-S\\d+)?$`, 'i') },
+        { code: targetSection },
+        { name: targetSection },
       ],
       ...(targetSemester ? { semester: targetSemester } : {}),
     }).select('_id');

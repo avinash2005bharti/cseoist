@@ -28,10 +28,20 @@ export const createConsiderationSchema = z.object({
   attachments: z.array(attachmentSchema).optional().default([]),
 });
 
-export const tgReviewSchema = z.object({
-  decision: z.enum(['RECOMMEND', 'REJECT']),
-  remarks: z.string().optional().default(''),
-});
+export const tgReviewSchema = z
+  .object({
+    decision: z.enum(['RECOMMEND', 'REJECT']),
+    remarks: z.string().optional().default(''),
+  })
+  .refine(
+    (data) => {
+      if (data.decision === 'REJECT') {
+        return typeof data.remarks === 'string' && data.remarks.trim().length >= 5;
+      }
+      return true;
+    },
+    { message: 'Rejection remarks must be at least 5 characters long', path: ['remarks'] }
+  );
 
 export const hodReviewSchema = z.object({
   decision: z.preprocess((val) => {

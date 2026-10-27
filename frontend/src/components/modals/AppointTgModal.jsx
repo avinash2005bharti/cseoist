@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ShieldCheck, UserCheck, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 import { mentorshipApi, masterDataApi } from '../../api';
 import { useERP } from '../../context/ERPContext.jsx';
-import { DEFAULT_ACADEMIC_SESSION } from '../../utils/constants.js';
+import { DEFAULT_ACADEMIC_SESSION, getSectionLetter } from '../../utils/constants.js';
 
 export default function AppointTgModal({
   teachers = [],
@@ -72,10 +72,18 @@ export default function AppointTgModal({
     // Find section doc if available
     const matchedDoc = availableSections.find(
       (s) =>
+        (Number(s.semester) === semNum || !s.semester) &&
+        (getSectionLetter(s) === secLetter ||
+          s.code === `CSE-${secLetter}` ||
+          s.code === `CSE-${secLetter}-S${semNum}` ||
+          s.name === section ||
+          s.code === section ||
+          s.name === `Section ${secLetter}`)
+    ) || availableSections.find(
+      (s) =>
+        getSectionLetter(s) === secLetter ||
         s.code === `CSE-${secLetter}` ||
-        s.name === section ||
-        s.code === section ||
-        s.name?.endsWith(secLetter)
+        s.name === `Section ${secLetter}`
     );
 
     const payload = {

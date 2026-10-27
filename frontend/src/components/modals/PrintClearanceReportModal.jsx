@@ -70,7 +70,7 @@ export default function PrintClearanceReportModal({
 
       // Standard department fallback if empty
       if (allUniqueLetters.size === 0) {
-        ['A', 'B', 'C', 'D'].forEach((l) => allUniqueLetters.add(l));
+        ['A', 'B', 'C', 'D', 'E'].forEach((l) => allUniqueLetters.add(l));
       }
 
       const sorted = Array.from(allUniqueLetters).sort();
@@ -108,7 +108,7 @@ export default function PrintClearanceReportModal({
 
     // Fallback if no specific sections found for this semester
     if (semLetters.size === 0) {
-      ['A', 'B', 'C', 'D'].forEach((l) => semLetters.add(l));
+      ['A', 'B', 'C', 'D', 'E'].forEach((l) => semLetters.add(l));
     }
 
     const sortedSem = Array.from(semLetters).sort();

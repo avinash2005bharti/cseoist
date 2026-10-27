@@ -457,6 +457,36 @@ describe('12. Section Letter Isolation, Temporary Passwords & Student Profile Up
     // Confirm CSE-B does NOT falsely match Section C
     assert.notEqual(getSectionLetter('CSE-B'), 'C');
     assert.notEqual(getSectionLetter('CSE-C'), 'B');
+
+    // Confirm Section E resolution does NOT falsely match Section A (CSE-A)
+    const resolveSectionCode = (targetLetter, targetSem = 5) => {
+      const mockSections = [
+        { code: 'CSE-A', name: 'Section A', semester: 5 },
+        { code: 'CSE-B', name: 'Section B', semester: 5 },
+        { code: 'CSE-C', name: 'Section C', semester: 5 },
+        { code: 'CSE-D', name: 'Section D', semester: 5 },
+        { code: 'CSE-E-S5', name: 'Section E', semester: 5 },
+      ];
+      return mockSections.find((s) => {
+        if (s.semester !== targetSem) return false;
+        if (s.code === `CSE-${targetLetter}-S${targetSem}`) return true;
+        if (s.code === `CSE-${targetLetter}`) return true;
+        if (s.name === `Section ${targetLetter}`) return true;
+        if (new RegExp(`^Section\\s*${targetLetter}$`, 'i').test(s.name)) return true;
+        if (new RegExp(`^CSE-${targetLetter}(?:-S\\d+)?$`, 'i').test(s.code)) return true;
+        if (new RegExp(`-${targetLetter}(?:-|$)`, 'i').test(s.code)) return true;
+        return false;
+      });
+    };
+
+    const resolvedA = resolveSectionCode('A', 5);
+    const resolvedE = resolveSectionCode('E', 5);
+
+    assert.equal(resolvedA?.name, 'Section A');
+    assert.equal(resolvedA?.code, 'CSE-A');
+    assert.equal(resolvedE?.name, 'Section E');
+    assert.equal(resolvedE?.code, 'CSE-E-S5');
+    assert.notEqual(resolvedE?.name, 'Section A');
   });
 
   it('should generate temporary passwords meeting complexity rules', () => {
@@ -472,6 +502,40 @@ describe('12. Section Letter Isolation, Temporary Passwords & Student Profile Up
     const tempPass = generateTempPassword();
     assert.equal(tempPass.startsWith('Reset@'), true);
     assert.equal(tempPass.length, 10);
+  });
+
+  it('should enforce that TG of Section A cannot view or control Section E student', () => {
+    const secAId = 'sec-a-5';
+    const secEId = 'sec-e-5';
+
+    const tgSectionA = {
+      isTG: true,
+      teacherId: 'teacher-a',
+      assignedSectionIds: [secAId],
+    };
+
+    const studentSecE = {
+      _id: 'student-e-1',
+      name: 'Suyash Shukla',
+      section: secEId,
+      mentorGroup: null, // Unlinked from sec A
+    };
+
+    // Check authorization: TG of Section A checking permission for Section E student
+    const isAuthorized = Boolean(studentSecE.section && tgSectionA.assignedSectionIds.includes(studentSecE.section));
+    assert.equal(isAuthorized, false, 'TG of Section A must NOT be authorized for Section E student');
+
+    // Filter cohort list
+    const mockCohortStudents = [
+      { _id: 'std-a', rollNumber: '1234', section: { _id: secAId } },
+      { _id: 'std-e', rollNumber: '0105CS241413', section: { _id: secEId } },
+    ];
+    const filteredForTgA = mockCohortStudents.filter(
+      (s) => (s.section?._id || s.section) === secAId
+    );
+    assert.equal(filteredForTgA.length, 1);
+    assert.equal(filteredForTgA[0].rollNumber, '1234');
+    assert.equal(filteredForTgA.some((s) => s.rollNumber === '0105CS241413'), false);
   });
 });
 

@@ -123,7 +123,7 @@ export default function OfficialClearancesLedgerModal({
   const [loading, setLoading] = useState(true);
 
   const dynamicSections = useMemo(() => {
-    const letters = new Set(['A', 'B', 'C', 'D']);
+    const letters = new Set(['A', 'B', 'C', 'D', 'E']);
     considerations.forEach((item) => {
       const sec = (item.student?.section?.name || item.student?.section?.code || '')
         .replace(/^Section\s*/i, '')

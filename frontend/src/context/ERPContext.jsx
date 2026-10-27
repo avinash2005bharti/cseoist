@@ -78,6 +78,13 @@ export function ERPProvider({ children }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  useEffect(() => {
+    window.__campusflow_addToast = addToast;
+    return () => {
+      delete window.__campusflow_addToast;
+    };
+  }, [addToast]);
+
   // Modal Handlers
   const openModal = useCallback((name, data = {}) => {
     setActiveModal(name);

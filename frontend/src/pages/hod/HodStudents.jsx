@@ -89,8 +89,8 @@ export default function HodStudents() {
 
     const optionsMap = new Map();
 
-    // 1. Always seed standard department sections A, B, C, D so they are always available
-    ['A', 'B', 'C', 'D'].forEach((l) => {
+    // 1. Always seed standard department sections A, B, C, D, E so they are always available
+    ['A', 'B', 'C', 'D', 'E'].forEach((l) => {
       optionsMap.set(l, {
         value: l,
         label: `Section ${l}`,

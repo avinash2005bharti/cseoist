@@ -30,25 +30,34 @@ export default function TgMyStudents() {
 
       if (cohortData) {
         setCohort(cohortData);
-        if (cohortData.students?.length) {
-          setStudents(cohortData.students);
+        const secId = (cohortData.section?._id || cohortData.section)?.toString();
+
+        // Strictly enforce section isolation: only show students who belong to this assigned section
+        const validCohortStudents = (cohortData.students || []).filter((st) => {
+          if (!st) return false;
+          const stSecId = (st.section?._id || st.section)?.toString();
+          return !secId || !stSecId || stSecId === secId;
+        });
+
+        if (validCohortStudents.length) {
+          setStudents(validCohortStudents);
           return;
         }
 
-        // If students array inside cohort doc wasn't populated or was empty, fetch students of this section
-        if (cohortData.section?._id || cohortData.section) {
-          const secId = cohortData.section?._id || cohortData.section;
-          const res = await masterDataApi.getStudents({ section: secId, all: 'true' });
-          if (res?.data?.length) {
-            setStudents(res.data);
-            return;
-          }
+        // If students array inside cohort doc was empty, fetch students of this section only
+        if (secId) {
+          const res = await masterDataApi.getStudents({ section: secId, all: 'true' }).catch(() => null);
+          const validSecStudents = (res?.data || []).filter((st) => {
+            if (!st) return false;
+            const stSecId = (st.section?._id || st.section)?.toString();
+            return !secId || !stSecId || stSecId === secId;
+          });
+          setStudents(validSecStudents);
+          return;
         }
       }
 
-      // Fallback to masterDataApi students list if cohort not assigned yet
-      const res = await masterDataApi.getStudents({ all: 'true' });
-      setStudents(res?.data || []);
+      setStudents([]);
     } finally {
       setLoading(false);
     }
@@ -117,7 +126,7 @@ export default function TgMyStudents() {
               .join('')
               .toUpperCase()
               .slice(0, 2) || 'ST';
-            const secName = getSectionLetter(st.section) || 'B';
+            const secName = getSectionLetter(st.section) || (cohort?.section ? getSectionLetter(cohort.section) : '—');
             const semNum = st.semester || st.section?.semester || 5;
             const email = st.user?.email || 'Not provided';
             const phone = st.user?.phone || 'Not provided';

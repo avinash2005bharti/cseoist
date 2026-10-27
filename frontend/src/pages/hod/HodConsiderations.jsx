@@ -31,6 +31,7 @@ import {
   FileSpreadsheet,
   UserCheck,
   AlertCircle,
+  ShieldCheck,
 } from 'lucide-react';
 
 const GoogleSheetsLogo = () => (
@@ -338,7 +339,7 @@ export default function HodConsiderations() {
     );
 
     if (set.size === 0) {
-      ['A', 'B', 'C', 'D'].forEach((l) => set.add(l));
+      ['A', 'B', 'C', 'D', 'E'].forEach((l) => set.add(l));
     }
 
     return [...set].filter(Boolean).sort();
@@ -1011,6 +1012,124 @@ export default function HodConsiderations() {
                   <span>{reviewError}</span>
                 </div>
               )}
+
+              {/* TG Recommendation / Verification Status */}
+              {(() => {
+                const s = (reviewingItem.status || '').toUpperCase();
+                const tgDecision = (reviewingItem.tgReview?.decision || '').toUpperCase();
+                const isRecommended =
+                  s === 'RECOMMENDED_BY_TG' ||
+                  tgDecision === 'RECOMMEND' ||
+                  tgDecision === 'APPROVE' ||
+                  (Array.isArray(reviewingItem.history) &&
+                    reviewingItem.history.some(
+                      (h) =>
+                        (h.actorRole === 'TG' || h.actorRole === 'TEACHER') &&
+                        (h.status === 'RECOMMENDED_BY_TG' || h.decision === 'RECOMMEND' || h.decision === 'APPROVE')
+                    ));
+
+                const isRejectedByTg =
+                  tgDecision === 'REJECT' ||
+                  (Array.isArray(reviewingItem.history) &&
+                    reviewingItem.history.some(
+                      (h) =>
+                        (h.actorRole === 'TG' || h.actorRole === 'TEACHER') &&
+                        (h.status === 'REJECTED' || h.decision === 'REJECT')
+                    ));
+
+                const rawTgName =
+                  reviewingItem.tgReview?.reviewedBy?.name ||
+                  reviewingItem.assignedTg?.name ||
+                  reviewingItem.assignedTg?.user?.name ||
+                  reviewingItem.student?.assignedTg?.name ||
+                  (typeof reviewingItem.tgReview?.reviewedBy === 'string' &&
+                  !/^[0-9a-fA-F]{24}$/.test(reviewingItem.tgReview.reviewedBy)
+                    ? reviewingItem.tgReview.reviewedBy
+                    : null);
+
+                const tgReviewer = rawTgName || 'Prof. Kavita Sen (TG)';
+
+                if (isRecommended) {
+                  return (
+                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-indigo-50/95 via-blue-50/70 to-indigo-50/95 border border-indigo-200/90 shadow-2xs">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                            <ShieldCheck size={16} />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-black text-indigo-950">
+                                Recommended by TG: {tgReviewer}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                Endorsed
+                              </span>
+                            </div>
+                            <p className="text-xs text-indigo-900/90 font-medium italic mt-1 break-words m-0">
+                              "{reviewingItem.tgReview?.remarks || 'Application verified and recommended for attendance consideration.'}"
+                            </p>
+                          </div>
+                        </div>
+
+                        {reviewingItem.tgReview?.reviewedAt && (
+                          <span className="text-[11px] font-bold text-indigo-700 shrink-0 whitespace-nowrap self-start">
+                            {formatDateSlash(reviewingItem.tgReview.reviewedAt)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (isRejectedByTg) {
+                  return (
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 flex items-start justify-between gap-2.5">
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                          <XCircle size={16} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-rose-900">
+                              TG Recommendation: Declined by TG
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">
+                              Declined
+                            </span>
+                          </div>
+                          {reviewingItem.tgReview?.remarks && (
+                            <p className="text-xs text-rose-800 mt-1 m-0 italic">
+                              "{reviewingItem.tgReview.remarks}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="p-3 rounded-xl bg-amber-50/90 border border-amber-200 flex items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 text-amber-900 min-w-0">
+                      <AlertCircle size={17} className="text-amber-600 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-amber-950">
+                            TG Recommendation: Awaiting TG Verification
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                            Not Verified
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-amber-800/90 font-medium block truncate mt-0.5">
+                          Application has not yet been endorsed by assigned Teacher Guardian.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Student Justification (Screen 7 & 8) */}
               <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">

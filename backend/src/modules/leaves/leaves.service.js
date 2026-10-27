@@ -230,32 +230,26 @@ export const getTGLeaveQueue = async (user, query) => {
 
   const { page, limit, skip } = parsePagination(query);
 
-  // Scope to the students of this TG's assigned sections/groups
+  // Scope strictly to students belonging to this TG's assigned sections
   const myGroups = await MentorGroup.find({ tg: user.teacherId, isActive: true });
   const mySectionIds = myGroups.map((g) => g.section).filter(Boolean);
-  const myExplicitStudentIds = myGroups.flatMap((g) => g.students || []);
+
+  if (mySectionIds.length === 0) {
+    return {
+      leaves: [],
+      meta: buildPaginationMeta(0, page, limit),
+    };
+  }
 
   const myStudents = await Student.find({
-    $or: [
-      { _id: { $in: myExplicitStudentIds } },
-      { mentorGroup: { $in: myGroups.map((g) => g._id) } },
-      ...(mySectionIds.length > 0 ? [{ section: { $in: mySectionIds } }] : []),
-    ],
+    section: { $in: mySectionIds },
   }).select('_id');
   const myStudentIds = myStudents.map((s) => s._id);
 
   const filter = {
     applicantRole: 'STUDENT',
-    $or: [
-      { tg: user.teacherId },
-      { student: { $in: myStudentIds } },
-    ],
+    student: { $in: myStudentIds },
   };
-
-  if (myStudentIds.length > 0) {
-    filter.student = { $in: myStudentIds };
-    delete filter.$or;
-  }
 
   if (query.status && query.status.toUpperCase() !== 'ALL') {
     filter.status = query.status.toUpperCase();
@@ -581,7 +575,7 @@ export const cancelLeave = async (id, user) => {
 };
 
 export const tgReviewLeave = async (id, user, { decision, remarks }) => {
-  const leave = await LeaveApplication.findById(id);
+  const leave = await LeaveApplication.findById(id).populate('student');
   if (!leave) {
     throw ApiError.notFound('Leave application not found');
   }
@@ -590,8 +584,20 @@ export const tgReviewLeave = async (id, user, { decision, remarks }) => {
     throw ApiError.badRequest('TG review is only applicable for student leave applications');
   }
 
-  if (!user.isTG || !user.teacherId || leave.tg?.toString() !== user.teacherId) {
+  if (!user.isTG || !user.teacherId) {
     throw ApiError.forbidden('You are only authorized to review leaves from your assigned mentees');
+  }
+
+  const myGroups = await MentorGroup.find({ tg: user.teacherId, isActive: true });
+  const mySectionIds = myGroups.map((g) => g.section?.toString()).filter(Boolean);
+  const studentSecId = (leave.student?.section?._id || leave.student?.section)?.toString();
+
+  const isAssignedSection = studentSecId && mySectionIds.includes(studentSecId);
+  if (!isAssignedSection && leave.tg?.toString() !== user.teacherId) {
+    throw ApiError.forbidden('You are only authorized to review leaves from your assigned mentees');
+  }
+  if (!isAssignedSection) {
+    throw ApiError.forbidden('You are only authorized to review leaves from students in your assigned section');
   }
 
   if (leave.status !== 'PENDING') {

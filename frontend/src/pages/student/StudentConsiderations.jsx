@@ -131,18 +131,22 @@ export default function StudentConsiderations() {
               className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold ${
                 windowStatus?.isTimeLimitEnabled === false
                   ? 'bg-purple-50 border-purple-200 text-purple-800'
-                  : 'bg-blue-50 border-blue-200 text-blue-800'
+                  : windowStatus?.isOpen
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-amber-50 border-amber-200 text-amber-800'
               }`}
             >
               {windowStatus?.isTimeLimitEnabled === false ? (
                 <Sparkles size={13} className="text-purple-600 animate-pulse" />
               ) : (
-                <Clock size={13} className="text-blue-600" />
+                <Clock size={13} className={windowStatus?.isOpen ? "text-emerald-600" : "text-amber-600"} />
               )}
               <span>
                 {windowStatus?.isTimeLimitEnabled === false
                   ? '24/7 Open (Testing Mode)'
-                  : 'Window: 9:00 AM – 4:00 PM IST'}
+                  : windowStatus?.isOpen
+                  ? 'Window Open (9:00 AM – 4:00 PM IST)'
+                  : 'Window Closed (9:00 AM – 4:00 PM IST)'}
               </span>
             </span>
             <Button

@@ -72,11 +72,11 @@ export default function TgDashboard() {
   }, []);
 
   const totalPending = pendingConsiderations.length + pendingLeaves.length;
-  const studentCount = cohort?.students?.length || summary?.totalStudents || summary?.totalMentees || 21;
+  const studentCount = cohort?.students?.length ?? summary?.totalMentees ?? summary?.totalStudents ?? 0;
   const deptCode = cohort?.department?.code || 'CSE';
-  const semNum = cohort?.section?.semester || cohort?.semester || '5';
-  const rawSec = cohort?.section?.name || cohort?.section?.code || 'B';
-  const cleanSec = rawSec.replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim() || 'B';
+  const semNum = cohort?.section?.semester || cohort?.semester || '—';
+  const rawSec = cohort?.section?.name || cohort?.section?.code || '';
+  const cleanSec = rawSec ? rawSec.replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim() : '—';
 
   return (
     <div data-appearance="light" className="flex flex-col gap-6 sm:gap-8 w-full pb-10">

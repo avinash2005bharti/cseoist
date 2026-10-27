@@ -11,9 +11,16 @@ import Notification from '../../models/Notification.js';
 import ApiError from '../../utils/ApiError.js';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.js';
 
-export const listStudents = async (query) => {
+export const listStudents = async (query, actorUser = null) => {
   const { page, limit, skip } = parsePagination(query);
   const andConditions = [];
+
+  // If actor is a TG, strictly limit visibility to students of their assigned section(s)
+  if (actorUser && (actorUser.role === 'TG' || actorUser.isTG) && actorUser.role !== 'HOD' && actorUser.role !== 'ADMIN') {
+    const activeGroups = await MentorGroup.find({ tg: actorUser.teacherId, isActive: true });
+    const assignedSectionIds = activeGroups.map((g) => g.section).filter(Boolean);
+    andConditions.push({ section: { $in: assignedSectionIds } });
+  }
 
   if (query.section) {
     andConditions.push({ section: query.section });
@@ -109,18 +116,14 @@ export const updateStudent = async (id, data, actorUser = null) => {
   }
 
   // FLAW-AUTH-04: Strict cohort scoping and field restrictions for Tutor Guardians
-  if (actorUser && actorUser.role === 'TG') {
+  if (actorUser && (actorUser.role === 'TG' || actorUser.isTG) && actorUser.role !== 'HOD' && actorUser.role !== 'ADMIN') {
     const activeGroups = await MentorGroup.find({ tg: actorUser.teacherId, isActive: true });
     const assignedSectionIds = activeGroups.map((g) => g.section?.toString()).filter(Boolean);
-    const assignedStudentIds = activeGroups.flatMap((g) => (g.students || []).map((s) => s.toString()));
 
-    const isMentee =
-      assignedStudentIds.includes(student._id.toString()) ||
-      (student.mentorGroup && activeGroups.some((g) => g._id.toString() === student.mentorGroup.toString())) ||
-      (student.section && assignedSectionIds.includes(student.section.toString()));
+    const isMentee = student.section && assignedSectionIds.includes(student.section.toString());
 
     if (!isMentee) {
-      throw ApiError.forbidden('You are only authorized to update students assigned to your cohort');
+      throw ApiError.forbidden('You are only authorized to update students assigned to your section');
     }
 
     // TGs are NOT authorized to alter institutional attributes or account status
@@ -187,7 +190,7 @@ export const updateStudent = async (id, data, actorUser = null) => {
 
     if (!resolvedSection) {
       const rawSec = String(data.section).trim();
-      let letter = 'B';
+      let letter = '';
       const cseMatch = rawSec.match(/CSE[\s\-_]*(?:SEM\s*\d+[\s\-_]*|\d+[\s\-_]*)?([A-Z0-9]+)/i);
       const secMatch = rawSec.match(/SEC(?:TION)?[\s\-_]*([A-Z0-9]+)/i);
       const singleMatch = rawSec.match(/^([A-Z0-9])$/i);
@@ -203,50 +206,98 @@ export const updateStudent = async (id, data, actorUser = null) => {
         if (match) letter = match[1].toUpperCase();
       }
 
+      if (!letter) letter = 'B';
+
       const targetSem = student.semester || 5;
 
       resolvedSection = await Section.findOne({
         semester: targetSem,
         $or: [
+          { code: `CSE-${letter}-S${targetSem}` },
           { code: `CSE-${letter}` },
           { name: `Section ${letter}` },
-          { code: new RegExp(`[\\b-_]${letter}(?:[\\b-_]|$)`, 'i') },
-          { name: new RegExp(`Section\\s*${letter}`, 'i') },
+          { name: new RegExp(`^Section\\s*${letter}$`, 'i') },
+          { code: new RegExp(`^CSE-${letter}(?:-S\\d+)?$`, 'i') },
+          { code: new RegExp(`-${letter}(?:-|$)`, 'i') },
+          { code: rawSec },
+          { name: rawSec },
         ],
       });
 
       if (!resolvedSection) {
         resolvedSection = await Section.findOne({
           $or: [
+            { code: `CSE-${letter}-S${targetSem}` },
             { code: `CSE-${letter}` },
             { name: `Section ${letter}` },
+            { name: new RegExp(`^Section\\s*${letter}$`, 'i') },
+            { code: new RegExp(`^CSE-${letter}(?:-S\\d+)?$`, 'i') },
+            { code: rawSec },
+            { name: rawSec },
           ],
         });
+      }
+
+      // If section does not exist in DB yet for this semester, create it automatically
+      if (!resolvedSection) {
+        const deptId = student.department || (await Department.findOne({ code: 'CSE' }))?._id;
+        if (deptId) {
+          let codeToUse = `CSE-${letter}`;
+          const existingCode = await Section.findOne({ code: codeToUse });
+          if (existingCode && existingCode.semester !== targetSem) {
+            codeToUse = `CSE-${letter}-S${targetSem}`;
+          }
+          resolvedSection = await Section.create({
+            department: deptId,
+            year: Math.ceil(targetSem / 2),
+            semester: targetSem,
+            name: `Section ${letter}`,
+            code: codeToUse,
+            capacity: 60,
+          });
+        }
       }
     }
 
     if (resolvedSection) {
+      const oldSectionId = student.section ? student.section.toString() : null;
+      const newSectionId = resolvedSection._id.toString();
+
       student.section = resolvedSection._id;
 
-      // Automatically reassign student to the appointed Tutor Guardian / MentorGroup of the new section
-      const activeMentorGroup = await MentorGroup.findOne({
-        section: resolvedSection._id,
-        isActive: true,
-      });
-
-      if (activeMentorGroup) {
-        // Remove from previous mentor group if any
-        if (student.mentorGroup && student.mentorGroup.toString() !== activeMentorGroup._id.toString()) {
+      if (oldSectionId !== newSectionId) {
+        // Automatically unbind student from previous mentor group
+        if (student.mentorGroup) {
           await MentorGroup.findByIdAndUpdate(student.mentorGroup, { $pull: { students: student._id } });
+          student.mentorGroup = null;
         }
-        student.mentorGroup = activeMentorGroup._id;
-        await MentorGroup.findByIdAndUpdate(activeMentorGroup._id, { $addToSet: { students: student._id } });
+
+        // Automatically reassign student to the appointed Tutor Guardian / MentorGroup of the new section
+        const activeMentorGroup = await MentorGroup.findOne({
+          section: resolvedSection._id,
+          isActive: true,
+        });
+
+        if (activeMentorGroup) {
+          student.mentorGroup = activeMentorGroup._id;
+          await MentorGroup.findByIdAndUpdate(activeMentorGroup._id, { $addToSet: { students: student._id } });
+        }
       }
     }
   }
 
   if (data.mentorGroup !== undefined) {
-    student.mentorGroup = data.mentorGroup;
+    if (data.mentorGroup) {
+      const mg = await MentorGroup.findById(data.mentorGroup);
+      if (mg && (!mg.section || !student.section || mg.section.toString() === student.section.toString())) {
+        student.mentorGroup = data.mentorGroup;
+      }
+    } else {
+      if (student.mentorGroup) {
+        await MentorGroup.findByIdAndUpdate(student.mentorGroup, { $pull: { students: student._id } });
+      }
+      student.mentorGroup = null;
+    }
   }
 
   await student.save();

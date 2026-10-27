@@ -55,7 +55,7 @@ export default function SectionOverviewModal({
   const dynamicLetters = semesterDbSections
     .map((s) => getSectionLetter(s) || s.code?.replace('CSE-', '') || s.name?.replace('Section ', ''))
     .filter(Boolean);
-  const baseLetters = ['A', 'B', 'C', 'D'];
+  const baseLetters = ['A', 'B', 'C', 'D', 'E'];
   const allLetters = [...new Set([...baseLetters, ...dynamicLetters])];
 
   const palette = [

@@ -13,7 +13,7 @@ router.get(
   auth,
   authorize('HOD', 'ADMIN', 'TG', 'STUDENT'),
   asyncHandler(async (req, res) => {
-    const result = await studentsService.listStudents(req.query);
+    const result = await studentsService.listStudents(req.query, req.user);
     return sendSuccess(res, result.students, result.meta);
   })
 );

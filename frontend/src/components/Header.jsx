@@ -256,14 +256,14 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
         </div>
 
         {/* Center: Role Badge or Student / TG / HOD Portal Pill (Screen 7, Screen 3, Screen 9) */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           {isHod ? (
             <div className="font-semibold rounded-md bg-accent text-accent-foreground text-sm hidden px-4 py-2 items-center gap-2 lg:flex">
               <BadgeCheck className="size-4" />
               <span>HOD Dashboard</span>
             </div>
           ) : isTg ? (
-            <div className="font-semibold rounded-full bg-muted text-foreground text-sm border border-border px-4 py-2 hidden md:flex items-center gap-2 shadow-2xs">
+            <div className="font-semibold rounded-full bg-muted text-foreground text-sm border border-border px-4 py-2 hidden lg:flex items-center gap-2 shadow-2xs">
               <BadgeCheck className="text-primary size-4" />
               <span>TG Dashboard</span>
             </div>
@@ -534,12 +534,14 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
             className={
               isHod
                 ? "rounded-md bg-card text-muted-foreground border flex justify-center items-center size-10 hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors shadow-2xs"
-                : `rounded-lg bg-card text-muted-foreground border border-border flex justify-center items-center w-10 h-10 shrink-0 hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors shadow-2xs ${isTg ? 'hidden sm:flex' : 'flex'}`
+                : isTg
+                ? "rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-rose-600 flex justify-center items-center w-10 h-10 shrink-0 cursor-pointer transition-colors shadow-2xs"
+                : "rounded-lg bg-card text-muted-foreground border border-border flex justify-center items-center w-10 h-10 shrink-0 hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors shadow-2xs"
             }
             title="Logout"
             aria-label="Logout"
           >
-            <LogOut className={isHod ? "size-4 text-muted-foreground shrink-0" : "w-5 h-5 text-muted-foreground shrink-0"} />
+            <LogOut className={isHod ? "size-4 text-muted-foreground shrink-0" : isTg ? "w-5 h-5 text-slate-600 hover:text-rose-600 shrink-0" : "w-5 h-5 text-muted-foreground shrink-0"} />
           </button>
         </div>
       </div>

@@ -10177,15 +10177,15 @@ div.flex.flex-wrap.items-center.gap-2 {
 /* 1. Primary Solid Action Buttons that were Green (Approve, Sanction, View Order, Confirm, etc.) */
 button[class*="bg-emerald-600"],
 button[class*="bg-emerald-700"],
-button[class*="bg-emerald-800"],
-button[class*="bg-green-600"],
-button[class*="bg-green-700"],
-button[class*="bg-emerald-500"],
-button.bg-emerald-600,
-button.bg-emerald-700,
-button.btn-success,
-.btn-success,
-button:has(svg)[class*="bg-emerald"] {
+button[class*="bg-emerald-800"]:not(.toast-close-btn),
+button[class*="bg-green-600"]:not(.toast-close-btn),
+button[class*="bg-green-700"]:not(.toast-close-btn),
+button[class*="bg-emerald-500"]:not(.toast-close-btn),
+button.bg-emerald-600:not(.toast-close-btn),
+button.bg-emerald-700:not(.toast-close-btn),
+button.btn-success:not(.toast-close-btn),
+.btn-success:not(.toast-close-btn),
+button:has(svg)[class*="bg-emerald"]:not(.toast-close-btn) {
   background: #2563EB !important;
   background-color: #2563EB !important;
   border: 1px solid #1D4ED8 !important;
@@ -10194,15 +10194,15 @@ button:has(svg)[class*="bg-emerald"] {
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-button[class*="bg-emerald-600"]:hover,
-button[class*="bg-emerald-700"]:hover,
-button[class*="bg-emerald-800"]:hover,
-button[class*="bg-green-600"]:hover,
-button[class*="bg-green-700"]:hover,
-button.bg-emerald-600:hover,
-button.bg-emerald-700:hover,
-button.btn-success:hover,
-.btn-success:hover {
+button[class*="bg-emerald-600"]:not(.toast-close-btn):hover,
+button[class*="bg-emerald-700"]:not(.toast-close-btn):hover,
+button[class*="bg-emerald-800"]:not(.toast-close-btn):hover,
+button[class*="bg-green-600"]:not(.toast-close-btn):hover,
+button[class*="bg-green-700"]:not(.toast-close-btn):hover,
+button.bg-emerald-600:not(.toast-close-btn):hover,
+button.bg-emerald-700:not(.toast-close-btn):hover,
+button.btn-success:not(.toast-close-btn):hover,
+.btn-success:not(.toast-close-btn):hover {
   background: #1D4ED8 !important;
   background-color: #1D4ED8 !important;
   border-color: #1E40AF !important;
@@ -10211,30 +10211,30 @@ button.btn-success:hover,
   transform: translateY(-1px) !important;
 }
 
-button[class*="bg-emerald-600"]:active,
-button[class*="bg-emerald-700"]:active,
-button.btn-success:active {
+button[class*="bg-emerald-600"]:not(.toast-close-btn):active,
+button[class*="bg-emerald-700"]:not(.toast-close-btn):active,
+button.btn-success:not(.toast-close-btn):active {
   transform: scale(0.98) !important;
 }
 
-button[class*="bg-emerald-600"] svg,
-button[class*="bg-emerald-700"] svg,
-button[class*="bg-green-600"] svg,
-button.btn-success svg {
+button[class*="bg-emerald-600"]:not(.toast-close-btn) svg,
+button[class*="bg-emerald-700"]:not(.toast-close-btn) svg,
+button[class*="bg-green-600"]:not(.toast-close-btn) svg,
+button.btn-success:not(.toast-close-btn) svg {
   color: #FFFFFF !important;
   stroke: #FFFFFF !important;
 }
 
 /* 2. Secondary / Outline Action Buttons that were Green (Attendance Clearances, Apply for Leave, etc.) */
-button[class*="bg-emerald-50"],
-button[class*="bg-[#ECFDF5]"],
-button[class*="bg-[#ecfdf5]"],
-button[class*="bg-[#EFFAF3]"],
-button[class*="border-emerald-300"],
-button[class*="border-emerald-200"],
-button[class*="border-[#A7F3D0]"],
-button[class*="text-emerald-800"],
-button[class*="text-emerald-700"] {
+button[class*="bg-emerald-50"]:not(.toast-close-btn),
+button[class*="bg-[#ECFDF5]"]:not(.toast-close-btn),
+button[class*="bg-[#ecfdf5]"]:not(.toast-close-btn),
+button[class*="bg-[#EFFAF3]"]:not(.toast-close-btn),
+button[class*="border-emerald-300"]:not(.toast-close-btn),
+button[class*="border-emerald-200"]:not(.toast-close-btn),
+button[class*="border-[#A7F3D0]"]:not(.toast-close-btn),
+button[class*="text-emerald-800"]:not(.toast-close-btn),
+button[class*="text-emerald-700"]:not(.toast-close-btn) {
   background: #FFFFFF !important;
   background-color: #FFFFFF !important;
   border: 1px solid #CBD5E1 !important;
@@ -10243,12 +10243,12 @@ button[class*="text-emerald-700"] {
   transition: all 0.15s ease !important;
 }
 
-button[class*="bg-emerald-50"]:hover,
-button[class*="bg-[#ECFDF5]"]:hover,
-button[class*="bg-[#ecfdf5]"]:hover,
-button[class*="bg-[#EFFAF3]"]:hover,
-button[class*="text-emerald-800"]:hover,
-button[class*="text-emerald-700"]:hover {
+button[class*="bg-emerald-50"]:not(.toast-close-btn):hover,
+button[class*="bg-[#ECFDF5]"]:not(.toast-close-btn):hover,
+button[class*="bg-[#ecfdf5]"]:not(.toast-close-btn):hover,
+button[class*="bg-[#EFFAF3]"]:not(.toast-close-btn):hover,
+button[class*="text-emerald-800"]:not(.toast-close-btn):hover,
+button[class*="text-emerald-700"]:not(.toast-close-btn):hover {
   background: #EFF6FF !important;
   background-color: #EFF6FF !important;
   border-color: #93C5FD !important;
@@ -10257,22 +10257,69 @@ button[class*="text-emerald-700"]:hover {
   transform: translateY(-1px) !important;
 }
 
-button[class*="bg-emerald-50"] svg,
-button[class*="bg-[#ECFDF5]"] svg,
-button[class*="bg-[#ecfdf5]"] svg,
-button[class*="text-emerald-800"] svg,
-button[class*="text-emerald-700"] svg {
+button[class*="bg-emerald-50"]:not(.toast-close-btn) svg,
+button[class*="bg-[#ECFDF5]"]:not(.toast-close-btn) svg,
+button[class*="bg-[#ecfdf5]"]:not(.toast-close-btn) svg,
+button[class*="text-emerald-800"]:not(.toast-close-btn) svg,
+button[class*="text-emerald-700"]:not(.toast-close-btn) svg {
   color: #2563EB !important;
   stroke: #2563EB !important;
 }
 
+/* Dedicated Toast Close Button: Always visible, never blue */
+button.toast-close-btn,
+.toast-close-btn {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #475569 !important;
+  border-radius: 8px !important;
+  padding: 4px !important;
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.06) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  opacity: 0.9 !important;
+}
+
+button.toast-close-btn:hover,
+.toast-close-btn:hover {
+  background: #F8FAFC !important;
+  background-color: #F8FAFC !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+  opacity: 1 !important;
+  transform: scale(1.05) !important;
+}
+
+button.toast-close-btn svg,
+.toast-close-btn svg {
+  color: #475569 !important;
+  stroke: #475569 !important;
+  stroke-width: 2.2px !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+button.toast-close-btn:hover svg,
+.toast-close-btn:hover svg {
+  color: #0F172A !important;
+  stroke: #0F172A !important;
+}
+
 /* 3. Reject / Destructive Outline Buttons that were Red (Reject button on HOD / TG review) */
-button[class*="text-rose-600"],
-button[class*="text-rose-700"],
-button[class*="text-red-600"],
-button[class*="border-rose-300"],
-button[class*="border-rose-200"],
-button[class*="bg-rose-50"],
+button[class*="text-rose-600"]:not(.toast-close-btn),
+button[class*="text-rose-700"]:not(.toast-close-btn),
+button[class*="text-red-600"]:not(.toast-close-btn),
+button[class*="border-rose-300"]:not(.toast-close-btn),
+button[class*="border-rose-200"]:not(.toast-close-btn),
+button[class*="bg-rose-50"]:not(.toast-close-btn),
 button.btn-danger-outline,
 .btn-danger-outline {
   background: #FFFFFF !important;
