@@ -54,21 +54,22 @@ export default function LoginPage() {
 
     if (oauthSuccess) {
       setLoading(true);
+      const token = searchParams.get('token');
+      const refreshToken = searchParams.get('refreshToken');
       setSuccessNotice('Google verification successful! Connecting to portal session...');
-      loginWithToken()
+      loginWithToken(token, refreshToken)
         .then((user) => {
           const role = (user.role || '').toLowerCase();
-          if (user.mustChangePassword) {
-            navigate('/change-password');
-          } else if (role === 'admin') {
-            navigate('/admin');
-          } else if (role === 'hod') {
-            navigate('/hod');
-          } else if (user.isTG || role === 'teacher') {
-            navigate('/tg');
-          } else {
-            navigate('/student');
-          }
+          const target = user.mustChangePassword
+            ? '/change-password'
+            : role === 'admin'
+            ? '/admin'
+            : role === 'hod'
+            ? '/hod'
+            : user.isTG || role === 'teacher'
+            ? '/tg'
+            : '/student';
+          navigate(target, { replace: true });
         })
         .catch((err) => {
           setError(err.message || 'Failed to authenticate session with Google.');

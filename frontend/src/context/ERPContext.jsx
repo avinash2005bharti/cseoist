@@ -143,8 +143,10 @@ export function ERPProvider({ children }) {
   // Sync / Verify current user session on mount
   const checkSession = useCallback(async () => {
     try {
-      if (!getAuthToken()) {
-        await authApi.refresh();
+      const storedToken = getAuthToken();
+      const storedRefresh = localStorage.getItem('campusflow_refresh_token');
+      if (!storedToken) {
+        await authApi.refresh(storedRefresh);
       }
       const res = await authApi.getMe();
       const user = res?.data || res;
@@ -160,8 +162,7 @@ export function ERPProvider({ children }) {
       setCurrentRole(effectiveRole);
       localStorage.setItem('campusflow_user', JSON.stringify(user));
       localStorage.setItem('campusflow_role', effectiveRole);
-    } catch (err) {
-      console.warn('Session verification failed, logging out');
+    } catch {
       clearAuthToken();
       setIsAuthenticated(false);
       setCurrentUser(null);
@@ -472,6 +473,9 @@ export function ERPProvider({ children }) {
     const isFaculty = user.role === 'TEACHER' || user.role === 'HOD';
     const effectiveRole = isFaculty && user.isTG ? 'tg' : role;
 
+    if (data.refreshToken) {
+      localStorage.setItem('campusflow_refresh_token', data.refreshToken);
+    }
     setToken(data.accessToken);
     setCurrentUser(user);
     setCurrentRole(effectiveRole);
@@ -484,9 +488,11 @@ export function ERPProvider({ children }) {
     return user;
   };
 
-  const loginWithToken = async (accessToken) => {
-    const refreshed = accessToken ? null : await authApi.refresh();
-    const sessionToken = accessToken || refreshed?.accessToken;
+  const loginWithToken = async (accessToken, refreshToken) => {
+    if (refreshToken) {
+      localStorage.setItem('campusflow_refresh_token', refreshToken);
+    }
+    const sessionToken = accessToken || (await authApi.refresh())?.accessToken;
     if (!sessionToken) {
       throw new Error('Unable to establish the Google sign-in session');
     }

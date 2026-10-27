@@ -6,6 +6,9 @@ export const authApi = {
     if (res?.data?.accessToken) {
       setAuthToken(res.data.accessToken);
     }
+    if (res?.data?.refreshToken) {
+      localStorage.setItem('campusflow_refresh_token', res.data.refreshToken);
+    }
     return res.data;
   },
 
@@ -14,17 +17,22 @@ export const authApi = {
     return res.data;
   },
 
-  refresh: async () => {
-    const res = await apiClient.post('/auth/refresh');
+  refresh: async (refreshToken) => {
+    const tokenToSend = refreshToken || localStorage.getItem('campusflow_refresh_token');
+    const res = await apiClient.post('/auth/refresh', tokenToSend ? { refreshToken: tokenToSend } : {});
     if (res?.data?.accessToken) {
       setAuthToken(res.data.accessToken);
+    }
+    if (res?.data?.refreshToken) {
+      localStorage.setItem('campusflow_refresh_token', res.data.refreshToken);
     }
     return res.data;
   },
 
   logout: async () => {
     try {
-      await apiClient.post('/auth/logout');
+      const storedRefresh = localStorage.getItem('campusflow_refresh_token');
+      await apiClient.post('/auth/logout', storedRefresh ? { refreshToken: storedRefresh } : {});
     } finally {
       clearAuthToken();
     }

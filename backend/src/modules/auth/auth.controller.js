@@ -33,6 +33,7 @@ export const login = asyncHandler(async (req, res) => {
   return sendSuccess(res, {
     user: result.user,
     accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
   });
 });
 
@@ -47,6 +48,7 @@ export const refresh = asyncHandler(async (req, res) => {
 
   return sendSuccess(res, {
     accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
   });
 });
 
@@ -211,7 +213,12 @@ export const handleGoogleCallback = asyncHandler(async (req, res) => {
 
     res.cookie('refreshToken', result.refreshToken, REFRESH_COOKIE_OPTIONS);
 
-    return res.redirect(`${clientUrl}/login?oauth=success`);
+    const redirectUrl = new URL(`${clientUrl}/login`);
+    redirectUrl.searchParams.set('oauth', 'success');
+    redirectUrl.searchParams.set('token', result.accessToken);
+    redirectUrl.searchParams.set('refreshToken', result.refreshToken);
+
+    return res.redirect(redirectUrl.toString());
   } catch (err) {
     console.error('❌ Google OAuth sign-in error:', err.message);
     const errorMsg = err.message || 'Google authentication failed.';

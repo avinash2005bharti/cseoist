@@ -69,8 +69,17 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshUrl = `${apiBaseUrl.replace(/\/+$/, '')}/auth/refresh`;
-        const res = await axios.post(refreshUrl, {}, { withCredentials: true });
+        const storedRefresh = localStorage.getItem('campusflow_refresh_token');
+        const res = await axios.post(
+          refreshUrl,
+          storedRefresh ? { refreshToken: storedRefresh } : {},
+          { withCredentials: true }
+        );
         const newToken = res.data?.data?.accessToken;
+        const newRefreshToken = res.data?.data?.refreshToken;
+        if (newRefreshToken) {
+          localStorage.setItem('campusflow_refresh_token', newRefreshToken);
+        }
         if (newToken) {
           setAuthToken(newToken);
           processQueue(null, newToken);
@@ -106,6 +115,7 @@ export const setAuthToken = (token) => {
 export const clearAuthToken = () => {
   currentToken = null;
   localStorage.removeItem('campusflow_token');
+  localStorage.removeItem('campusflow_refresh_token');
   localStorage.removeItem('campusflow_user');
   localStorage.removeItem('campusflow_role');
   localStorage.removeItem('campusflow_hod_rejected_ids');
