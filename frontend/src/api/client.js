@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-let currentToken = localStorage.getItem('campusflow_token') || null;
+let currentToken = null;
 
 const apiBaseUrl =
   import.meta.env.VITE_API_URL ||
@@ -96,19 +96,11 @@ apiClient.interceptors.response.use(
 );
 
 export const getAuthToken = () => {
-  if (!currentToken) {
-    currentToken = localStorage.getItem('campusflow_token') || null;
-  }
   return currentToken;
 };
 
 export const setAuthToken = (token) => {
   currentToken = token;
-  if (token) {
-    localStorage.setItem('campusflow_token', token);
-  } else {
-    localStorage.removeItem('campusflow_token');
-  }
 };
 
 export const clearAuthToken = () => {

@@ -218,8 +218,16 @@ export const initReminderJob = () => {
   return { middayCronTask, afternoonCronTask };
 };
 
+export const stopReminderJob = () => {
+  middayCronTask?.stop();
+  afternoonCronTask?.stop();
+  middayCronTask = null;
+  afternoonCronTask = null;
+};
+
 export default {
   resolveReminderRecipients,
   runAttendanceReminder,
   initReminderJob,
+  stopReminderJob,
 };

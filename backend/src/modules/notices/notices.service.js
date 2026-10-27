@@ -77,7 +77,9 @@ export const createNotice = async (data, user) => {
         link: '/dashboard',
       }));
 
-      await Notification.insertMany(notificationDocs, { ordered: false });
+      for (let index = 0; index < notificationDocs.length; index += 500) {
+        await Notification.insertMany(notificationDocs.slice(index, index + 500), { ordered: false });
+      }
     }
 
     // Record audit log

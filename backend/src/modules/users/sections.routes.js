@@ -12,14 +12,24 @@ import ApiError from '../../utils/ApiError.js';
 
 const router = Router();
 
+router.use(auth);
+
 router.get(
   '/',
+  authorize('ADMIN', 'HOD', 'TG', 'TEACHER', 'STUDENT'),
   asyncHandler(async (req, res) => {
     const filter = {};
     if (req.query.department) {
+      if (req.user.role === 'HOD' && req.user.departmentId && req.query.department.toString() !== req.user.departmentId.toString()) {
+        throw ApiError.forbidden('You can only view sections in your department');
+      }
       filter.department = req.query.department;
+    } else if (req.user.role === 'HOD' || (req.user.role !== 'ADMIN' && req.user.departmentId)) {
+      filter.department = req.user.departmentId;
     }
-    const sections = await Section.find(filter).populate('department').sort({ semester: 1, name: 1, code: 1 });
+    const sections = await Section.find(filter)
+      .populate('department', 'name code')
+      .sort({ semester: 1, name: 1, code: 1 });
 
     const sectionIds = sections.map((s) => s._id);
 
@@ -37,7 +47,8 @@ router.get(
       isActive: true,
     }).populate({
       path: 'tg',
-      populate: { path: 'user', select: 'name email phone' },
+      select: '_id user',
+      populate: { path: 'user', select: 'name' },
     });
     const groupMap = new Map();
     activeGroups.forEach((g) => {
@@ -59,8 +70,6 @@ router.get(
     return sendSuccess(res, enriched);
   })
 );
-
-router.use(auth);
 
 router.post(
   '/',
@@ -318,4 +327,3 @@ router.post(
 );
 
 export default router;
-

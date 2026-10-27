@@ -1,14 +1,24 @@
 import authService from './auth.service.js';
+import crypto from 'node:crypto';
 import { sendSuccess } from '../../utils/response.js';
 import asyncHandler from '../../utils/asyncHandler.js';
 import env from '../../config/env.js';
 
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: env.NODE_ENV === 'production',
+  secure: env.COOKIE_SECURE || env.NODE_ENV === 'production',
   sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
   maxAge: env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
   path: '/',
+};
+
+const OAUTH_STATE_COOKIE = 'google_oauth_state';
+const OAUTH_STATE_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: env.COOKIE_SECURE || env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge: 10 * 60 * 1000,
+  path: '/auth/google/callback',
 };
 
 export const login = asyncHandler(async (req, res) => {
@@ -116,6 +126,8 @@ export const initiateGoogleAuth = asyncHandler(async (req, res) => {
   }
 
   const redirectUri = getGoogleRedirectUri(req);
+  const state = crypto.randomBytes(32).toString('base64url');
+  res.cookie(OAUTH_STATE_COOKIE, state, OAUTH_STATE_COOKIE_OPTIONS);
   const params = new URLSearchParams({
     client_id: env.GOOGLE_CLIENT_ID,
     redirect_uri: redirectUri,
@@ -123,6 +135,7 @@ export const initiateGoogleAuth = asyncHandler(async (req, res) => {
     scope: 'openid email profile',
     access_type: 'offline',
     prompt: 'select_account',
+    state,
   });
 
   const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -130,8 +143,10 @@ export const initiateGoogleAuth = asyncHandler(async (req, res) => {
 });
 
 export const handleGoogleCallback = asyncHandler(async (req, res) => {
-  const { code, error } = req.query;
+  const { code, error, state } = req.query;
   const clientUrl = env.CLIENT_URL || 'http://localhost:5173';
+  const storedState = req.cookies?.[OAUTH_STATE_COOKIE];
+  res.clearCookie(OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_OPTIONS);
 
   if (error) {
     console.error('❌ Google OAuth callback error:', error);
@@ -140,6 +155,15 @@ export const handleGoogleCallback = asyncHandler(async (req, res) => {
 
   if (!code) {
     return res.redirect(`${clientUrl}/login?error=${encodeURIComponent('Missing authorization code from Google.')}`);
+  }
+
+  if (
+    !storedState ||
+    typeof state !== 'string' ||
+    state.length !== storedState.length ||
+    !crypto.timingSafeEqual(Buffer.from(state), Buffer.from(storedState))
+  ) {
+    return res.redirect(`${clientUrl}/login?error=${encodeURIComponent('Invalid or expired Google sign-in session. Please retry.')}`);
   }
 
   const redirectUri = getGoogleRedirectUri(req);
@@ -187,10 +211,7 @@ export const handleGoogleCallback = asyncHandler(async (req, res) => {
 
     res.cookie('refreshToken', result.refreshToken, REFRESH_COOKIE_OPTIONS);
 
-    const role = (result.user.role || '').toLowerCase();
-    return res.redirect(
-      `${clientUrl}/login?google_token=${encodeURIComponent(result.accessToken)}&role=${encodeURIComponent(role)}&isTG=${result.user.isTG ? 'true' : 'false'}`
-    );
+    return res.redirect(`${clientUrl}/login?oauth=success`);
   } catch (err) {
     console.error('❌ Google OAuth sign-in error:', err.message);
     const errorMsg = err.message || 'Google authentication failed.';
@@ -214,4 +235,3 @@ export default {
   initiateGoogleAuth,
   handleGoogleCallback,
 };
-

@@ -247,9 +247,6 @@ export const updateProfile = async (userId, data) => {
     if (!isMatch) {
       throw ApiError.badRequest('Current password does not match');
     }
-    if (data.newPassword.length < 6) {
-      throw ApiError.badRequest('New password must be at least 6 characters long');
-    }
     user.passwordHash = await User.hashPassword(data.newPassword);
     user.mustChangePassword = false;
   }
@@ -421,8 +418,12 @@ export const registerStudent = async ({
     throw ApiError.badRequest('Valid email address is required');
   }
 
-  // If OTP is provided, verify against database and memory
-  if (otp) {
+  if (!otp) {
+    throw ApiError.badRequest('A valid 6-digit verification code is required');
+  }
+
+  // Verify the required OTP against database and memory
+  {
     const cleanOtp = String(otp).replace(/\D/g, '').trim();
     const hashedInput = hashOtp(cleanOtp);
     const dbOtp = await Otp.findOne({

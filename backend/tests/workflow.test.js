@@ -199,6 +199,7 @@ describe('7. Student Self-Registration Validation (SEC-02, SEC-08)', () => {
         name: 'Avinash Bharti',
         email: 'avinash@college.edu',
         password: 'Password@123',
+        otp: '123456',
         rollNumber: '0105CS241101',
         section: 'B',
         semester: 5,
@@ -754,7 +755,6 @@ describe('17. Admin Consideration Window Toggle & 24/7 Testing Mode', () => {
     assert.equal(authorizedToggleRoles.includes('STUDENT'), false);
   });
 });
-
 
 
 

@@ -86,6 +86,9 @@ export const uploadDirect = async (file, userId) => {
   if (file.size > MAX_FILE_SIZE) {
     throw ApiError.badRequest('File size exceeds maximum allowed limit of 5 MB');
   }
+  if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    throw ApiError.badRequest('Invalid file type. Only PDF, JPG, and PNG are allowed.');
+  }
 
   const ik = getImageKit();
   if (!ik) {
@@ -107,7 +110,7 @@ export const uploadDirect = async (file, userId) => {
       fileName: `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`,
       folder: `/campusflow-erp/uploads/${userId || 'general'}`,
       useUniqueFileName: true,
-      isPrivateFile: false,
+      isPrivateFile: true,
     });
 
     return {
@@ -116,7 +119,7 @@ export const uploadDirect = async (file, userId) => {
       name: file.originalname,
       mimeType: file.mimetype,
       size: file.size,
-      url: uploadRes.url,
+      url: '',
       uploadedAt: new Date(),
     };
   } catch (err) {
@@ -160,13 +163,6 @@ export const generateSignedUrl = async (fileId, user) => {
   }
 
   // 1. If stored attachment has a direct valid URL, return it
-  if (targetAttachment?.url && targetAttachment.url.startsWith('http')) {
-    return {
-      url: targetAttachment.url,
-      expiresIn: 3600,
-    };
-  }
-
   const ik = getImageKit();
   if (!ik) {
     return {
@@ -248,4 +244,3 @@ export default {
   generateSignedUrl,
   deleteFile,
 };
-

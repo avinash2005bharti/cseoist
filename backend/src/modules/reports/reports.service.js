@@ -10,6 +10,8 @@ import User from '../../models/User.js';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.js';
 import { getTodayIST } from '../../utils/dates.js';
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export const getDashboardSummary = async (user) => {
   const role = user.role;
   const todayIST = getTodayIST();
@@ -635,7 +637,9 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
     studentScope.semester = targetSemester;
   }
   if (targetSection && targetSection !== 'ALL') {
-    const cleanLetter = targetSection.replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim();
+    const cleanLetter = escapeRegex(
+      targetSection.replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim()
+    );
     const matchingSections = await Section.find({
       $or: [
         { code: `CSE-${cleanLetter}-S${targetSemester || ''}` },
@@ -960,7 +964,9 @@ export const exportLeavesToExcel = async (query, res, user) => {
     studentScope.semester = targetSemester;
   }
   if (targetSection && targetSection !== 'ALL') {
-    const cleanLetter = targetSection.replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim();
+    const cleanLetter = escapeRegex(
+      targetSection.replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim()
+    );
     const matchingSections = await Section.find({
       $or: [
         { code: `CSE-${cleanLetter}-S${targetSemester || ''}` },

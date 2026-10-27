@@ -8,6 +8,7 @@ import {
   verifyOtpSchema,
   registerStudentSchema,
   registerTeacherSchema,
+  profileUpdateSchema,
 } from './auth.schema.js';
 import { validateBody } from '../../middleware/validate.js';
 import auth from '../../middleware/auth.js';
@@ -30,7 +31,7 @@ router.post('/reset-password', authLimiter, validateBody(resetPasswordSchema), a
 router.post('/refresh', authController.refresh);
 router.post('/logout', auth, authController.logout);
 router.post('/change-password', auth, validateBody(changePasswordSchema), authController.changePassword);
-router.patch('/profile', auth, authController.updateProfile);
+router.patch('/profile', auth, validateBody(profileUpdateSchema), authController.updateProfile);
 router.get('/me', auth, authController.getMe);
 
 export default router;

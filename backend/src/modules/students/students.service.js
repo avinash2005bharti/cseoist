@@ -11,6 +11,15 @@ import Notification from '../../models/Notification.js';
 import ApiError from '../../utils/ApiError.js';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.js';
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const normalizeSearch = (value) => {
+  const search = String(value || '').trim();
+  if (search.length > 100) {
+    throw ApiError.badRequest('Search text must be 100 characters or fewer');
+  }
+  return search;
+};
+
 export const listStudents = async (query, actorUser = null) => {
   const { page, limit, skip } = parsePagination(query);
   const andConditions = [];
@@ -50,7 +59,7 @@ export const listStudents = async (query, actorUser = null) => {
 
   // If search query is provided, search rollNumber, enrollmentNumber or matching user IDs
   if (query.search) {
-    const searchRegex = new RegExp(query.search, 'i');
+    const searchRegex = new RegExp(escapeRegex(normalizeSearch(query.search)), 'i');
     const matchingUsers = await User.find({
       role: 'STUDENT',
       $or: [{ name: searchRegex }, { email: searchRegex }],
@@ -330,7 +339,7 @@ export const deleteStudent = async (id) => {
 };
 
 export const searchPeers = async (query = {}, user = null) => {
-  const search = (query.search || query.q || '').trim();
+  const search = normalizeSearch(query.search || query.q);
   const limit = Math.min(parseInt(query.limit, 10) || 1000, 1000);
   const filter = {};
 
@@ -346,7 +355,7 @@ export const searchPeers = async (query = {}, user = null) => {
   }
 
   if (search) {
-    const searchRegex = new RegExp(search, 'i');
+    const searchRegex = new RegExp(escapeRegex(search), 'i');
     const matchingUsers = await User.find({
       role: 'STUDENT',
       isActive: true,
@@ -388,4 +397,3 @@ export default {
   deleteStudent,
   searchPeers,
 };
-

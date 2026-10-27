@@ -43,7 +43,7 @@ export default function LoginPage() {
   // Listen for Google OAuth callback parameters
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const googleToken = searchParams.get('google_token');
+    const oauthSuccess = searchParams.get('oauth') === 'success';
     const googleErr = searchParams.get('error');
 
     if (googleErr) {
@@ -52,10 +52,10 @@ export default function LoginPage() {
       return;
     }
 
-    if (googleToken) {
+    if (oauthSuccess) {
       setLoading(true);
       setSuccessNotice('Google verification successful! Connecting to portal session...');
-      loginWithToken(googleToken)
+      loginWithToken()
         .then((user) => {
           const role = (user.role || '').toLowerCase();
           if (user.mustChangePassword) {

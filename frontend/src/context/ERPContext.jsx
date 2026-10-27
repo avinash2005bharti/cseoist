@@ -142,14 +142,10 @@ export function ERPProvider({ children }) {
 
   // Sync / Verify current user session on mount
   const checkSession = useCallback(async () => {
-    const storedToken = getAuthToken();
-    if (!storedToken) {
-      setLoadingAuth(false);
-      setIsAuthenticated(false);
-      return;
-    }
-
     try {
+      if (!getAuthToken()) {
+        await authApi.refresh();
+      }
       const res = await authApi.getMe();
       const user = res?.data || res;
       setCurrentUser(user);
@@ -489,8 +485,13 @@ export function ERPProvider({ children }) {
   };
 
   const loginWithToken = async (accessToken) => {
-    setAuthToken(accessToken);
-    setToken(accessToken);
+    const refreshed = accessToken ? null : await authApi.refresh();
+    const sessionToken = accessToken || refreshed?.accessToken;
+    if (!sessionToken) {
+      throw new Error('Unable to establish the Google sign-in session');
+    }
+    setAuthToken(sessionToken);
+    setToken(sessionToken);
     const res = await authApi.getMe();
     const user = res?.data || res;
     const role = (user.role || '').toLowerCase();

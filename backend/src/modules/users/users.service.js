@@ -16,6 +16,8 @@ import { sendTemporaryPasswordEmail } from '../../utils/sendEmail.js';
 import { emitNotification } from '../../sockets/emitters.js';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.js';
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export const listUsers = async (query) => {
   const { page, limit, skip } = parsePagination(query);
   const filter = {};
@@ -24,9 +26,14 @@ export const listUsers = async (query) => {
     filter.role = query.role.toUpperCase();
   }
   if (query.search) {
+    const search = String(query.search).trim();
+    if (search.length > 100) {
+      throw ApiError.badRequest('Search text must be 100 characters or fewer');
+    }
+    const searchRegex = new RegExp(escapeRegex(search), 'i');
     filter.$or = [
-      { name: { $regex: query.search, $options: 'i' } },
-      { email: { $regex: query.search, $options: 'i' } },
+      { name: searchRegex },
+      { email: searchRegex },
     ];
   }
   if (query.isActive !== undefined) {
@@ -936,4 +943,3 @@ export default {
   resetPassword,
   updateStatus,
 };
-

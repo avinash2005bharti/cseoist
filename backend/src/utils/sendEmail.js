@@ -66,15 +66,12 @@ export const sendEmail = async ({ to, subject, html, text, recipientName = 'User
     }
   }
 
-  // 3. Fallback: Prominent development console delivery
-  console.log('\n================== 📧 [CAMPUSFLOW / BREVO OTP SERVICE] ==================');
-  console.log(`To: ${to} (${recipientName})`);
-  console.log(`Subject: ${subject}`);
-  console.log(`Message Body:\n${text || html}`);
-  console.log('Brevo Setup Tip: Authorise current IP at https://app.brevo.com/security/authorised_ips');
-  console.log('========================================================================\n');
+  if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
+    console.warn(`[Email] Delivery unavailable; simulated delivery for ${to}`);
+    return { success: true, simulated: true };
+  }
 
-  return { success: true, simulated: true };
+  throw new Error('Email delivery is not configured or available');
 };
 
 export const sendOtpEmail = async (email, otp, name = 'Student') => {
@@ -149,4 +146,3 @@ export const sendTemporaryPasswordEmail = async (email, tempPassword, name = 'St
 
   return sendEmail({ to: email, subject, html, text, recipientName: name });
 };
-

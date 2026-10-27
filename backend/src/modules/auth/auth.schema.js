@@ -49,7 +49,10 @@ export const registerStudentSchema = z.object({
   batch: z.string().trim().nullish(),
   phone: z.union([z.string(), z.number()]).nullish().transform((v) => (v != null ? String(v).trim() : null)),
   enrollmentYear: z.union([z.string(), z.number()]).nullish(),
-  otp: z.union([z.string(), z.number()]).nullish().transform((v) => (v != null ? String(v).trim() : undefined)),
+  otp: z
+    .union([z.string(), z.number()])
+    .transform((v) => String(v).trim())
+    .refine((value) => /^\d{6}$/.test(value), 'A valid 6-digit verification code is required'),
 });
 
 export const registerTeacherSchema = z.object({
@@ -66,6 +69,20 @@ export const registerTeacherSchema = z.object({
   phone: z.union([z.string(), z.number()]).nullish().transform((v) => (v != null ? String(v).trim() : null)),
 });
 
+export const profileUpdateSchema = z
+  .object({
+    email: z.string().email('Please enter a valid email address').toLowerCase().trim().optional(),
+    phone: z.union([z.string(), z.number()]).nullish().transform((v) => (v == null ? null : String(v).trim())),
+    currentPassword: z.string().min(1).optional(),
+    newPassword: z
+      .string()
+      .min(8, 'New password must be at least 8 characters long')
+      .regex(/[A-Z]/, 'New password must contain at least one uppercase letter')
+      .regex(/[0-9]/, 'New password must contain at least one number')
+      .optional(),
+  })
+  .strict();
+
 export default {
   loginSchema,
   changePasswordSchema,
@@ -74,5 +91,5 @@ export default {
   verifyOtpSchema,
   registerStudentSchema,
   registerTeacherSchema,
+  profileUpdateSchema,
 };
-

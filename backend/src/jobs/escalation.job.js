@@ -215,7 +215,15 @@ export const initEscalationJob = () => {
   return cronTask;
 };
 
+export const stopEscalationJob = () => {
+  if (cronTask) {
+    cronTask.stop();
+    cronTask = null;
+  }
+};
+
 export default {
   initEscalationJob,
+  stopEscalationJob,
   runEscalationScan,
 };

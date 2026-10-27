@@ -14,6 +14,14 @@ export const authApi = {
     return res.data;
   },
 
+  refresh: async () => {
+    const res = await apiClient.post('/auth/refresh');
+    if (res?.data?.accessToken) {
+      setAuthToken(res.data.accessToken);
+    }
+    return res.data;
+  },
+
   logout: async () => {
     try {
       await apiClient.post('/auth/logout');

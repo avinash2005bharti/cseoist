@@ -14,33 +14,31 @@ export const connectDB = async () => {
   const mongoUri = env.MONGODB_URI;
 
   if (!mongoUri || mongoUri.includes('<username>') || mongoUri.includes('<password>')) {
-    console.warn('\n⚠️ WARNING: MONGO_URI is using placeholder values or is not set properly in .env.');
+    throw new Error('MONGODB_URI must be configured with a real database connection string');
+  }
+  if (env.NODE_ENV === 'production' && /^mongodb:\/\/(localhost|127\.0\.0\.1)/i.test(mongoUri)) {
+    throw new Error('Production MONGODB_URI must not point to localhost');
   }
 
-  try {
-    const conn = await mongoose.connect(mongoUri);
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    return conn;
-  } catch (error) {
-    // If local DNS fails with querySrv ECONNREFUSED, retry once with public DNS
-    if (error.code === 'ECONNREFUSED' && error.syscall === 'querySrv') {
-      try {
-        console.warn('⚠️ MongoDB SRV lookup failed on local DNS. Retrying with Google/Cloudflare DNS (8.8.8.8)...');
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const conn = await mongoose.connect(mongoUri);
+      console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+      return conn;
+    } catch (error) {
+      lastError = error;
+      console.error(`❌ MongoDB Connection Attempt ${attempt}/3: ${error.message}`);
+      if (error.code === 'ECONNREFUSED' && error.syscall === 'querySrv') {
         dns.setServers(['8.8.8.8', '1.1.1.1']);
-        const conn = await mongoose.connect(mongoUri);
-        console.log(`✅ MongoDB Connected (via DNS fallback): ${conn.connection.host}`);
-        return conn;
-      } catch (retryError) {
-        console.error(`❌ MongoDB Connection Retry Error: ${retryError.message}`);
+      }
+      if (attempt < 3) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
       }
     }
-
-    console.error(`❌ MongoDB Connection Error: ${error.message}`);
-    // Don't exit process in development to keep server up if mongo connection is retried or offline
-    if (env.NODE_ENV === 'production') {
-      process.exit(1);
-    }
   }
+
+  throw lastError;
 };
 
 export default connectDB;
