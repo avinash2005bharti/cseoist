@@ -179,14 +179,15 @@ export function ERPProvider({ children }) {
   const refreshNotifications = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const res = await notificationApi.getNotifications({ limit: 15 });
+      const scope = currentUser?.sharedTeacher ? 'teacher' : currentRole;
+      const res = await notificationApi.getNotifications({ limit: 15, scope });
       const list = res?.data || [];
       setNotifications(list);
       setUnreadNotifCount(res?.meta?.unreadCount || list.filter((n) => !n.isRead).length);
     } catch {
       // ignore
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentRole, currentUser]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -366,6 +367,10 @@ export function ERPProvider({ children }) {
       addToast('Not Supported', 'Web Push notifications are not supported in this browser.', 'warning');
       return false;
     }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      addToast('Not Supported', 'This browser does not support PWA push notifications.', 'warning');
+      return false;
+    }
 
     try {
       const permission = await Notification.requestPermission();
@@ -382,33 +387,35 @@ export function ERPProvider({ children }) {
         }
       }
 
-      if (reg && 'pushManager' in reg) {
-        try {
-          const vapidRes = await notificationApi.getVapidPublicKey();
-          const vapidKey = vapidRes?.data?.publicKey || vapidRes?.publicKey;
-
-          if (vapidKey) {
-            let sub = await reg.pushManager.getSubscription();
-            if (!sub) {
-              sub = await reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidKey),
-              });
-            }
-
-            const rawJson = sub.toJSON();
-            await notificationApi.subscribePush({
-              endpoint: sub.endpoint,
-              keys: {
-                p256dh: rawJson.keys?.p256dh,
-                auth: rawJson.keys?.auth,
-              },
-            });
-          }
-        } catch (pushErr) {
-          console.warn('[PWA] Push backend registration notice:', pushErr.message);
-        }
+      if (!reg || !('pushManager' in reg)) {
+        throw new Error('Service worker push manager is unavailable');
       }
+
+      const vapidRes = await notificationApi.getVapidPublicKey();
+      const vapidKey = vapidRes?.data?.publicKey || vapidRes?.publicKey;
+      if (!vapidKey) {
+        throw new Error('Push notifications are not configured on the server');
+      }
+
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
+        });
+      }
+
+      const rawJson = sub.toJSON();
+      if (!rawJson.keys?.p256dh || !rawJson.keys?.auth) {
+        throw new Error('Browser returned an incomplete push subscription');
+      }
+      await notificationApi.subscribePush({
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: rawJson.keys.p256dh,
+          auth: rawJson.keys.auth,
+        },
+      });
 
       setPwaPushEnabled(true);
 
@@ -427,8 +434,9 @@ export function ERPProvider({ children }) {
       return true;
     } catch (err) {
       console.warn('PWA notification setup error:', err.message);
-      setPwaPushEnabled(true);
-      return true;
+      setPwaPushEnabled(false);
+      addToast('PWA Setup Failed', err.message || 'Could not register this device for push notifications.', 'danger');
+      return false;
     }
   }, [addToast, showSystemNotification]);
 

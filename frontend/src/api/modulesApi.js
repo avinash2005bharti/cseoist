@@ -256,12 +256,12 @@ export const notificationApi = {
     return apiClient.get('/notifications', { params });
   },
 
-  markAsRead: async (id) => {
-    return apiClient.patch(`/notifications/${id}/read`);
+  markAsRead: async (id, scope) => {
+    return apiClient.patch(`/notifications/${id}/read`, null, { params: { scope } });
   },
 
-  markAllAsRead: async () => {
-    return apiClient.patch('/notifications/read-all');
+  markAllAsRead: async (scope) => {
+    return apiClient.patch('/notifications/read-all', null, { params: { scope } });
   },
 
   getConsiderationWindow: async () => {

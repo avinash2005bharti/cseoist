@@ -3,17 +3,20 @@ import { sendSuccess } from '../../utils/response.js';
 import asyncHandler from '../../utils/asyncHandler.js';
 
 export const getNotifications = asyncHandler(async (req, res) => {
-  const result = await notificationsService.getUserNotifications(req.user.id, req.query);
+  const scope = notificationsService.getNotificationScope(req.user, req.query.scope);
+  const result = await notificationsService.getUserNotifications(req.user.id, req.query, scope);
   return sendSuccess(res, result.notifications, result.meta);
 });
 
 export const markRead = asyncHandler(async (req, res) => {
-  const notif = await notificationsService.markAsRead(req.params.id, req.user.id);
+  const scope = notificationsService.getNotificationScope(req.user, req.query.scope);
+  const notif = await notificationsService.markAsRead(req.params.id, req.user.id, scope);
   return sendSuccess(res, notif);
 });
 
 export const markAllRead = asyncHandler(async (req, res) => {
-  const result = await notificationsService.markAllAsRead(req.user.id);
+  const scope = notificationsService.getNotificationScope(req.user, req.query.scope);
+  const result = await notificationsService.markAllAsRead(req.user.id, scope);
   return sendSuccess(res, result);
 });
 
@@ -56,4 +59,3 @@ export default {
   getConsiderationWindow,
   sendReminderNow,
 };
-

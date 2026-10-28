@@ -5,18 +5,42 @@ import ApiError from '../../utils/ApiError.js';
 import { getISTTime, isWithinConsiderationWindow } from '../../utils/dates.js';
 import env from '../../config/env.js';
 
-export const getUserNotifications = async (userId, query) => {
-  const { page, limit, skip } = parsePagination(query);
-  const filter = { user: userId };
+const normalizeScope = (scope, fallback = 'user') => {
+  const normalized = String(scope || fallback).toLowerCase();
+  return ['student', 'teacher', 'tg', 'hod', 'admin'].includes(normalized) ? normalized : fallback;
+};
 
-  if (query.unread === 'true' || query.unread === true) {
-    filter.isRead = false;
-  }
+export const getNotificationScope = (user, requestedScope) => {
+  const fallback = user.sharedTeacher ? 'teacher' : String(user.role || 'user').toLowerCase();
+  const scope = normalizeScope(requestedScope, fallback);
+  const allowedScopes = user.sharedTeacher
+    ? ['teacher']
+    : user.role === 'ADMIN'
+    ? ['admin']
+    : user.role === 'HOD'
+    ? ['hod', ...(user.isTG ? ['tg', 'teacher'] : [])]
+    : user.role === 'TEACHER'
+    ? ['teacher', ...(user.isTG ? ['tg'] : [])]
+    : ['student'];
+
+  return allowedScopes.includes(scope) ? scope : fallback;
+};
+
+export const getUserNotifications = async (userId, query, scope = 'user') => {
+  const { page, limit, skip } = parsePagination(query);
+  const unreadFilter = {
+    user: userId,
+    isRead: false,
+    readStates: { $not: { $elemMatch: { scope } } },
+  };
 
   const [notifications, total, unreadCount] = await Promise.all([
-    Notification.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
-    Notification.countDocuments(filter),
-    Notification.countDocuments({ user: userId, isRead: false }),
+    Notification.find(query.unread === 'true' || query.unread === true ? unreadFilter : { user: userId })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }),
+    Notification.countDocuments(query.unread === 'true' || query.unread === true ? unreadFilter : { user: userId }),
+    Notification.countDocuments(unreadFilter),
   ]);
 
   const meta = buildPaginationMeta(total, page, limit);
@@ -28,26 +52,39 @@ export const getUserNotifications = async (userId, query) => {
   };
 };
 
-export const markAsRead = async (id, userId) => {
+export const markAsRead = async (id, userId, scope = 'user') => {
   const notification = await Notification.findOne({ _id: id, user: userId });
   if (!notification) {
     throw ApiError.notFound('Notification not found');
   }
 
-  notification.isRead = true;
-  notification.readAt = new Date();
+  const readAt = new Date();
+  const existingState = notification.readStates.find((state) => state.scope === scope);
+  if (existingState) {
+    existingState.readAt = readAt;
+  } else {
+    notification.readStates.push({ scope, readAt });
+  }
   await notification.save();
 
   return notification;
 };
 
-export const markAllAsRead = async (userId) => {
-  const result = await Notification.updateMany(
-    { user: userId, isRead: false },
-    { $set: { isRead: true, readAt: new Date() } }
-  );
+export const markAllAsRead = async (userId, scope = 'user') => {
+  const notifications = await Notification.find({
+    user: userId,
+    isRead: false,
+    readStates: { $not: { $elemMatch: { scope } } },
+  });
+  const readAt = new Date();
+  for (const notification of notifications) {
+    notification.readStates.push({ scope, readAt });
+  }
+  if (notifications.length > 0) {
+    await Notification.bulkSave(notifications);
+  }
 
-  return { modifiedCount: result.modifiedCount };
+  return { modifiedCount: notifications.length };
 };
 
 export const savePushSubscription = async (userId, subscription, userAgent = '') => {
@@ -125,6 +162,7 @@ export const triggerReminderManually = async (slot = 'MIDDAY', user) => {
 
 export default {
   getUserNotifications,
+  getNotificationScope,
   markAsRead,
   markAllAsRead,
   savePushSubscription,

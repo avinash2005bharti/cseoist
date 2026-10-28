@@ -48,12 +48,16 @@ export const auth = async (req, res, next) => {
       const sharedTeacherAllowedPaths = new Set([
         '/api/v1/auth/me',
         '/api/v1/auth/logout',
+        '/api/v1/notifications',
+        '/api/v1/notifications/read-all',
         '/api/v1/considerations/teacher-approved',
         '/api/v1/notifications/push-subscribe',
         '/api/v1/notifications/push-unsubscribe',
       ]);
       const requestPath = req.originalUrl.split('?')[0];
-      if (!sharedTeacherAllowedPaths.has(requestPath)) {
+      const isSharedTeacherNotificationRead = requestPath.startsWith('/api/v1/notifications/')
+        && requestPath.endsWith('/read');
+      if (!sharedTeacherAllowedPaths.has(requestPath) && !isSharedTeacherNotificationRead) {
         return next(ApiError.forbidden('Shared Teacher access is limited to approved consideration records'));
       }
       return next();

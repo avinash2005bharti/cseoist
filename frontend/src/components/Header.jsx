@@ -73,7 +73,7 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
     setExpandedNotifId(expandedNotifId === notif._id ? null : notif._id);
     if (!notif.isRead) {
       try {
-        await notificationApi.markAsRead(notif._id);
+        await notificationApi.markAsRead(notif._id, currentUser?.sharedTeacher ? 'teacher' : currentRole);
         refreshNotifications();
       } catch {
         // ignore
@@ -83,7 +83,7 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
 
   const handleMarkAllRead = async () => {
     try {
-      await notificationApi.markAllAsRead();
+      await notificationApi.markAllAsRead(currentUser?.sharedTeacher ? 'teacher' : currentRole);
       refreshNotifications();
     } catch {
       // ignore

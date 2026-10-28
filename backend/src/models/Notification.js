@@ -34,6 +34,21 @@ const notificationSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    readStates: {
+      type: [
+        {
+          scope: {
+            type: String,
+            required: true,
+          },
+          readAt: {
+            type: Date,
+            required: true,
+          },
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true,
