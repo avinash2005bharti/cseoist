@@ -133,18 +133,3 @@ npm test
 ```
 
 ---
-
-## 📡 API Health Check
-```
-GET /api/v1/health
-```
-Response:
-```json
-{
-  "status": "ok",
-  "timestamp": "2026-10-12T14:15:00.000Z",
-  "service": "CampusFlow Lite API",
-  "version": "1.0.0"
-}
-```
-For complete endpoint details, see [docs/API.md](file:///c:/Users/HP/OneDrive/Desktop/consideration%20management/backend/docs/API.md).

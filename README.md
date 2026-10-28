@@ -163,45 +163,6 @@ flowchart LR
 - Shared Teacher middleware verifies the current credential version and restricts the allowed route surface.
 - HOD/Admin passcode management requires the current authenticated session and password confirmation.
 
-## Important API routes
-
-All API routes are prefixed with `/api/v1`.
-
-### Authentication
-
-| Method | Route | Purpose |
-|---|---|---|
-| `POST` | `/auth/login` | Normal user login |
-| `POST` | `/auth/teacher-passcode` | Shared Teacher login |
-| `GET` | `/auth/teacher-passcode/status` | HOD/Admin masked configuration status |
-| `PATCH` | `/auth/teacher-passcode` | Configure or replace the shared passcode |
-| `POST` | `/auth/teacher-passcode/reset` | Disable the current shared passcode |
-| `POST` | `/auth/refresh` | Rotate refresh token |
-| `POST` | `/auth/logout` | Revoke refresh token |
-| `GET` | `/auth/me` | Resolve current session |
-
-### Considerations
-
-| Method | Route | Purpose |
-|---|---|---|
-| `POST` | `/considerations` | Student creates a request |
-| `GET` | `/considerations/mine` | Student’s requests |
-| `GET` | `/considerations/tg-queue` | TG review queue |
-| `GET` | `/considerations/hod-queue` | HOD/Admin review queue |
-| `GET` | `/considerations/teacher-approved` | Shared Teacher read-only approved records |
-| `PATCH` | `/considerations/:id/tg-review` | TG recommendation/rejection |
-| `PATCH` | `/considerations/:id/final-review` | HOD/Admin final decision |
-
-### Notifications
-
-| Method | Route | Purpose |
-|---|---|---|
-| `GET` | `/notifications` | In-app notifications |
-| `POST` | `/notifications/push-subscribe` | Save browser push subscription |
-| `POST` | `/notifications/push-unsubscribe` | Remove browser push subscription |
-| `GET` | `/notifications/vapid-public-key` | Retrieve public Web Push key |
-| `POST` | `/notifications/send-reminder-now` | HOD/Admin test reminder dispatch |
-
 ## Database model overview
 
 Core MongoDB collections include:
