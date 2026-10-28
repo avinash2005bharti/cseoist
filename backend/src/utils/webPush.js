@@ -34,7 +34,9 @@ export const sendPushToUser = async (userId, payload) => {
   if (!isConfigured) return 0;
 
   try {
-    const subscriptions = await PushSubscription.find({ user: userId });
+    const subscriptions = await PushSubscription.find(
+      userId === 'shared-teacher' ? { ownerKey: 'shared-teacher' } : { user: userId }
+    );
     if (!subscriptions || subscriptions.length === 0) return 0;
 
     const payloadString = typeof payload === 'string' ? payload : JSON.stringify(payload);
@@ -70,6 +72,8 @@ export const sendPushToUser = async (userId, payload) => {
     return 0;
   }
 };
+
+export const sendPushToSharedTeacher = async (payload) => sendPushToUser('shared-teacher', payload);
 
 /**
  * Send Web Push notification to an array of user IDs

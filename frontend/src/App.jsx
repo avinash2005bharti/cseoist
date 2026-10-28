@@ -7,6 +7,7 @@ import { lazyWithRetry as lazy } from './utils/lazyWithRetry.js';
 // Auth Pages (Lazy with auto-retry)
 const LoginPage = lazy(() => import('./pages/auth/LoginPage.jsx'));
 const ChangePasswordPage = lazy(() => import('./pages/auth/ChangePasswordPage.jsx'));
+const TeacherPasscodeManagementPage = lazy(() => import('./pages/auth/TeacherPasscodeManagementPage.jsx'));
 const StudentRegisterPage = lazy(() => import('./pages/auth/StudentRegisterPage.jsx'));
 const TeacherRegisterPage = lazy(() => import('./pages/auth/TeacherRegisterPage.jsx'));
 
@@ -362,6 +363,14 @@ export default function App() {
               <AdminHodLeaves />
             </RoleRouteGuard>
           }
+        />
+        <Route
+          path="admin/teacher-passcode"
+          element={<RoleRouteGuard role="admin"><TeacherPasscodeManagementPage /></RoleRouteGuard>}
+        />
+        <Route
+          path="hod/teacher-passcode"
+          element={<RoleRouteGuard role="hod"><TeacherPasscodeManagementPage /></RoleRouteGuard>}
         />
 
         {/* Common Audit Trail (Admin and HOD) */}

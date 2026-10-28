@@ -5,6 +5,15 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+export const teacherPasscodeSchema = z.object({
+  passcode: z.string().regex(/^\d{4}$/, 'Passcode must be exactly four digits'),
+});
+
+export const teacherPasscodeManagementSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  passcode: z.string().regex(/^\d{4}$/, 'Passcode must be exactly four digits'),
+});
+
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
   newPassword: z

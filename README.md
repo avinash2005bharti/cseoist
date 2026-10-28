@@ -1,424 +1,315 @@
-# 🎓 CampusFlow Lite — Academic Attendance Consideration & Mentorship ERP
+# CampusFlow Lite
 
-[![Node.js](https://img.shields.io/badge/Node.js-v18%2B-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Express 5](https://img.shields.io/badge/Express-v5.3.0-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
-[![React 18](https://img.shields.io/badge/React-v18.3.1-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-v5.4.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas_Mongoose_9-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
-[![Socket.IO](https://img.shields.io/badge/Socket.IO-v4.8.4-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
-[![Tests](https://img.shields.io/badge/Tests-30%20Passed-brightgreen?style=for-the-badge&logo=jest&logoColor=white)](https://github.com/avinash2005bharti/campusflowlite)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+CampusFlow Lite is a MERN-based academic operations system for managing student consideration requests, leave workflows, Tutor Guardian (TG) reviews, HOD approvals, faculty administration, notifications, and reporting.
 
-> **CampusFlow Lite** is a production-grade, full-stack Academic Operations ERP designed specifically for college departments (such as Computer Science & Engineering). It digitizes the complete lifecycle of **attendance consideration applications**, **leave workflows**, **faculty mentorship (Tutor Guardians)**, **academic section management**, and **automated ledger reporting**.
-
----
-
-## 📌 Table of Contents
-
-- [Key Highlights & Capabilities](#-key-highlights--capabilities)
-- [System Architecture & Workflow Visualizations](#-system-architecture--workflow-visualizations)
-  - [Consideration Request Workflow](#1-consideration-approval-chain)
-  - [Group Consideration Architecture](#2-group-consideration-engine)
-  - [Leave Application Hierarchy](#3-leave-approval-hierarchy)
-  - [Role Hierarchy & Dynamic TG Derivation](#4-role-hierarchy--dynamic-tg-derivation)
-- [Technology Stack](#-technology-stack)
-- [Database Schema (12 Mongoose Models)](#-database-schema)
-- [Project Directory Structure](#-project-directory-structure)
-- [Getting Started & Installation](#-getting-started--installation)
-  - [Prerequisites](#prerequisites)
-  - [1. Clone Repository](#1-clone-repository)
-  - [2. Backend Setup](#2-backend-setup)
-  - [3. Frontend Setup](#3-frontend-setup)
-  - [4. Database Seeding](#4-database-seeding)
-- [Role-Based Access & Demo Accounts](#-role-based-access--demo-accounts)
-- [API Reference Overview](#-api-reference-overview)
-- [Automated Testing & Verification](#-automated-testing--verification)
-- [License & Authors](#-license--authors)
-
----
-
-## 🚀 Key Highlights & Capabilities
-
-### 1. 📋 Dual Consideration Workflows (Individual & Multi-Section Group)
-- **Single Consideration**: Students submit attendance consideration for events, hackathons, sports, medical emergencies, or academic seminars with start/end dates, exact time slots (`timeFrom`, `timeTo`), and proof attachments (PDF, JPG, PNG).
-- **Group Considerations**:
-  - A lead student can apply on behalf of multiple peers across various semesters and sections (Section A, B, C, D).
-  - **Smart TG Routing Engine**: Partitioned automatically so that each section's Tutor Guardian receives a scoped request containing only their section's students.
-  - **Unified Master HOD Request**: Head of Department receives a single consolidated application listing all participating students with their roll numbers, sections, and semesters to eliminate duplicate approvals.
-- **Automated Ledger Generation**: Once HOD approves, verified entries are automatically written to the department's `ConsiderationLedger` for attendance compilation and audit inspection.
-
-### 2. 🏖️ Comprehensive Multi-Tier Leave System
-- **Student Leave**: Initiated by student $\rightarrow$ recommended/rejected by assigned TG $\rightarrow$ final approval/rejection by HOD.
-- **Faculty Leave**: Regular teachers and TGs apply directly to HOD.
-- **HOD Leave**: Applied directly to College Admin for final authorization.
-- Date collision avoidance, inclusive calendar day calculations, and mandatory justification checks.
-
-### 3. 👥 Department & Academic Master Data Control (HOD / Admin)
-- **Section Overview & Zero Overlap**: Strict regex isolation (`/CSE[\s\-_]*([A-D])/i`) guaranteeing that CSE-A, CSE-B, CSE-C, and CSE-D student lists and counts remain completely independent without overlap.
-- **Student Roster Management**:
-  - HOD can edit student profile details, phone numbers, and enrollments.
-  - **Dynamic Semester & Section Transfer**: Changing a student's semester (1–8) or section (A–D) automatically relocates the student and reassigns them to the active `MentorGroup` of their new section's Tutor Guardian.
-- **Automated Temporary Password Reset**: When an Admin or HOD resets a student's credentials, the backend generates an alphanumeric temporary password (`Reset@XXXX`), hashes it, updates `mustChangePassword = true`, dispatches it to the student via transactional email, and logs an in-app notification.
-- **Department Notices Broadcast**: HODs can broadcast circulars and notices targeted to all students or specific sections with priority tags (`URGENT`, `HIGH`, `NORMAL`).
-
-### 4. 🔐 Student Self-Service Account Management
-- **Email Modification**: Students can update their registered email address from the Student Dashboard or Student Profile, protected by instant current-password authorization check.
-- **Password Modification**: Real-time password updates with character minimums, match validation, and eye-toggle visibility.
-
-### 5. ⚡ Real-Time Notifications & Reports
-- **Real-Time Push**: Powered by Socket.IO for immediate badge counters and modal refreshes on approval/rejection actions.
-- **Email Delivery**: Integrates Brevo Transactional Email API with automated fallback to Nodemailer SMTP.
-- **Audit Reports**: One-click Excel `.xlsx` report generator using `ExcelJS` containing period breakdowns, event classifications, and full approval audit logs.
-
----
-
-## 📐 System Architecture & Workflow Visualizations
-
-### 1. Consideration Approval Chain
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Student as Student
-    actor TG as Tutor Guardian (TG)
-    actor HOD as Head of Dept (HOD)
-    participant System as CampusFlow Engine
-    participant DB as MongoDB Atlas
-
-    Student->>System: Submit Consideration (Time, Dates, Proof, Reason)
-    System->>DB: Save AttendanceConsideration (Status: PENDING)
-    System->>TG: Socket.IO & Email Notification
-    Note over TG: TG verifies student credibility & evidence
-    alt TG Recommends
-        TG->>System: Recommend (Remarks)
-        System->>DB: Update (Status: RECOMMENDED_BY_TG)
-        System->>HOD: Push to HOD Pending Queue
-        alt HOD Approves
-            HOD->>System: Approve (Approved Periods, Remarks)
-            System->>DB: Status: APPROVED_BY_HOD
-            System->>DB: Insert into ConsiderationLedger
-            System-->>Student: Email & In-App Notification (Approved)
-        else HOD Rejects
-            HOD->>System: Reject (Reason)
-            System->>DB: Status: REJECTED
-            System-->>Student: Notification (Rejected)
-        end
-    else TG Rejects
-        TG->>System: Reject (Remarks)
-        System->>DB: Update (Status: REJECTED)
-        System-->>Student: Notification (Rejected by TG)
-    end
-```
-
-### 2. Group Consideration Engine
-
-```mermaid
-graph TD
-    A["Lead Student Applies for Group (CSE-A & CSE-B Members)"] --> B["Group Consideration Splitter"]
-    B --> C["Section A Sub-Request (Scoped to Section A Students)"]
-    B --> D["Section B Sub-Request (Scoped to Section B Students)"]
-    B --> E["Consolidated Master Request (All Students Listed)"]
-    C --> F["Section A TG Review Queue"]
-    D --> G["Section B TG Review Queue"]
-    E --> H["HOD Master Review Queue (Single Approval Action)"]
-```
-
-### 3. Leave Approval Hierarchy
-
-```mermaid
-graph LR
-    subgraph Student Leave Chain
-        SL[Student Leave] -->|Step 1| TG_REV[Tutor Guardian]
-        TG_REV -->|Step 2| HOD_REV[HOD Approval]
-    end
-
-    subgraph Faculty Leave Chain
-        FL[Faculty / TG Leave] -->|Direct| HOD_REV2[HOD Approval]
-    end
-
-    subgraph HOD Leave Chain
-        HL[HOD Leave] -->|Direct| ADM_REV[Admin Approval]
-    end
-```
-
-### 4. Role Hierarchy & Dynamic TG Derivation
-
-```mermaid
-graph TD
-    ADMIN["ADMIN (System Superuser)"] -->|"Full administrative power"| HOD["HOD (Department Head)"]
-    HOD -->|"Assigns sections & groups"| TG["Tutor Guardian (Appointed Teacher)"]
-    HOD -->|"Supervises"| TEACHER["TEACHER (Regular Faculty)"]
-    TG -->|"Mentors & Approves"| STUDENT["STUDENT"]
-
-    classDef roleBox fill:#f8fafc,stroke:#3b82f6,stroke-width:2px;
-    class ADMIN,HOD,TG,TEACHER,STUDENT roleBox;
-```
-
-> **Dynamic TG Derivation**: `TG` is not a static role. When a Teacher is assigned as the mentor of an active `MentorGroup` for a Section, the authentication middleware (`auth.middleware.js`) dynamically detects the relation and grants `isTG = true` permissions for that section's students.
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technology | Version | Purpose |
-|---|---|---|---|
-| **Frontend Core** | React 18 | `^18.3.1` | Modern declarative component architecture |
-| **Build Tool** | Vite | `^5.4.2` | Lightning-fast HMR and optimized production bundles |
-| **Routing** | React Router DOM | `^6.26.2` | Client-side routing with role-based route guards |
-| **Icons & UI** | Lucide React | `^1.16.0` | Clean, modern feather icon set |
-| **Styling** | Vanilla CSS Design System | Custom | Curated design tokens, glassmorphism, responsive cards |
-| **HTTP Client** | Axios | `^1.7.9` | Request/response interceptors with JWT auto-injection |
-| **Real-Time Client** | Socket.IO Client | `^4.8.1` | WebSocket bidirectional real-time alerts |
-| **Backend Runtime** | Node.js (ESM) | `>= 18.0.0` | Native ECMAScript Modules runtime |
-| **Web Framework** | Express 5 | `^5.3.0` | REST API routing and middleware pipelines |
-| **Database** | MongoDB Atlas | Cloud | Scalable document storage |
-| **ODM** | Mongoose | `^9.11.1` | Schema validation, relationships, and lifecycle hooks |
-| **Validation** | Zod | `^4.6.6` | Type-safe schema validation on incoming payloads |
-| **Authentication** | JWT & bcryptjs | `^9.0.3` / `^3.0.3` | Dual token flow (access + refresh) with 12 bcrypt rounds |
-| **Cloud Storage** | ImageKit SDK | `^6.0.0` | Cloud CDN storage for proof documents and PDFs |
-| **Email Service** | Brevo SDK & Nodemailer | `^6.0.3` / `^10.1.0` | Transactional email delivery with SMTP fallback |
-| **Report Engine** | ExcelJS | `^4.4.0` | Programmatic `.xlsx` generation for ledgers and audits |
-| **Task Scheduling** | node-cron | `^4.6.0` | Scheduled jobs and periodic cleanup |
-
----
-
-## 🗄️ Database Schema
-
-The system is built upon **12 interconnected Mongoose models**:
-
-| Model | Schema File | Description |
-|---|---|---|
-| `User` | `models/User.js` | Core authentication profile, roles (`ADMIN`, `HOD`, `TEACHER`, `STUDENT`), credentials, active status |
-| `Student` | `models/Student.js` | Enrollment number, roll number, semester, section ref, guardian details, department |
-| `Teacher` | `models/Teacher.js` | Employee ID, designation, department ref, phone, cabin location |
-| `Department` | `models/Department.js` | Academic department details (e.g., Computer Science & Engineering), code, HOD ref |
-| `Section` | `models/Section.js` | Class section (CSE-A, CSE-B, CSE-C, CSE-D), academic year, semester |
-| `MentorGroup` | `models/MentorGroup.js` | Maps a Tutor Guardian (`Teacher`) to a specific `Section` and student pool |
-| `AttendanceConsideration`| `models/AttendanceConsideration.js`| Consideration requests: event dates, time window, status, proofs, TG and HOD remarks |
-| `LeaveRequest` | `models/LeaveRequest.js` | Leave applications: student/teacher leaves, date ranges, approval chain logs |
-| `ConsiderationLedger`| `models/ConsiderationLedger.js` | Official departmental ledger storing approved consideration records for exams & audit |
-| `Notification` | `models/Notification.js` | In-app user notifications with read/unread tracking and actionable links |
-| `Notice` | `models/Notice.js` | Departmental circulars, announcements, priority tags, and broadcast audiences |
-| `AuditLog` | `models/AuditLog.js` | Immutable administrative audit log tracking user changes, role reassignments, and resets |
-
----
-
-## 📂 Project Directory Structure
+The application is designed for department-level deployment and preserves a strict approval chain:
 
 ```text
-campusflowlite/
+Student -> Tutor Guardian (recommend/reject) -> HOD (final approve/reject)
+```
+
+## Features
+
+- Student attendance consideration requests with individual and group applications.
+- TG-scoped review queues and HOD consolidated approval queues.
+- Student, faculty, TG, and HOD leave workflows.
+- HOD and Admin dashboards for users, sections, faculty, mentorship, leaves, notices, reports, and audit history.
+- Read-only Teacher dashboard for approved consideration records.
+- Real-time in-app notifications through Socket.IO.
+- Optional browser push notifications using Web Push and a service worker.
+- Excel reporting and administrative bulk import.
+- ImageKit-backed private document uploads and signed preview URLs.
+- IST-aware date handling, pagination, audit records, and automated escalation/reminder jobs.
+
+## Shared Teacher Authentication
+
+Teachers use one logical shared identity rather than individual login accounts:
+
+1. Select **Teacher** on the login screen.
+2. Enter the four-digit shared passcode.
+3. Receive a normal short-lived authenticated access token.
+4. Open the Teacher Dashboard and view approved consideration records.
+
+The passcode:
+
+- Is stored as a bcrypt hash in MongoDB through the `SystemSetting` model.
+- Is never returned by the API, stored in browser storage, placed in a URL/JWT payload, or written to logs.
+- Supports leading zeros.
+- Requires authenticated HOD/Admin access and current-password confirmation to configure, change, or reset.
+- Invalidates existing shared Teacher tokens after a change or reset through credential-version checks.
+- Uses persistent MongoDB-backed failed-attempt tracking and temporary lockout.
+
+The shared Teacher identity is intentionally read-only. Shared Teachers cannot create, edit, cancel, recommend, approve, reject, audit, or access HOD/Admin APIs. They can access approved consideration records and manage their own browser push subscription.
+
+> **Security limitation:** A four-digit secret has only 10,000 possible combinations. Persistent lockout and rate limiting reduce online guessing risk but do not increase credential entropy. Production deployments should consider a higher-entropy shared credential or individual Teacher authentication.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Browser[React + Vite frontend] -->|HTTPS JSON API| API[Express API]
+  Browser -->|Socket.IO JWT handshake| Socket[Realtime gateway]
+  Browser -->|Web Push subscription| Push[Push service]
+  API --> Auth[JWT auth + role authorization]
+  API --> Modules[Domain modules]
+  Modules --> Mongo[(MongoDB)]
+  API --> ImageKit[ImageKit private storage]
+  API --> Email[Brevo / SMTP email]
+  Jobs[node-cron jobs] --> Mongo
+  Jobs --> Push
+  Socket --> Browser
+```
+
+### Request lifecycle
+
+1. Express applies Helmet, CORS, body parsing, cookies, request limits, and error handling.
+2. Authentication verifies JWT access tokens and resolves the user profile/TG status.
+3. Authorization applies `STUDENT`, `TEACHER`, `TG`, `HOD`, and `ADMIN` permissions.
+4. Zod schemas validate request bodies before controllers execute.
+5. Services enforce workflow rules and write MongoDB models.
+6. Controllers return the standard `{ success, data, meta }` response shape.
+7. Notifications are emitted through in-app records, Socket.IO, email, and optional Web Push.
+
+## Role capabilities
+
+| Role | Main capabilities |
+|---|---|
+| Student | Register, submit/view considerations, apply for leave, track workflow, manage profile |
+| Teacher | Shared passcode login, view approved consideration ledger, receive notifications |
+| TG | Review assigned student requests, recommend/reject, view assigned students |
+| HOD | Final consideration/leave decisions, department management, reports, notices, Teacher passcode management |
+| Admin | User and system administration, HOD leave approval, imports, audit access, Teacher passcode management |
+
+## Repository structure
+
+```text
+.
 ├── backend/
 │   ├── src/
-│   │   ├── config/              # MongoDB, ImageKit, Brevo & Socket.IO initialization
-│   │   ├── middleware/          # auth, authorize, validate, rateLimiter, error handler
-│   │   ├── models/              # 12 Mongoose data models
-│   │   ├── modules/             # Modular controllers, routes, and business services
-│   │   │   ├── auth/            # Login, register, profile update, password change
-│   │   │   ├── users/           # User management, role assign, temporary password reset
-│   │   │   ├── students/        # Student roster, semester/section reassignment
-│   │   │   ├── teachers/        # Faculty directory and assignment
-│   │   │   ├── considerations/  # Single & group attendance considerations, ledger
-│   │   │   ├── leaves/          # Multi-tier leave requests & approvals
-│   │   │   ├── mentorship/      # TG assignments & mentor group mappings
-│   │   │   ├── sections/        # Section overview and management
-│   │   │   ├── notices/         # Circulars and notice broadcasting
-│   │   │   ├── dashboard/       # Aggregated stats for Student, TG, HOD, and Admin
-│   │   │   └── reports/         # ExcelJS ledger and audit export generators
-│   │   ├── utils/               # ApiError, ApiResponse, sendEmail, date helpers
-│   │   ├── seed/                # Comprehensive mock & initial seed data script
-│   │   └── server.js            # Express application bootstrap & WebSocket server
-│   ├── tests/                   # 30 Unit & Integration tests (Node test runner)
-│   ├── .env.example             # Environment variable template
+│   │   ├── app.js                         # Express middleware and route registration
+│   │   ├── server.js                      # HTTP, Socket.IO, database, and jobs entrypoint
+│   │   ├── config/                        # Environment, database, CORS, integrations
+│   │   ├── middleware/                    # Auth, authorization, validation, limits, errors
+│   │   ├── models/                        # Mongoose models and indexes
+│   │   ├── modules/
+│   │   │   ├── auth/                      # Login, refresh, passcode, profile, password flows
+│   │   │   ├── considerations/            # Consideration state machine and review APIs
+│   │   │   ├── leaves/                    # Leave workflow and approval APIs
+│   │   │   ├── mentorship/                # Mentor groups and TG assignments
+│   │   │   ├── notifications/             # In-app and Web Push subscriptions
+│   │   │   ├── reports/                   # Dashboards, ledgers, Excel exports
+│   │   │   ├── users/, students/, teachers/# Directory and profile operations
+│   │   │   ├── import/                    # Admin Excel import
+│   │   │   └── audit/                     # Audit log access
+│   │   ├── jobs/                          # Escalation and reminder schedules
+│   │   ├── sockets/                       # Socket.IO initialization and emitters
+│   │   ├── seed/                          # Development database seed script
+│   │   └── utils/                         # Errors, dates, pagination, email, Web Push
+│   ├── docs/API.md                        # Backend API reference
+│   ├── tests/                             # Node test runner tests
+│   ├── .env.example
 │   └── package.json
-│
 ├── frontend/
 │   ├── src/
-│   │   ├── api/                 # Axios clients for auth, considerations, leaves, etc.
-│   │   ├── components/
-│   │   │   ├── common/          # Button, Card, Badge, Modal, PageHeader primitives
-│   │   │   ├── layout/          # Sidebar, Header, NotificationDropdown, DashboardLayout
-│   │   │   └── modals/          # ApplyConsiderationModal, EditStudentModal,
-│   │   │                        # StudentAccountSettingsModal, SectionOverviewModal,
-│   │   │                        # SendNoticeModal, ViewConsiderationModal
-│   │   ├── context/             # ERPContext (global state, user, auth, toasts, socket)
-│   │   ├── pages/
-│   │   │   ├── auth/            # LoginPage, RegisterPage, ForgotPasswordPage
-│   │   │   ├── student/         # StudentDashboard, StudentRequests, StudentProfile
-│   │   │   ├── tg/              # TgDashboard, TgStudents, TgReviewQueue
-│   │   │   ├── hod/             # HodDashboard, HodConsiderations, HodStudents, HodReports
-│   │   │   └── admin/           # AdminDashboard, AdminUsers, AdminSettings
-│   │   ├── utils/               # Formatters, section letter isolator, status helpers
-│   │   ├── App.jsx              # Application router with ProtectedRoute wrappers
-│   │   ├── index.css            # Custom Vanilla CSS Design System
-│   │   └── main.jsx             # React DOM entry point
-│   ├── vite.config.js           # Vite dev server with proxy routing
+│   │   ├── App.jsx                        # React Router routes and role guards
+│   │   ├── context/ERPContext.jsx         # Session, notifications, sockets, PWA state
+│   │   ├── api/                           # Axios client and domain API wrappers
+│   │   ├── components/                    # Shared layout, navigation, tables, modals
+│   │   ├── layouts/                       # Protected dashboard shell
+│   │   └── pages/                         # Auth, Student, Teacher, TG, HOD, Admin pages
+│   ├── public/service-worker.js           # Browser push handling
+│   ├── .env.example
 │   └── package.json
-│
-├── system-architecture.md       # Detailed technical architecture specification
-└── README.md                    # Project documentation
+├── design-system.txt                      # UI design and interaction guidance
+├── system-architecture.md                 # Extended architecture notes
+└── README.md
 ```
 
----
+## Technology stack
 
-## ⚡ Getting Started & Installation
+### Frontend
+
+- React 18
+- React Router 6
+- Vite 5
+- Axios
+- Socket.IO client
+- Lucide React
+- Responsive utility-class styling and existing CSS design tokens
+
+### Backend
+
+- Node.js with ES modules
+- Express 5
+- MongoDB with Mongoose
+- JWT access tokens and rotating refresh tokens
+- bcryptjs password/passcode hashing
+- Zod request/environment validation
+- Helmet, CORS, cookie-parser, express-rate-limit
+- Socket.IO
+- node-cron
+- ExcelJS
+- ImageKit
+- Brevo/Nodemailer integration
+- web-push
+
+## Authentication and session model
+
+- Normal users authenticate with email/enrollment/employee ID plus password.
+- Access tokens are short-lived JWTs; refresh tokens are stored hashed and rotated.
+- Refresh-token reuse detection revokes a user’s refresh tokens.
+- Password changes revoke active refresh tokens.
+- Shared Teacher tokens contain only identity metadata and credential-version metadata; the raw passcode is never included.
+- Shared Teacher middleware verifies the current credential version and restricts the allowed route surface.
+- HOD/Admin passcode management requires the current authenticated session and password confirmation.
+
+## Important API routes
+
+All API routes are prefixed with `/api/v1`.
+
+### Authentication
+
+| Method | Route | Purpose |
+|---|---|---|
+| `POST` | `/auth/login` | Normal user login |
+| `POST` | `/auth/teacher-passcode` | Shared Teacher login |
+| `GET` | `/auth/teacher-passcode/status` | HOD/Admin masked configuration status |
+| `PATCH` | `/auth/teacher-passcode` | Configure or replace the shared passcode |
+| `POST` | `/auth/teacher-passcode/reset` | Disable the current shared passcode |
+| `POST` | `/auth/refresh` | Rotate refresh token |
+| `POST` | `/auth/logout` | Revoke refresh token |
+| `GET` | `/auth/me` | Resolve current session |
+
+### Considerations
+
+| Method | Route | Purpose |
+|---|---|---|
+| `POST` | `/considerations` | Student creates a request |
+| `GET` | `/considerations/mine` | Student’s requests |
+| `GET` | `/considerations/tg-queue` | TG review queue |
+| `GET` | `/considerations/hod-queue` | HOD/Admin review queue |
+| `GET` | `/considerations/teacher-approved` | Shared Teacher read-only approved records |
+| `PATCH` | `/considerations/:id/tg-review` | TG recommendation/rejection |
+| `PATCH` | `/considerations/:id/final-review` | HOD/Admin final decision |
+
+### Notifications
+
+| Method | Route | Purpose |
+|---|---|---|
+| `GET` | `/notifications` | In-app notifications |
+| `POST` | `/notifications/push-subscribe` | Save browser push subscription |
+| `POST` | `/notifications/push-unsubscribe` | Remove browser push subscription |
+| `GET` | `/notifications/vapid-public-key` | Retrieve public Web Push key |
+| `POST` | `/notifications/send-reminder-now` | HOD/Admin test reminder dispatch |
+
+## Database model overview
+
+Core MongoDB collections include:
+
+- `User`: Student, Teacher, HOD, and Admin accounts.
+- `Student`: enrollment, department, section, and mentor-group profile.
+- `Teacher`: faculty profile and department association.
+- `MentorGroup`: TG assignments and student cohorts.
+- `ConsiderationRequest`: request details, group members, reviews, status, and history.
+- `LeaveApplication`: student/faculty/HOD leave lifecycle.
+- `SystemSetting`: persistent configuration, including the hashed shared Teacher passcode.
+- `TeacherPasscodeAttempt`: persistent failed-attempt and lockout state.
+- `RefreshToken`: hashed rotating refresh tokens with TTL expiration.
+- `Notification`: in-app notification records.
+- `PushSubscription`: browser push endpoints, including shared Teacher subscriptions.
+- `AuditLog`: operational and workflow audit history.
+
+No migration or seed operation deletes existing collections or records. MongoDB creates model indexes during normal application startup.
+
+## Local development
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) v18.0.0 or higher
-- [MongoDB](https://www.mongodb.com/) (Local instance or MongoDB Atlas connection string)
-- Git installed on your system
 
-### 1. Clone Repository
+- Node.js 20+ recommended
+- MongoDB 7+ or MongoDB Atlas
+- npm
+- Optional: ImageKit, Brevo/SMTP, Google OAuth, and Web Push VAPID credentials
+
+### Backend
+
 ```bash
-git clone https://github.com/avinash2005bharti/campusflowlite.git
-cd campusflowlite
+cd backend
+npm install
+copy .env.example .env
+npm run dev
 ```
 
----
+On macOS/Linux, use `cp .env.example .env` instead of `copy`.
 
-### 2. Backend Setup
-1. Navigate to the `backend` directory:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create your `.env` configuration file:
-   ```bash
-   cp .env.example .env
-   ```
-4. Open `.env` and fill in your connection strings and secrets:
-   ```env
-   PORT=5000
-   NODE_ENV=development
-   MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/campusflow?retryWrites=true&w=majority
-   JWT_SECRET=your_jwt_access_secret_32_characters_minimum
-   JWT_REFRESH_SECRET=your_jwt_refresh_secret_32_characters_minimum
-   JWT_EXPIRE=7d
-   BREVO_API_KEY=your_brevo_api_key
-   BREVO_SENDER_EMAIL=your_verified_email@domain.com
-   BREVO_SENDER_NAME="CampusFlow Notifications"
-   IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
-   IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
-   IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_id/
-   CLIENT_URL=http://localhost:5173
-   ```
-5. Start the backend development server:
-   ```bash
-   npm run dev
-   ```
-   *The backend will boot up at `http://localhost:5000` with WebSocket listeners enabled.*
+### Frontend
 
----
+```bash
+cd frontend
+npm install
+copy .env.example .env
+npm run dev
+```
 
-### 3. Frontend Setup
-1. Open a new terminal window and navigate to the `frontend` directory:
-   ```bash
-   cd frontend
-   ```
-2. Install frontend dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
-   *The application will launch at `http://localhost:5173`.*
+Configure `VITE_API_URL`, `VITE_BACKEND_URL`, and `VITE_SOCKET_URL` for the backend address.
 
----
+### Database seed
 
-### 4. Database Seeding (Optional but Recommended)
-Populate your database with complete departmental mock data (Department, Sections A–D, HOD, TGs, Students, Considerations, and Leaves):
 ```bash
 cd backend
 npm run seed
 ```
 
----
+The seed script is for development/demo data only. Review [backend/src/seed/seed.js](backend/src/seed/seed.js) before using it. Never use seeded demo passwords or development secrets in production. The shared Teacher passcode is not seeded; it must be configured by an authenticated HOD/Admin through the application.
 
-## 👥 Role-Based Access & Demo Accounts
+## Environment configuration
 
-When the seed script is executed, you can immediately test any portal role:
+Backend configuration is documented in [backend/.env.example](backend/.env.example). Important production values include:
 
-| Role | Email | Password | Primary Permissions |
-|---|---|---|---|
-| **ADMIN** | `admin@oist.ac.in` | `Admin@123` | System management, all user access, academic master data, HOD leave approval |
-| **HOD** | `hod.cse@oist.ac.in` | `Hod@123` | Final consideration approval, student roster edit (semester/section), temporary password resets, notices |
-| **TG (Section B)** | `tg.cse.b@oist.ac.in` | `Teacher@123` | Mentorship review, recommend/reject considerations for Section B students |
-| **TG (Section C)** | `tg.cse.c@oist.ac.in` | `Teacher@123` | Mentorship review, recommend/reject considerations for Section C students |
-| **TEACHER** | Existing faculty account | Existing faculty password | Read-only view of approved consideration records in the teacher's authorized cohort |
-| **STUDENT** | `student@oist.ac.in` | `Student@123` | Apply single/group considerations, apply leaves, change email/password, track status |
+- `NODE_ENV=production`
+- Strong `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` values of at least 32 characters
+- `MONGODB_URI`
+- `CLIENT_URL` and `ALLOWED_ORIGINS`
+- `COOKIE_SECURE=true` when using HTTPS
+- VAPID keys for browser push notifications
+- Optional ImageKit, email, and Google OAuth credentials
 
-### Teacher consideration visibility
+Never commit `.env` files, API keys, JWT secrets, database credentials, or private VAPID keys.
 
-The Teacher Dashboard exposes only **View Consideration**. Its ledger reuses the authenticated,
-read-only `/reports/considerations` API and uses the teacher's assigned department as the access
-boundary. Teachers see approved consideration records for students in that department, while
-teachers with an active TG assignment continue to use their existing mentor-group scope in the
-TG workspace. No approval, rejection, edit, delete, or create actions are exposed to teachers.
+## Testing and verification
 
----
-
-## 🔌 API Reference Overview
-
-All API endpoints are prefixed with `/api/v1/`.
-
-| Group | Method | Endpoint | Description | Auth Required |
-|---|:---:|---|---|:---:|
-| **Auth** | `POST` | `/auth/login` | Login with email and password | Public |
-| | `POST` | `/auth/refresh` | Refresh access token using cookie | Public |
-| | `PATCH` | `/auth/profile` | Self-service update email / password | Student / Faculty |
-| **Users** | `GET` | `/users` | List department users with filters | HOD, Admin |
-| | `POST` | `/users/reset-password` | Reset password & email temporary credentials | HOD, Admin |
-| **Students** | `GET` | `/students` | Get paginated student directory | TG, HOD, Admin |
-| | `PUT` | `/students/:id` | Update student, change semester/section & TG | HOD, Admin |
-| **Considerations** | `GET` | `/considerations/mine`| View own applied considerations | Student |
-| | `POST` | `/considerations` | Submit single or group consideration | Student |
-| | `PATCH`| `/considerations/:id/tg-review` | Recommend or reject consideration | Assigned TG |
-| | `PATCH`| `/considerations/:id/hod-review`| Final approve or reject consideration | HOD, Admin |
-| | `GET` | `/considerations/ledger` | Fetch approved consideration ledger | TG, HOD, Admin |
-| **Leaves** | `POST` | `/leaves` | Apply for leave (Student/Faculty/HOD) | All Users |
-| | `PATCH`| `/leaves/:id/review` | Progress leave approval chain | TG, HOD, Admin |
-| **Notices** | `GET` | `/notices` | Fetch active notices & circulars | All Users |
-| | `POST` | `/notices` | Broadcast a new notice with priority | HOD, Admin |
-| **Reports** | `GET` | `/reports/considerations/export` | Download `.xlsx` consideration ledger | TG, HOD, Admin |
-
----
-
-## 🧪 Automated Testing & Verification
-
-The backend includes a comprehensive suite of **30 automated unit and integration tests** testing all critical business logic, security policies, and boundary cases:
+From the repository root:
 
 ```bash
 cd backend
 npm test
-```
+npm run build
 
-### Test Suite Highlights:
-- **Section Letter Isolation**: Confirms `CSE-B` and `CSE-C` never overlap.
-- **Group Consideration Partitioning**: Verifies multi-section student arrays are partitioned into section-specific TG buckets while delivering a single unified master request to the HOD.
-- **Temporary Password Formatting**: Validates complexity rules (`Reset@XXXX`).
-- **Student Profile Self-Service**: Tests email and password change validation.
-- **Role Permission Enforcement**: Verifies strict role boundaries (TGs cannot delete student records; only HOD/Admin can reassign sections).
-- **Date & Range Overlaps**: Tests inclusive calendar day calculations and format verification.
-
-### Frontend Production Build:
-```bash
-cd frontend
+cd ../frontend
 npm run build
 ```
-*Compiles the production bundle with 0 errors.*
 
----
+The backend tests use Node’s built-in test runner. The build commands perform backend syntax checks and create the Vite production bundle.
 
-## 📄 License & Authors
+## Production checklist
 
-Distributed under the **MIT License**. See `LICENSE` for more information.
+- Use HTTPS for frontend, API, Socket.IO, and Web Push.
+- Set strong production JWT secrets and `COOKIE_SECURE=true`.
+- Restrict `ALLOWED_ORIGINS` to trusted frontend origins.
+- Configure MongoDB backups, indexes, monitoring, and least-privilege credentials.
+- Configure VAPID keys if browser push is required.
+- Configure email and ImageKit integrations only with server-side secrets.
+- Do not seed demo users or default credentials in production.
+- Configure the shared Teacher passcode through an authenticated HOD/Admin session.
+- Monitor failed passcode attempts, lockouts, unusual login activity, and reminder dispatch.
+- Treat the four-digit shared passcode as a low-entropy credential; consider replacing it before high-risk deployment.
+- Run `npm audit` and review dependency advisories before release.
 
-- **Author**: Avinash Bharti ([@avinash2005bharti](https://github.com/avinash2005bharti))
-- **Repository**: [https://github.com/avinash2005bharti/campusflowlite](https://github.com/avinash2005bharti/campusflowlite)
+## Documentation
 
----
-*Built with ❤️ for clean, transparent, and hassle-free academic workflows.*
+- [Backend API reference](backend/docs/API.md)
+- [Extended system architecture](system-architecture.md)
+- [Design system](design-system.txt)
+
+## License
+
+This project is maintained for CampusFlow Lite institutional operations. Add or update the repository license file before publishing a formal open-source distribution.

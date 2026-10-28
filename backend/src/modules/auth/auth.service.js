@@ -256,6 +256,19 @@ export const updateProfile = async (userId, data) => {
 };
 
 export const getMe = async (userId) => {
+  if (userId === 'shared-teacher') {
+    return {
+      id: 'shared-teacher',
+      name: 'Teacher',
+      email: null,
+      role: 'TEACHER',
+      mustChangePassword: false,
+      isTG: false,
+      mentorGroupId: null,
+      profile: null,
+      sharedTeacher: true,
+    };
+  }
   const user = await User.findById(userId);
   if (!user || !user.isActive) {
     throw ApiError.unauthenticated('User not found');

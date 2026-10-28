@@ -550,6 +550,20 @@ export default function HodDashboard() {
             </div>
           </button>
 
+          <button
+            type="button"
+            onClick={() => navigate('/hod/teacher-passcode')}
+            className="hod-action-card text-left p-4 sm:p-5 flex flex-col justify-between items-start min-h-[135px] sm:min-h-[145px] cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          >
+            <div className="size-9 rounded-lg bg-[#F3E8FF] border border-[#E9D5FF] flex items-center justify-center text-[#9333EA] shrink-0 group-hover:scale-105 transition-transform">
+              <Shield className="size-5" />
+            </div>
+            <div>
+              <p className="font-bold text-sm text-[#0F172A]">Teacher Passcode</p>
+              <p className="text-[#64748B] text-xs mt-1">Manage shared access</p>
+            </div>
+          </button>
+
           {/* 6. Section Progression */}
           <button
             type="button"

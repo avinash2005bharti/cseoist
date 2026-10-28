@@ -14,6 +14,7 @@ import Otp from './Otp.js';
 import Notice from './Notice.js';
 import PushSubscription from './PushSubscription.js';
 import SystemSetting from './SystemSetting.js';
+import TeacherPasscodeAttempt from './TeacherPasscodeAttempt.js';
 
 export {
   User,
@@ -32,6 +33,7 @@ export {
   Notice,
   PushSubscription,
   SystemSetting,
+  TeacherPasscodeAttempt,
 };
 
 export default {
@@ -51,5 +53,5 @@ export default {
   Notice,
   PushSubscription,
   SystemSetting,
+  TeacherPasscodeAttempt,
 };
-

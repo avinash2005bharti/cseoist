@@ -524,6 +524,22 @@ export default function AdminDashboard() {
           </div>
           <ArrowRight size={15} className="text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
         </div>
+
+        <div
+          onClick={() => navigate('/admin/teacher-passcode')}
+          className="card p-4 cursor-pointer hover:border-violet-400 hover:shadow-md transition-all group flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-colors">
+              <Shield size={19} />
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-slate-800">Teacher Passcode</h4>
+              <p className="text-[11px] text-slate-400">Configure shared access</p>
+            </div>
+          </div>
+          <ArrowRight size={15} className="text-slate-300 group-hover:text-violet-600 group-hover:translate-x-1 transition-all" />
+        </div>
       </div>
 
       {/* Main Account Directory Section on Admin Dashboard */}

@@ -17,6 +17,10 @@ export const considerationApi = {
     return apiClient.get('/considerations/hod-queue', { params });
   },
 
+  getTeacherApproved: async (params = {}) => {
+    return apiClient.get('/considerations/teacher-approved', { params });
+  },
+
   getTGHistory: async (params = {}) => {
     return apiClient.get('/considerations/tg-history', { params });
   },

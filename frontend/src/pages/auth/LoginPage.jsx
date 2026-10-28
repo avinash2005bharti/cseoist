@@ -18,13 +18,14 @@ import {
 import ForgotPasswordModal from '../../components/modals/ForgotPasswordModal.jsx';
 
 export default function LoginPage() {
-  const { login, loginWithToken } = useERP();
+  const { login, loginTeacher, loginWithToken } = useERP();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [selectedRole, setSelectedRole] = useState('student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passcode, setPasscode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,6 +39,7 @@ export default function LoginPage() {
     // Clear fields on switching role tabs to ensure no credentials linger
     setEmail('');
     setPassword('');
+    setPasscode('');
   };
 
   // Listen for Google OAuth callback parameters
@@ -103,17 +105,21 @@ export default function LoginPage() {
     setSuccessNotice('');
     setForgotNotice('');
 
-    if (!email.trim() || !password) {
+    if (selectedRole === 'teacher') {
+      if (!/^\d{4}$/.test(passcode)) {
+        setError('Enter the four-digit Teacher passcode.');
+        return;
+      }
+    } else if (!email.trim() || !password) {
       setError('Please provide both email and password.');
       return;
     }
 
     setLoading(true);
     try {
-      const user = await login({
-        email: email.trim().toLowerCase(),
-        password,
-      });
+      const user = selectedRole === 'teacher'
+        ? await loginTeacher(passcode)
+        : await login({ email: email.trim().toLowerCase(), password });
 
       const role = (user.role || '').toLowerCase();
       if (user.mustChangePassword) {
@@ -278,6 +284,7 @@ export default function LoginPage() {
             <div className="auth-role-tabs">
               {[
                 { id: 'student', label: 'Student', icon: GraduationCap },
+                { id: 'teacher', label: 'Teacher', icon: UserCheck },
                 { id: 'tg', label: 'TG', icon: UserCheck },
                 { id: 'hod', label: 'HOD', icon: Landmark },
                 { id: 'admin', label: 'Admin', icon: Shield },
@@ -302,8 +309,30 @@ export default function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
-            {/* Email Address */}
-            <div>
+            {selectedRole === 'teacher' ? (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Teacher Passcode
+                </label>
+                <div className="relative">
+                  <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]{4}"
+                    maxLength={4}
+                    autoComplete="off"
+                    value={passcode}
+                    onChange={(e) => setPasscode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="••••"
+                    aria-label="Four-digit Teacher passcode"
+                    required
+                    className="w-full pl-11 pr-4 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-sm text-slate-800 font-medium tracking-[0.5em]"
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Use the shared four-digit code provided by your HOD or Admin.</p>
+              </div>
+            ) : (<div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 Email Address
               </label>
@@ -325,10 +354,9 @@ export default function LoginPage() {
                   className="w-full pl-11 pr-4 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-sm text-slate-800 font-medium"
                 />
               </div>
-            </div>
+            </div>)}
 
-            {/* Password */}
-            <div>
+            {selectedRole !== 'teacher' && (<div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-slate-700">Password</label>
                 <button
@@ -364,7 +392,7 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-            </div>
+            </div>)}
 
             {/* Primary Action Button */}
             <button
@@ -378,7 +406,7 @@ export default function LoginPage() {
                   <span>Verifying Credentials...</span>
                 </>
               ) : (
-                <span>Sign In to ERP Portal</span>
+                <span>{selectedRole === 'teacher' ? 'Continue as Teacher' : 'Sign In to ERP Portal'}</span>
               )}
             </button>
           </form>

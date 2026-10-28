@@ -26,6 +26,7 @@ import {
   ShieldCheck,
   Landmark,
   Menu,
+  KeyRound,
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -68,6 +69,7 @@ export default function Sidebar({ isOpen, onClose }) {
           { to: '/hod/mentorship', label: 'Teacher Guardian Allocation', icon: <Building2 size={18} /> },
           { to: '/hod/students', label: 'Student Directory', icon: <GraduationCap size={18} /> },
           { to: '/hod/teachers', label: 'Faculty Directory', icon: <UserCheck size={18} /> },
+          { to: '/hod/teacher-passcode', label: 'Teacher Passcode', icon: <KeyRound size={18} /> },
         ];
       case 'teacher':
         return [

@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "flowstep": {
-      "type": "http",
-      "url": "https://api.flowstep.ai/mcp"
-    }
-  }
-}

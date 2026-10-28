@@ -5,7 +5,12 @@ const pushSubscriptionSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
+      index: true,
+    },
+    ownerKey: {
+      type: String,
+      default: null,
       index: true,
     },
     endpoint: {
@@ -35,4 +40,3 @@ const pushSubscriptionSchema = new mongoose.Schema(
 
 const PushSubscription = mongoose.model('PushSubscription', pushSubscriptionSchema);
 export default PushSubscription;
-

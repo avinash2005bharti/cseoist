@@ -44,6 +44,8 @@ router.get(
   considerationsController.getHODQueue
 );
 
+router.get('/teacher-approved', authorize('TEACHER'), considerationsController.getTeacherApproved);
+
 // HOD / Admin / TG recommendations history
 router.get(
   '/tg-history',

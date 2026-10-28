@@ -12,6 +12,27 @@ export const authApi = {
     return res.data;
   },
 
+  loginTeacher: async (passcode) => {
+    const res = await apiClient.post('/auth/teacher-passcode', { passcode });
+    if (res?.data?.accessToken) setAuthToken(res.data.accessToken);
+    return res.data;
+  },
+
+  getTeacherPasscodeStatus: async () => {
+    const res = await apiClient.get('/auth/teacher-passcode/status');
+    return res.data;
+  },
+
+  updateTeacherPasscode: async ({ currentPassword, passcode }) => {
+    const res = await apiClient.patch('/auth/teacher-passcode', { currentPassword, passcode });
+    return res.data;
+  },
+
+  resetTeacherPasscode: async (currentPassword) => {
+    const res = await apiClient.post('/auth/teacher-passcode/reset', { currentPassword });
+    return res.data;
+  },
+
   getMe: async () => {
     const res = await apiClient.get('/auth/me');
     return res.data;

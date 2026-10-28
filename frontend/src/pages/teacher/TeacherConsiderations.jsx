@@ -18,7 +18,8 @@ export default function TeacherConsiderations() {
     >
       <OfficialClearancesLedgerModal
         initialTab="considerations"
-        initialDateMode="previous"
+        initialDateMode="today"
+        isTeacherView
         onClose={() => navigate('/teacher')}
       />
     </Suspense>

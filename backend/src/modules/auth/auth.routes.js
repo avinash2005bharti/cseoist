@@ -8,12 +8,15 @@ import {
   verifyOtpSchema,
   registerStudentSchema,
   registerTeacherSchema,
+  teacherPasscodeSchema,
+  teacherPasscodeManagementSchema,
   profileUpdateSchema,
 } from './auth.schema.js';
 import { validateBody } from '../../middleware/validate.js';
 import auth from '../../middleware/auth.js';
 import authorize from '../../middleware/authorize.js';
 import { authLimiter } from '../../middleware/rateLimit.js';
+import { z } from 'zod';
 
 const router = Router();
 
@@ -21,6 +24,10 @@ router.get('/google', authController.initiateGoogleAuth);
 router.get('/google/callback', authController.handleGoogleCallback);
 
 router.post('/login', authLimiter, validateBody(loginSchema), authController.login);
+router.post('/teacher-passcode', authLimiter, validateBody(teacherPasscodeSchema), authController.teacherPasscodeLogin);
+router.get('/teacher-passcode/status', auth, authorize('ADMIN', 'HOD'), authController.getTeacherPasscodeStatus);
+router.patch('/teacher-passcode', auth, authorize('ADMIN', 'HOD'), validateBody(teacherPasscodeManagementSchema), authController.changeTeacherPasscode);
+router.post('/teacher-passcode/reset', auth, authorize('ADMIN', 'HOD'), validateBody(z.object({ currentPassword: z.string().min(1) })), authController.resetTeacherPasscode);
 router.post('/register/student/send-otp', authLimiter, authController.sendStudentRegistrationOtp);
 router.post('/register/student/verify-otp', authLimiter, validateBody(verifyOtpSchema), authController.verifyRegistrationOtp);
 router.post('/verify-otp', authLimiter, validateBody(verifyOtpSchema), authController.verifyRegistrationOtp);

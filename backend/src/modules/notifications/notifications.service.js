@@ -56,10 +56,11 @@ export const savePushSubscription = async (userId, subscription, userAgent = '')
     throw ApiError.badRequest('Invalid push subscription format');
   }
 
+  const isSharedTeacher = userId === 'shared-teacher';
   const updated = await PushSubscription.findOneAndUpdate(
     { endpoint: subscription.endpoint },
     {
-      user: userId,
+      ...(isSharedTeacher ? { user: null, ownerKey: 'shared-teacher' } : { user: userId, ownerKey: null }),
       endpoint: subscription.endpoint,
       keys: {
         p256dh: subscription.keys.p256dh,
@@ -79,7 +80,11 @@ export const removePushSubscription = async (userId, endpoint) => {
     throw ApiError.badRequest('Endpoint is required to remove subscription');
   }
 
-  await PushSubscription.deleteOne({ user: userId, endpoint });
+  await PushSubscription.deleteOne(
+    userId === 'shared-teacher'
+      ? { ownerKey: 'shared-teacher', endpoint }
+      : { user: userId, endpoint }
+  );
   return { success: true };
 };
 
@@ -110,8 +115,8 @@ export const getConsiderationWindowStatus = async () => {
 };
 
 export const triggerReminderManually = async (slot = 'MIDDAY', user) => {
-  if (!['HOD', 'ADMIN', 'TEACHER'].includes(user.role)) {
-    throw ApiError.forbidden('Only faculty or administrators can trigger attendance reminders');
+  if (!['HOD', 'ADMIN'].includes(user.role) || user.sharedTeacher) {
+    throw ApiError.forbidden('Only HOD or Admin users can trigger attendance reminders');
   }
 
   const { runAttendanceReminder } = await import('../../jobs/reminder.job.js');
@@ -127,5 +132,3 @@ export default {
   getConsiderationWindowStatus,
   triggerReminderManually,
 };
-
-

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { reportApi } from '../../api';
+import considerationApi from '../../api/considerationApi.js';
 import AttendanceLeaveReportsModal from './AttendanceLeaveReportsModal.jsx';
 import {
   FileText,
@@ -56,6 +57,7 @@ export default function OfficialClearancesLedgerModal({
   assignedSemester = null,
   assignedSection = null,
   initialDateMode = 'today',
+  isTeacherView = false,
 }) {
   const todayStr = getTodayISTString();
 
@@ -164,10 +166,11 @@ export default function OfficialClearancesLedgerModal({
         ...(overrideParams || {}),
       };
 
-      const [conRes, leaveRes] = await Promise.allSettled([
-        reportApi.getConsiderations(params),
-        reportApi.getLeaves(params),
-      ]);
+      const [conRes, leaveRes] = await Promise.allSettled(
+        isTeacherView
+          ? [considerationApi.getTeacherApproved({ limit: 1000 }), Promise.resolve({ data: [] })]
+          : [reportApi.getConsiderations(params), reportApi.getLeaves(params)]
+      );
 
       const rawCon = conRes.status === 'fulfilled' ? conRes.value : null;
       const rawConList = Array.isArray(rawCon?.data?.requests)
@@ -205,7 +208,7 @@ export default function OfficialClearancesLedgerModal({
     if (urlParams.get('open_print') === 'true') {
       setShowPrintModal(true);
     }
-  }, []);
+  }, [isTeacherView]);
 
   // Sync print modal scope whenever dateMode or dates change
   useEffect(() => {

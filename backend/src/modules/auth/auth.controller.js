@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { sendSuccess } from '../../utils/response.js';
 import asyncHandler from '../../utils/asyncHandler.js';
 import env from '../../config/env.js';
+import teacherPasscodeService from './teacherPasscode.service.js';
 
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
@@ -35,6 +36,35 @@ export const login = asyncHandler(async (req, res) => {
     accessToken: result.accessToken,
     refreshToken: result.refreshToken,
   });
+});
+
+export const teacherPasscodeLogin = asyncHandler(async (req, res) => {
+  const result = await teacherPasscodeService.login({
+    passcode: req.body.passcode,
+    ip: req.ip,
+  });
+  return sendSuccess(res, result);
+});
+
+export const getTeacherPasscodeStatus = asyncHandler(async (req, res) => {
+  return sendSuccess(res, await teacherPasscodeService.getStatus());
+});
+
+export const changeTeacherPasscode = asyncHandler(async (req, res) => {
+  const result = await teacherPasscodeService.setPasscode({
+    userId: req.user.id,
+    currentPassword: req.body.currentPassword,
+    passcode: req.body.passcode,
+  });
+  return sendSuccess(res, result, 'Teacher passcode updated successfully');
+});
+
+export const resetTeacherPasscode = asyncHandler(async (req, res) => {
+  const result = await teacherPasscodeService.resetPasscode({
+    userId: req.user.id,
+    currentPassword: req.body.currentPassword,
+  });
+  return sendSuccess(res, result, 'Teacher passcode reset. Configure a new code before allowing Teacher access.');
 });
 
 export const refresh = asyncHandler(async (req, res) => {
@@ -239,6 +269,10 @@ export default {
   verifyRegistrationOtp,
   registerStudent,
   registerTeacher,
+  teacherPasscodeLogin,
+  getTeacherPasscodeStatus,
+  changeTeacherPasscode,
+  resetTeacherPasscode,
   initiateGoogleAuth,
   handleGoogleCallback,
 };

@@ -488,6 +488,19 @@ export function ERPProvider({ children }) {
     return user;
   };
 
+  const loginTeacher = async (passcode) => {
+    const data = await authApi.loginTeacher(passcode);
+    const user = data.user;
+    setToken(data.accessToken);
+    setCurrentUser(user);
+    setCurrentRole('teacher');
+    setIsAuthenticated(true);
+    localStorage.setItem('campusflow_user', JSON.stringify(user));
+    localStorage.setItem('campusflow_role', 'teacher');
+    addToast('Welcome', 'Teacher session established.', 'success');
+    return user;
+  };
+
   const loginWithToken = async (accessToken, refreshToken) => {
     if (refreshToken) {
       localStorage.setItem('campusflow_refresh_token', refreshToken);
@@ -574,6 +587,7 @@ export function ERPProvider({ children }) {
         viewAttachment,
         closeFilePreview,
         login,
+        loginTeacher,
         loginWithToken,
         logout,
         switchRole,

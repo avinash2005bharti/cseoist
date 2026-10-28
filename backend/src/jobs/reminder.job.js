@@ -78,7 +78,7 @@ export const runAttendanceReminder = async (slot = 'MIDDAY', mockClock = null) =
     const { default: ConsiderationRequest } = await import('../models/ConsiderationRequest.js');
     const { default: AuditLog } = await import('../models/AuditLog.js');
     const { emitNotification, emitToUser } = await import('../sockets/emitters.js');
-    const { sendPushToUser } = await import('../utils/webPush.js');
+    const { sendPushToUser, sendPushToSharedTeacher } = await import('../utils/webPush.js');
     const { acquireDistributedLock, releaseDistributedLock } = await import('../utils/distributedLock.js');
 
     // FLAW-BKD-04: Prevent multi-instance / clustered duplicate reminder dispatch
@@ -151,6 +151,19 @@ export const runAttendanceReminder = async (slot = 'MIDDAY', mockClock = null) =
       });
       pushDelivered += delivered;
     }
+
+    pushDelivered += await sendPushToSharedTeacher({
+      title,
+      body: message,
+      icon: '/iit.png',
+      badge: '/iit.png',
+      url: '/teacher/considerations',
+      data: {
+        url: '/teacher/considerations',
+        type: 'ATTENDANCE_REMINDER',
+        slot,
+      },
+    });
 
     // 4. Log Audit
     await AuditLog.create({
