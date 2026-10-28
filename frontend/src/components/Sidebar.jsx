@@ -71,9 +71,7 @@ export default function Sidebar({ isOpen, onClose }) {
         ];
       case 'teacher':
         return [
-          { to: '/tg', label: 'Dashboard', icon: <Home size={18} /> },
-          { to: '/tg/requests', label: 'Review Applications', icon: <CheckSquare size={18} /> },
-          { to: '/tg/students', label: 'Assigned Students', icon: <Users size={18} /> },
+          { to: '/teacher/considerations', label: 'View Consideration', icon: <FileText size={18} /> },
         ];
       case 'student':
       default:

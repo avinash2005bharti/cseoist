@@ -66,8 +66,10 @@ export default function LoginPage() {
             ? '/admin'
             : role === 'hod'
             ? '/hod'
-            : user.isTG || role === 'teacher'
+            : user.isTG
             ? '/tg'
+            : role === 'teacher'
+            ? '/teacher'
             : '/student';
           navigate(target, { replace: true });
         })
@@ -120,8 +122,10 @@ export default function LoginPage() {
         navigate('/admin');
       } else if (role === 'hod') {
         navigate('/hod');
-      } else if (user.isTG || role === 'teacher') {
+      } else if (user.isTG) {
         navigate('/tg');
+      } else if (role === 'teacher') {
+        navigate('/teacher');
       } else {
         navigate('/student');
       }

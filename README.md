@@ -348,7 +348,16 @@ When the seed script is executed, you can immediately test any portal role:
 | **HOD** | `hod.cse@oist.ac.in` | `Hod@123` | Final consideration approval, student roster edit (semester/section), temporary password resets, notices |
 | **TG (Section B)** | `tg.cse.b@oist.ac.in` | `Teacher@123` | Mentorship review, recommend/reject considerations for Section B students |
 | **TG (Section C)** | `tg.cse.c@oist.ac.in` | `Teacher@123` | Mentorship review, recommend/reject considerations for Section C students |
+| **TEACHER** | Existing faculty account | Existing faculty password | Read-only view of approved consideration records in the teacher's authorized cohort |
 | **STUDENT** | `student@oist.ac.in` | `Student@123` | Apply single/group considerations, apply leaves, change email/password, track status |
+
+### Teacher consideration visibility
+
+The Teacher Dashboard exposes only **View Consideration**. Its ledger reuses the authenticated,
+read-only `/reports/considerations` API and uses the teacher's assigned department as the access
+boundary. Teachers see approved consideration records for students in that department, while
+teachers with an active TG assignment continue to use their existing mentor-group scope in the
+TG workspace. No approval, rejection, edit, delete, or create actions are exposed to teachers.
 
 ---
 

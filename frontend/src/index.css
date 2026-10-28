@@ -2499,6 +2499,41 @@ div#formal-sanction-printable,
   transition: all 0.15s ease !important;
 }
 
+@media (max-width: 639px) {
+  .formal-modal-backdrop,
+  div.formal-modal-backdrop,
+  .modal-backdrop:has(#formal-sanction-printable),
+  .modal-backdrop:has(.formal-sanction-container) {
+    align-items: flex-start !important;
+    padding: 1rem !important;
+  }
+
+  #formal-sanction-printable,
+  div#formal-sanction-printable,
+  .formal-sanction-container {
+    max-height: calc(100dvh - 2rem) !important;
+    padding: 1.25rem !important;
+    margin: 0 auto !important;
+  }
+
+  #formal-sanction-printable .formal-modal-header {
+    position: sticky !important;
+    top: -1.25rem !important;
+    z-index: 2 !important;
+    margin: -1.25rem -1.25rem 0 !important;
+    padding: 1rem 1.25rem 0.85rem !important;
+    background: #FFFFFF !important;
+  }
+
+  #formal-sanction-printable .formal-modal-header > div:first-child {
+    max-width: calc(100% - 7rem) !important;
+  }
+
+  #formal-sanction-printable button[aria-label="Close modal"] {
+    flex: 0 0 32px !important;
+  }
+}
+
 #formal-sanction-printable button[aria-label="Close modal"]:hover {
   background-color: #F1F5F9 !important;
   color: #0F172A !important;

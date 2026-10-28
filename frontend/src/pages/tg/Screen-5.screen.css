@@ -253,7 +253,8 @@
 }
 
 .app-container.tg-portal-mode .tg-content-container,
-.app-container.tg-portal-mode .content-container {
+.app-container.tg-portal-mode .content-container,
+.app-container.teacher-portal-mode .content-container {
   max-width: 80rem !important; /* 1280px / max-w-7xl */
   margin: 0 auto !important;
   padding: 2.5rem 2rem !important;
@@ -262,7 +263,8 @@
 
 @media (max-width: 640px) {
   .app-container.tg-portal-mode .tg-content-container,
-  .app-container.tg-portal-mode .content-container {
+  .app-container.tg-portal-mode .content-container,
+  .app-container.teacher-portal-mode .content-container {
     padding: 1rem 1rem 5.5rem 1rem !important;
   }
 }

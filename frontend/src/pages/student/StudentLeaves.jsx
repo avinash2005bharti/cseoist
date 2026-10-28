@@ -300,8 +300,8 @@ export default function StudentLeaves() {
 
         {/* Selected Leave Detail Drawer */}
         {selectedLeave && (
-          <div className="lg:col-span-1">
-            <Card className="border-blue-200 shadow-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm lg:static lg:inset-auto lg:z-auto lg:block lg:bg-transparent lg:p-0 lg:backdrop-blur-none lg:col-span-1">
+            <Card className="w-full max-w-xl max-h-[calc(100vh-2rem)] overflow-y-auto border-blue-200 shadow-md lg:max-w-none lg:max-h-none lg:overflow-visible">
               <div className="flex items-start justify-between pb-3 border-b border-slate-200">
                 <div>
                   <div className="text-xs font-bold text-blue-600 uppercase">

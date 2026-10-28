@@ -580,12 +580,12 @@ export default function StudentMyRequests() {
             {/* Modal Body */}
             <div className="p-6 flex flex-col gap-5 max-h-[75vh] overflow-y-auto">
               {/* Status Header Pill */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/50 border border-border">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col items-start gap-2 p-3.5 rounded-xl bg-muted/50 border border-border sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-2">
                   <span className="text-xs font-semibold text-muted-foreground">Current Status:</span>
                   {getStatusBadge(selectedDetailItem.status)}
                 </div>
-                <span className="text-xs font-semibold text-muted-foreground">
+                <span className="text-xs font-semibold text-muted-foreground sm:text-right">
                   {getSubStatusText(selectedDetailItem.status)}
                 </span>
               </div>

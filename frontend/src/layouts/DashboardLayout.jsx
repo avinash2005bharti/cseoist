@@ -47,6 +47,7 @@ export default function DashboardLayout() {
   const roleStr = (currentUser?.role || currentRole || '').toLowerCase();
   const isFaculty = roleStr === 'teacher' || roleStr === 'hod';
   const isTg = roleStr === 'tg' || location.pathname.startsWith('/tg');
+  const isTeacher = roleStr === 'teacher' || location.pathname.startsWith('/teacher');
   const isStudent = roleStr === 'student' || location.pathname.startsWith('/student');
   const isHod = roleStr === 'hod' || location.pathname.startsWith('/hod');
   const isHodDashboard = location.pathname === '/hod';
@@ -60,7 +61,7 @@ export default function DashboardLayout() {
   };
 
   return (
-    <div className={`app-container ${isStudent ? 'student-portal-mode' : ''} ${isTg ? 'tg-portal-mode' : ''} ${isHod ? 'hod-portal-mode' : ''}`}>
+    <div className={`app-container ${isStudent ? 'student-portal-mode' : ''} ${isTg ? 'tg-portal-mode' : ''} ${isTeacher ? 'teacher-portal-mode' : ''} ${isHod ? 'hod-portal-mode' : ''}`}>
       {/* Navigation Sidebar */}
       <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
 

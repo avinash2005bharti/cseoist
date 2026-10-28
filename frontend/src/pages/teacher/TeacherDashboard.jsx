@@ -1,246 +1,90 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext.jsx';
-import { dashboardApi, leaveApi } from '../../api';
-import {
-  StatCard,
-  Card,
-  Button,
-  Badge,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '../../components/common';
-import {
-  BookOpen,
-  Calendar,
-  ShieldCheck,
-  Plus,
-  ArrowRight,
-  Clock,
-  CheckCircle2,
-  FileText,
-  Users,
-} from 'lucide-react';
+import { ArrowRight, ExternalLink, SquareCheckBig, User } from 'lucide-react';
+import '../tg/Screen-5.screen.css';
 
 export default function TeacherDashboard() {
-  const { currentUser, openModal } = useERP();
+  const { currentUser } = useERP();
   const navigate = useNavigate();
 
-  const [summary, setSummary] = useState(null);
-  const [recentLeaves, setRecentLeaves] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const isAppointedTg = Boolean(currentUser?.isTG || currentUser?.mentorGroupId);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [sumRes, leavesRes] = await Promise.all([
-        dashboardApi.getSummary().catch(() => ({ data: {} })),
-        leaveApi.getMine().catch(() => ({ data: [] })),
-      ]);
-
-      setSummary(sumRes?.data || {});
-      setRecentLeaves(leavesRes?.data?.slice(0, 5) || []);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-
-    const handleRefresh = () => fetchData();
-    window.addEventListener('campusflow_refresh_leaves', handleRefresh);
-    return () => {
-      window.removeEventListener('campusflow_refresh_leaves', handleRefresh);
-    };
-  }, []);
-
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-            <BookOpen className="text-blue-600" size={26} />
-            Faculty Workspace
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Welcome back, {currentUser?.name || 'Professor'} • Computer Science & Engineering
-          </p>
-        </div>
+    <div data-appearance="light" className="flex flex-col gap-6 sm:gap-8 w-full pb-10">
+      <section className="flex flex-col gap-3 sm:gap-5">
+        <span className="font-bold uppercase rounded-full sm:bg-primary/10 text-primary text-xs tracking-wider sm:px-3 sm:py-1 inline-flex w-fit max-w-fit">
+          TEACHER WORKSPACE
+        </span>
 
-        <div className="flex items-center gap-2">
-          {isAppointedTg && (
-            <Button
-              variant="secondary"
-              onClick={() => navigate('/tg')}
-              className="text-xs font-bold"
-            >
-              <ShieldCheck size={15} />
-              Open TG Mentor Portal
-            </Button>
-          )}
-
-          <Button
-            variant="primary"
-            onClick={() => openModal('APPLY_LEAVE')}
-            className="text-xs font-black shadow-xs"
-          >
-            <Plus size={15} />
-            Apply for Leave
-          </Button>
-        </div>
-      </div>
-
-      {/* TG Mentor Banner if Appointed */}
-      {isAppointedTg && (
-        <Card className="p-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white border-none shadow-md">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center font-bold">
-                <ShieldCheck size={22} className="text-white" />
-              </div>
-              <div>
-                <h3 className="font-heading font-black text-sm text-white">
-                  Appointed Teacher Guardian (TG)
-                </h3>
-                <p className="text-xs text-blue-100">
-                  You are designated as Tutor Guardian for assigned student cohorts. Click below to review pending student requests.
-                </p>
+        <div className="shadow-sm rounded-xl bg-card border border-border flex p-6 sm:p-8 justify-between items-start gap-8">
+          <div className="flex items-start gap-4 sm:gap-5">
+            <div className="rounded-lg bg-primary text-primary-foreground flex justify-center items-center shrink-0 size-12 sm:size-14">
+              <User className="size-6 sm:size-7" />
+            </div>
+            <div>
+              <h1 className="font-bold text-2xl sm:text-3xl tracking-tight text-foreground">
+                Welcome back, {currentUser?.name || 'Professor'}!
+              </h1>
+              <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+                View approved attendance consideration records for your department.
+              </p>
+              <div className="flex mt-4 sm:mt-5 flex-wrap items-center gap-2 sm:gap-3">
+                <span className="font-semibold rounded-full bg-accent text-accent-foreground text-xs sm:text-sm border border-accent inline-flex px-3 py-1.5 items-center gap-2">
+                  <span className="rounded-full bg-primary size-2" />
+                  Active Faculty
+                </span>
+                <span className="rounded-full bg-muted text-muted-foreground text-xs sm:text-sm border border-border px-3 py-1.5 font-medium">
+                  Department: Computer Science and Engineering
+                </span>
               </div>
             </div>
-
-            <Button
-              variant="outline"
-              onClick={() => navigate('/tg/requests')}
-              className="bg-white text-blue-700 hover:bg-blue-50 border-white text-xs font-black shrink-0"
-            >
-              Review Student Requests
-              <ArrowRight size={14} />
-            </Button>
           </div>
-        </Card>
-      )}
+        </div>
+      </section>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <StatCard
-          title="Total Leaves Applied"
-          value={summary?.leaves?.total ?? recentLeaves.length}
-          icon={Calendar}
-          variant="primary"
-          trend="Personal record"
-          trendDirection="neutral"
-        />
-
-        <StatCard
-          title="Pending Approval"
-          value={summary?.leaves?.pending ?? recentLeaves.filter((l) => l.status === 'PENDING').length}
-          icon={Clock}
-          variant="warning"
-          trend="Awaiting HOD approval"
-          trendDirection="neutral"
-        />
-
-        <StatCard
-          title="Supervisory Role"
-          value={isAppointedTg ? 'Teacher Guardian' : 'Faculty Member'}
-          icon={ShieldCheck}
-          variant={isAppointedTg ? 'success' : 'default'}
-          trend={isAppointedTg ? 'Active TG cohort' : 'Standard faculty'}
-          trendDirection="neutral"
-        />
-      </div>
-
-      {/* Recent Leaves Table */}
-      <Card className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Calendar size={18} className="text-blue-600" />
-            <h3 className="font-heading font-black text-sm text-slate-900">
-              Recent Leave Applications
-            </h3>
+      <section className="grid gap-4 sm:gap-5 grid-cols-1">
+        <div className="shadow-sm rounded-xl bg-card border border-border flex p-6 flex-col justify-between min-h-56 sm:min-h-64 transition-all hover:border-primary/40 hover:shadow-md">
+          <div>
+            <div className="flex justify-between items-start gap-4">
+              <div className="rounded-lg bg-secondary text-secondary-foreground flex justify-center items-center size-10 sm:size-11">
+                <SquareCheckBig className="size-5" />
+              </div>
+              <ExternalLink className="text-muted-foreground size-4 hidden sm:block" />
+            </div>
+            <h2 className="font-bold text-base sm:text-lg mt-4 sm:mt-6 text-foreground">
+              Attendance Consideration Records
+            </h2>
+            <p className="text-muted-foreground text-sm leading-6 mt-1 sm:mt-2">
+              Approved attendance clearances and official records
+            </p>
           </div>
+
           <button
-            onClick={() => navigate('/teacher/leaves')}
-            className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            type="button"
+            onClick={() => navigate('/teacher/considerations')}
+            className="font-bold text-primary text-sm inline-flex mt-4 sm:mt-6 items-center gap-2 hover:underline cursor-pointer min-h-11 sm:min-h-0"
           >
-            View history <ArrowRight size={13} />
+            View Records
+            <ExternalLink className="size-4" />
           </button>
         </div>
+      </section>
 
-        {loading ? (
-          <div className="py-8 text-center text-xs text-slate-400">Loading leave records...</div>
-        ) : recentLeaves.length === 0 ? (
-          <div className="py-8 text-center text-xs text-slate-400 bg-slate-50 rounded-xl">
-            No personal leave applications submitted yet.
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Leave Type</TableHead>
-                <TableHead>Dates & Duration</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Applied Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentLeaves.map((item) => (
-                <TableRow key={item._id}>
-                  <TableCell>
-                    <span className="badge badge-indigo text-[10px] font-bold">
-                      {item.leaveType}
-                    </span>
-                  </TableCell>
-
-                  <TableCell>
-                    <span className="text-xs font-medium text-slate-800">
-                      {item.startDate === item.endDate
-                        ? item.startDate
-                        : `${item.startDate} to ${item.endDate}`}{' '}
-                      ({item.totalDays} days)
-                    </span>
-                  </TableCell>
-
-                  <TableCell>
-                    <span className="text-xs text-slate-600 truncate max-w-[220px] block" title={item.reason}>
-                      {item.reason}
-                    </span>
-                  </TableCell>
-
-                  <TableCell>
-                    <span
-                      className={`badge text-[10px] font-bold ${
-                        item.status === 'APPROVED'
-                          ? 'badge-emerald'
-                          : item.status === 'REJECTED'
-                          ? 'badge-danger'
-                          : 'badge-primary'
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                  </TableCell>
-
-                  <TableCell className="text-right">
-                    <span className="text-[11px] font-mono text-slate-400">
-                      {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-'}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </Card>
+      <div className="sm:hidden">
+        <button
+          type="button"
+          onClick={() => navigate('/teacher/considerations')}
+          className="text-left shadow-sm rounded-xl bg-primary text-primary-foreground flex px-4 justify-between items-center w-full min-h-12 cursor-pointer hover:bg-primary/90 transition-colors"
+        >
+          <span className="flex items-center gap-3">
+            <SquareCheckBig className="size-5" />
+            <span>
+              <span className="font-bold text-base block">Attendance Consideration</span>
+              <span className="text-primary-foreground/80 text-xs block">View approved records</span>
+            </span>
+          </span>
+          <ArrowRight className="size-5" />
+        </button>
+      </div>
     </div>
   );
 }

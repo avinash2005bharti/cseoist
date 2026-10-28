@@ -353,7 +353,16 @@ export const getConsiderationsReport = async (query = {}, user = null) => {
   const { page, limit, skip } = parsePagination(query);
   const filter = {};
 
-  if (user && user.role !== 'HOD' && user.role !== 'ADMIN') {
+  if (user?.role === 'TEACHER' && !user.isTG) {
+    if (!user.departmentId) {
+      filter.student = null;
+    } else {
+      const departmentStudents = await Student.find({
+        department: user.departmentId,
+      }).select('_id');
+      filter.student = { $in: departmentStudents.map((student) => student._id) };
+    }
+  } else if (user && user.role !== 'HOD' && user.role !== 'ADMIN') {
     const myGroups = await MentorGroup.find({
       $or: [{ tg: user._id }, { tg: user.teacherId }],
       isActive: true,

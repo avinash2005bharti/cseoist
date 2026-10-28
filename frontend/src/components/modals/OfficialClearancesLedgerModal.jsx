@@ -55,6 +55,7 @@ export default function OfficialClearancesLedgerModal({
   isTgView = false,
   assignedSemester = null,
   assignedSection = null,
+  initialDateMode = 'today',
 }) {
   const todayStr = getTodayISTString();
 
@@ -70,7 +71,7 @@ export default function OfficialClearancesLedgerModal({
   const [searchQuery, setSearchQuery] = useState('');
 
   // Date Filter Mode: 'today' by default, 'previous' when user chooses a date range
-  const [dateMode, setDateMode] = useState('today');
+  const [dateMode, setDateMode] = useState(initialDateMode);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 

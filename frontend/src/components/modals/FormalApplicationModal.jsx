@@ -478,8 +478,8 @@ export default function FormalApplicationModal({ item, onClose }) {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Header Bar matching Image 2 */}
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 no-print formal-modal-header">
-            <div className="flex items-center gap-2">
+          <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 no-print formal-modal-header">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className="font-bold text-slate-900 text-sm">
                 Formal Sanctioned Application Document
               </span>
@@ -488,7 +488,7 @@ export default function FormalApplicationModal({ item, onClose }) {
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
                 onClick={handlePrint}

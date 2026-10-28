@@ -42,7 +42,7 @@ const AdminAudit = lazy(() => import('./pages/admin/AdminAudit.jsx'));
 
 // Teacher Pages (Lazy with auto-retry)
 const TeacherDashboard = lazy(() => import('./pages/teacher/TeacherDashboard.jsx'));
-const TeacherLeaves = lazy(() => import('./pages/teacher/TeacherLeaves.jsx'));
+const TeacherConsiderations = lazy(() => import('./pages/teacher/TeacherConsiderations.jsx'));
 
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
@@ -374,14 +374,26 @@ export default function App() {
           }
         />
 
-        {/* Legacy Teacher Routes Redirect to TG Workspace */}
+        {/* Teacher Routes */}
         <Route
           path="teacher"
-          element={<Navigate to="/tg" replace />}
+          element={
+            <RoleRouteGuard role="teacher">
+              <TeacherDashboard />
+            </RoleRouteGuard>
+          }
+        />
+        <Route
+          path="teacher/considerations"
+          element={
+            <RoleRouteGuard role="teacher">
+              <TeacherConsiderations />
+            </RoleRouteGuard>
+          }
         />
         <Route
           path="teacher/leaves"
-          element={<Navigate to="/tg/requests" replace />}
+          element={<Navigate to="/teacher/considerations" replace />}
         />
       </Route>
 
