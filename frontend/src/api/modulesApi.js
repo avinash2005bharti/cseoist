@@ -257,11 +257,11 @@ export const notificationApi = {
   },
 
   markAsRead: async (id, scope) => {
-    return apiClient.patch(`/notifications/${id}/read`, null, { params: { scope } });
+    return apiClient.patch(`/notifications/${id}/read`, {}, { params: { scope } });
   },
 
   markAllAsRead: async (scope) => {
-    return apiClient.patch('/notifications/read-all', null, { params: { scope } });
+    return apiClient.patch('/notifications/read-all', {}, { params: { scope } });
   },
 
   getConsiderationWindow: async () => {

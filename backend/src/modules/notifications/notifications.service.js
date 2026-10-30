@@ -34,7 +34,7 @@ export const getUserNotifications = async (userId, query, scope = 'user') => {
     readStates: { $not: { $elemMatch: { scope } } },
   };
 
-  const [notifications, total, unreadCount] = await Promise.all([
+  const [notificationDocuments, total, unreadCount] = await Promise.all([
     Notification.find(query.unread === 'true' || query.unread === true ? unreadFilter : { user: userId })
       .skip(skip)
       .limit(limit)
@@ -42,6 +42,15 @@ export const getUserNotifications = async (userId, query, scope = 'user') => {
     Notification.countDocuments(query.unread === 'true' || query.unread === true ? unreadFilter : { user: userId }),
     Notification.countDocuments(unreadFilter),
   ]);
+
+  // isRead is kept globally for backwards compatibility, while readStates
+  // tracks the user's read state separately for each dashboard scope.
+  const notifications = notificationDocuments.map((notification) => {
+    const data = notification.toObject();
+    data.isRead =
+      data.isRead || data.readStates?.some((state) => state.scope === scope) || false;
+    return data;
+  });
 
   const meta = buildPaginationMeta(total, page, limit);
   meta.unreadCount = unreadCount;

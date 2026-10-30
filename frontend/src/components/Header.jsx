@@ -28,6 +28,7 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
     notifications,
     unreadNotifCount,
     refreshNotifications,
+    addToast,
     logout,
     switchRole,
     pwaPushEnabled,
@@ -36,6 +37,7 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
   } = useERP();
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [markingAllRead, setMarkingAllRead] = useState(false);
   const notifRef = useRef(null);
   const [expandedNotifId, setExpandedNotifId] = useState(null);
   const location = useLocation();
@@ -45,6 +47,7 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
   const isStudent = roleStr === 'student' || location.pathname.startsWith('/student');
   const isHod = roleStr === 'hod' || location.pathname.startsWith('/hod');
   const isHodDashboard = location.pathname === '/hod';
+  const notificationScope = currentUser?.sharedTeacher ? 'teacher' : currentRole;
 
   // Close notifications on outside click or Escape key
   useEffect(() => {
@@ -73,20 +76,24 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
     setExpandedNotifId(expandedNotifId === notif._id ? null : notif._id);
     if (!notif.isRead) {
       try {
-        await notificationApi.markAsRead(notif._id, currentUser?.sharedTeacher ? 'teacher' : currentRole);
-        refreshNotifications();
-      } catch {
-        // ignore
+        await notificationApi.markAsRead(notif._id, notificationScope);
+        await refreshNotifications();
+      } catch (error) {
+        addToast('Notifications unavailable', error?.message || 'Could not mark the notification as read.', 'danger');
       }
     }
   };
 
   const handleMarkAllRead = async () => {
+    if (markingAllRead || unreadNotifCount === 0) return;
+    setMarkingAllRead(true);
     try {
-      await notificationApi.markAllAsRead(currentUser?.sharedTeacher ? 'teacher' : currentRole);
-      refreshNotifications();
-    } catch {
-      // ignore
+      await notificationApi.markAllAsRead(notificationScope);
+      await refreshNotifications();
+    } catch (error) {
+      addToast('Notifications unavailable', error?.message || 'Could not mark all notifications as read.', 'danger');
+    } finally {
+      setMarkingAllRead(false);
     }
   };
 
@@ -345,15 +352,16 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
                       <button
                         type="button"
                         onClick={handleMarkAllRead}
+                        disabled={markingAllRead || unreadNotifCount === 0}
                         className={`text-xs font-bold flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-md transition-all ${
-                          unreadNotifCount > 0
+                          unreadNotifCount > 0 && !markingAllRead
                             ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
                             : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
                         }`}
                         title="Mark all notifications as read"
                       >
-                        <CheckCheck size={14} className={unreadNotifCount > 0 ? "text-blue-600" : "text-slate-400"} />
-                        <span>Mark all as read</span>
+                        <CheckCheck size={14} className={unreadNotifCount > 0 && !markingAllRead ? "text-blue-600" : "text-slate-400"} />
+                        <span>{markingAllRead ? 'Marking as read...' : 'Mark all as read'}</span>
                       </button>
                     )}
                   </div>
