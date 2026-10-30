@@ -262,7 +262,7 @@ export const updateStudent = async (id, data, actorUser = null) => {
             semester: targetSem,
             name: `Section ${letter}`,
             code: codeToUse,
-            capacity: 60,
+            capacity: 90,
           });
         }
       }

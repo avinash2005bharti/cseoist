@@ -70,6 +70,7 @@ export default function Sidebar({ isOpen, onClose }) {
           { to: '/hod/students', label: 'Student Directory', icon: <GraduationCap size={18} /> },
           { to: '/hod/teachers', label: 'Faculty Directory', icon: <UserCheck size={18} /> },
           { to: '/hod/teacher-passcode', label: 'Teacher Passcode', icon: <KeyRound size={18} /> },
+          { to: '/hod/account-settings', label: 'Account Settings', icon: <Settings2 size={18} /> },
         ];
       case 'teacher':
         return [

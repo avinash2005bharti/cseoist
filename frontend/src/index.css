@@ -271,6 +271,46 @@ button {
   color: inherit;
 }
 
+.account-settings-modal .account-settings-icon {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.8;
+  pointer-events: none;
+}
+
+.account-settings-modal {
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.account-settings-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.account-settings-modal::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 999px;
+}
+
+.account-settings-modal .account-settings-input {
+  padding-left: 2.5rem !important;
+  min-height: 42px;
+}
+
+.account-settings-modal .account-settings-input-with-toggle {
+  padding-right: 2.75rem !important;
+}
+
+.account-settings-modal .account-settings-input:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.account-settings-modal label,
+.account-settings-modal .text-xs {
+  line-height: 1.35;
+}
+
 input,
 select,
 textarea {

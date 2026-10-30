@@ -85,7 +85,11 @@ export const createMentorGroup = async (
 
   const finalSemester = parsedSemester || resolvedSectionDoc?.semester || 5;
   const finalSectionId = resolvedSectionDoc?._id || null;
-  const activeYear = academicYear || '2025-26';
+  const activeYear = academicYear || '2026-27';
+
+  if (!/^\d{4}-\d{2}$/.test(activeYear)) {
+    throw ApiError.badRequest('Academic session must use the YYYY-YY format, for example 2026-27.');
+  }
 
   // Prevent duplicate active appointment for the same teacher in the same academic session
   const existingTeacherGroup = await MentorGroup.findOne({
@@ -260,7 +264,11 @@ export const updateMentorGroup = async (
     }
   }
 
-  const activeYear = academicYear || group.academicYear || '2025-26';
+  const activeYear = academicYear || group.academicYear || '2026-27';
+
+  if (!/^\d{4}-\d{2}$/.test(activeYear)) {
+    throw ApiError.badRequest('Academic session must use the YYYY-YY format, for example 2026-27.');
+  }
   const finalSemester = parsedSemester || resolvedSectionDoc?.semester || group.semester || 5;
   const finalSectionId = resolvedSectionDoc?._id || group.section?._id || group.section;
 

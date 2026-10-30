@@ -74,7 +74,7 @@ export default function SectionOverviewModal({
       id: letCode,
       code: `CSE-${letCode}`,
       label: `CSE-${letCode}`,
-      capacity: secDoc?.capacity || 60,
+      capacity: secDoc?.capacity || 90,
       bgColor: pal.bgColor,
       borderColor: pal.borderColor,
     };
@@ -95,7 +95,7 @@ export default function SectionOverviewModal({
   });
 
   const activeSecDoc = semesterDbSections.find((s) => getSectionLetter(s) === selectedSection);
-  const activeCapacity = activeSecDoc?.capacity || 60;
+  const activeCapacity = activeSecDoc?.capacity || 90;
 
   // Display enrolled students from database
   const displayStudents = currentSectionStudents;

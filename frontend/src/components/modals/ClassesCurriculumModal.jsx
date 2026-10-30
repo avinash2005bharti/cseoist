@@ -32,12 +32,12 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
   const [newSectionName, setNewSectionName] = useState('');
   const [newSectionCode, setNewSectionCode] = useState('');
   const [newSectionSemester, setNewSectionSemester] = useState(5);
-  const [newSectionCapacity, setNewSectionCapacity] = useState(60);
+  const [newSectionCapacity, setNewSectionCapacity] = useState(90);
   const [submitting, setSubmitting] = useState(false);
 
   // Inline Capacity Editing State
   const [editingSecId, setEditingSecId] = useState(null);
-  const [editingCapacity, setEditingCapacity] = useState(60);
+  const [editingCapacity, setEditingCapacity] = useState(90);
   const [updatingCapacity, setUpdatingCapacity] = useState(false);
 
   const yearSemesterMap = {
@@ -86,7 +86,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
       const cleanName = newSectionName.replace(/^Section\s*/i, '').trim().toUpperCase();
       const semNum = Number(newSectionSemester);
       const codeToUse = (newSectionCode || `CSE-${cleanName}-S${semNum}`).toUpperCase().trim();
-      const capNum = Number(newSectionCapacity) || 60;
+      const capNum = Number(newSectionCapacity) || 90;
 
       await masterDataApi.createSection({
         name: `Section ${cleanName}`,
@@ -104,7 +104,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
 
       setNewSectionName('');
       setNewSectionCode('');
-      setNewSectionCapacity(60);
+      setNewSectionCapacity(90);
       setIsProvisioning(false);
       await fetchSections();
       window.dispatchEvent(new CustomEvent('campusflow_sections_changed', { detail: { semester: semNum } }));
@@ -461,7 +461,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
             <div className="space-y-3">
               {filteredSections.map((sec) => {
                 const enrolled = sec.studentCount || 0;
-                const capacity = sec.capacity || 60;
+                const capacity = sec.capacity || 90;
                 const fillPct = Math.min(100, Math.round((enrolled / capacity) * 100));
                 const isEditing = editingSecId === sec._id;
 
@@ -529,7 +529,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                           type="button"
                           onClick={() => {
                             setEditingSecId(sec._id);
-                            setEditingCapacity(sec.capacity || 60);
+                            setEditingCapacity(sec.capacity || 90);
                           }}
                           className="px-3.5 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                           title="HOD/Admin: Set or update section capacity"

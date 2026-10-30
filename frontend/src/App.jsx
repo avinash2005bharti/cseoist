@@ -33,6 +33,7 @@ const HodStudents = lazy(() => import('./pages/hod/HodStudents.jsx'));
 const HodTeachers = lazy(() => import('./pages/hod/HodTeachers.jsx'));
 const HodReports = lazy(() => import('./pages/hod/HodReports.jsx'));
 const HodSections = lazy(() => import('./pages/hod/HodSections.jsx'));
+const HodAccountSettings = lazy(() => import('./pages/hod/HodAccountSettings.jsx'));
 
 // Admin Pages (Lazy with auto-retry)
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.jsx'));
@@ -327,6 +328,14 @@ export default function App() {
           element={
             <RoleRouteGuard role="hod">
               <HodReports />
+            </RoleRouteGuard>
+          }
+        />
+        <Route
+          path="hod/account-settings"
+          element={
+            <RoleRouteGuard role="hod">
+              <HodAccountSettings />
             </RoleRouteGuard>
           }
         />

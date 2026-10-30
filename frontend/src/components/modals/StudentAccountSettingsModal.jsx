@@ -3,7 +3,7 @@ import { X, Mail, Lock, KeyRound, Eye, EyeOff, ShieldCheck, CheckCircle2, AlertC
 import { authApi } from '../../api';
 import { useERP } from '../../context/ERPContext.jsx';
 
-export default function StudentAccountSettingsModal({ onClose, defaultTab = 'email', initialTab }) {
+export default function StudentAccountSettingsModal({ onClose, defaultTab = 'email', initialTab, accountLabel = 'student' }) {
   const { currentUser, updateCurrentUser, addToast } = useERP();
 
   const [activeTab, setActiveTab] = useState(initialTab || defaultTab); // 'email' | 'password'
@@ -78,8 +78,8 @@ export default function StudentAccountSettingsModal({ onClose, defaultTab = 'ema
       return;
     }
 
-    if (!newPassword || newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters long.');
+    if (!newPassword || newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      setPasswordError('New password must be at least 8 characters and include one uppercase letter and one number.');
       return;
     }
 
@@ -110,7 +110,7 @@ export default function StudentAccountSettingsModal({ onClose, defaultTab = 'ema
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-container max-w-md w-[95%] bg-white p-6 sm:p-7 rounded-3xl text-slate-900 shadow-2xl font-sans"
+        className="account-settings-modal modal-container max-w-md w-[95%] bg-white p-6 sm:p-7 rounded-3xl text-slate-900 shadow-2xl font-sans"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -124,7 +124,7 @@ export default function StudentAccountSettingsModal({ onClose, defaultTab = 'ema
                 Security & Account Settings
               </h3>
               <p className="text-xs text-slate-500 m-0 mt-0.5">
-                Manage your student portal login credentials
+                Manage your {accountLabel} portal login credentials
               </p>
             </div>
           </div>
@@ -184,7 +184,7 @@ export default function StudentAccountSettingsModal({ onClose, defaultTab = 'ema
                 Current Registered Email
               </span>
               <div className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-600 select-all">
-                {currentUser?.email || 'student@domain.in'}
+                {currentUser?.email || 'account@domain.in'}
               </div>
             </div>
 
@@ -200,9 +200,9 @@ export default function StudentAccountSettingsModal({ onClose, defaultTab = 'ema
                   onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="Enter new email address..."
                   required
-                  className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="account-settings-input w-full pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
-                <Mail size={15} className="absolute left-3 top-3 text-slate-400" />
+                <Mail size={15} aria-hidden="true" className="account-settings-icon absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               </div>
             </div>
 
@@ -218,15 +218,15 @@ export default function StudentAccountSettingsModal({ onClose, defaultTab = 'ema
                   onChange={(e) => setEmailPassword(e.target.value)}
                   placeholder="Enter current password to authorize..."
                   required
-                  className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="account-settings-input account-settings-input-with-toggle w-full pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
-                <Lock size={15} className="absolute left-3 top-3 text-slate-400" />
+                <Lock size={15} aria-hidden="true" className="account-settings-icon absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <button
                   type="button"
                   onClick={() => setShowEmailPassword(!showEmailPassword)}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer inline-flex items-center justify-center"
                 >
-                  {showEmailPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showEmailPassword ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}
                 </button>
               </div>
             </div>
@@ -275,15 +275,15 @@ export default function StudentAccountSettingsModal({ onClose, defaultTab = 'ema
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password..."
                   required
-                  className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  className="account-settings-input account-settings-input-with-toggle w-full pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
-                <KeyRound size={15} className="absolute left-3 top-3 text-slate-400" />
+                <KeyRound size={15} aria-hidden="true" className="account-settings-icon absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer inline-flex items-center justify-center"
                 >
-                  {showCurrentPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showCurrentPassword ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}
                 </button>
               </div>
             </div>
@@ -298,18 +298,18 @@ export default function StudentAccountSettingsModal({ onClose, defaultTab = 'ema
                   type={showNewPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Minimum 6 characters..."
+                  placeholder="Minimum 8 characters, 1 uppercase, 1 number..."
                   required
-                  minLength={6}
-                  className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  minLength={8}
+                  className="account-settings-input account-settings-input-with-toggle w-full pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
-                <Lock size={15} className="absolute left-3 top-3 text-slate-400" />
+                <Lock size={15} aria-hidden="true" className="account-settings-icon absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer inline-flex items-center justify-center"
                 >
-                  {showNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showNewPassword ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}
                 </button>
               </div>
             </div>
@@ -326,10 +326,10 @@ export default function StudentAccountSettingsModal({ onClose, defaultTab = 'ema
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter new password..."
                   required
-                  minLength={6}
-                  className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  minLength={8}
+                  className="account-settings-input w-full pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
-                <Lock size={15} className="absolute left-3 top-3 text-slate-400" />
+                <Lock size={15} aria-hidden="true" className="account-settings-icon absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               </div>
             </div>
 

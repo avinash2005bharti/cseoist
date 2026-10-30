@@ -2,7 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { X, ShieldCheck, UserCheck, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 import { mentorshipApi, masterDataApi } from '../../api';
 import { useERP } from '../../context/ERPContext.jsx';
-import { DEFAULT_ACADEMIC_SESSION, getSectionLetter } from '../../utils/constants.js';
+import { getSectionLetter } from '../../utils/constants.js';
+
+const CURRENT_ACADEMIC_SESSION = '2026-27';
+const ACADEMIC_SESSION_OPTIONS = Array.from({ length: 7 }, (_, index) => {
+  const startYear = 2024 + index;
+  return `${startYear}-${String(startYear + 1).slice(-2)}`;
+});
+
+const getSemesterYear = (semesterValue) => Math.ceil(Number(semesterValue) / 2);
+
+const getSectionOptions = (sections, semesterValue) => {
+  const semNum = parseInt(String(semesterValue).replace(/\D/g, ''), 10) || 1;
+  return sections.filter((item) => Number(item.semester) === semNum);
+};
 
 export default function AppointTgModal({
   teachers = [],
@@ -35,7 +48,7 @@ export default function AppointTgModal({
 
   const [semester, setSemester] = useState(initialSemester);
   const [section, setSection] = useState(initialSection);
-  const [session, setSession] = useState(existingCohort?.academicYear || DEFAULT_ACADEMIC_SESSION);
+  const [session, setSession] = useState(existingCohort?.academicYear || CURRENT_ACADEMIC_SESSION);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -49,8 +62,38 @@ export default function AppointTgModal({
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (preselectedTeacher || isChangeSection || availableSections.length === 0) return;
+
+    const semNum = parseInt(semester.replace(/\D/g, ''), 10) || 1;
+    const sectionLetter = getSectionLetter(section) || section.replace(/^Section\s+/i, '').trim();
+    const expectedYear = getSemesterYear(semNum);
+    const matchingTg = teachers.find((teacher) => {
+      const email = teacher.user?.email?.toLowerCase() || '';
+      return email === `tgcse${expectedYear}${sectionLetter.toLowerCase()}@oist.in`;
+    });
+
+    if (matchingTg) {
+      setSelectedTeacherId(matchingTg._id);
+    }
+  }, [availableSections, isChangeSection, preselectedTeacher, section, semester, teachers]);
+
+  useEffect(() => {
+    if (preselectedTeacher || isChangeSection) return;
+    const sectionOptions = getSectionOptions(availableSections, semester);
+    if (sectionOptions.length > 0 && !sectionOptions.some((item) => item.name === section)) {
+      setSection(sectionOptions[0].name);
+    }
+  }, [availableSections, isChangeSection, preselectedTeacher, semester, section]);
+
   const selectedTeacher =
     teachers.find((t) => t._id === selectedTeacherId) || preselectedTeacher || teachers[0];
+  const selectedSemesterNumber = parseInt(semester.replace(/\D/g, ''), 10) || 1;
+  const selectedSectionLetter = getSectionLetter(section) || section.replace(/^Section\s+/i, '').trim();
+  const matchingTgAccount = teachers.find((teacher) => (
+    teacher.user?.email?.toLowerCase() ===
+    `tgcse${getSemesterYear(selectedSemesterNumber)}${selectedSectionLetter.toLowerCase()}@oist.in`
+  ));
 
   const handleConfirm = async (e) => {
     e.preventDefault();
@@ -61,8 +104,8 @@ export default function AppointTgModal({
       return;
     }
 
-    if (!session || !session.trim()) {
-      setError('Please provide a valid academic session (e.g. 2025-26).');
+    if (!/^\d{4}-\d{2}$/.test(session)) {
+      setError('Please select a valid academic session.');
       return;
     }
 
@@ -201,6 +244,11 @@ export default function AppointTgModal({
                   </option>
                 ))}
               </select>
+              {matchingTgAccount && (
+                <p className="mt-1 text-[11px] text-emerald-700">
+                  Matching provisioned TG account: {matchingTgAccount.user?.email}
+                </p>
+              )}
             </div>
           )}
 
@@ -233,8 +281,7 @@ export default function AppointTgModal({
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none cursor-pointer"
               >
                 {(() => {
-                  const semNum = parseInt(semester.replace(/[^0-9]/g, '')) || 5;
-                  const semSecs = availableSections.filter((s) => Number(s.semester) === semNum);
+                  const semSecs = getSectionOptions(availableSections, semester);
                   const list = semSecs.length > 0 ? semSecs : availableSections;
                   if (list.length === 0) {
                     return (
@@ -265,13 +312,20 @@ export default function AppointTgModal({
             <label className="block text-xs font-bold text-slate-700 mb-1">
               Academic Session <span className="text-rose-500">*</span>
             </label>
-            <input
-              type="text"
+            <select
               value={session}
               onChange={(e) => setSession(e.target.value)}
-              placeholder="e.g. 2025-26"
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none"
-            />
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none cursor-pointer"
+            >
+              {Array.from(new Set([session, ...ACADEMIC_SESSION_OPTIONS])).map((option) => (
+                <option key={option} value={option}>
+                  {option}{option === CURRENT_ACADEMIC_SESSION ? ' (Current)' : ''}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Session is selected from the academic-year register.
+            </p>
           </div>
 
           {/* TG Powers & Mentorship Scope Box */}

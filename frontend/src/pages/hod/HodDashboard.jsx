@@ -854,7 +854,7 @@ export default function HodDashboard() {
                         <p className="font-black text-2xl mt-4 sm:mt-5 text-[#0F172A] m-0 leading-none">
                           {section.studentCount}
                           <span className="font-medium text-[#64748B] text-sm">
-                            {' '}/ {section.capacity || 60}
+                            {' '}/ {section.capacity || 90}
                           </span>
                         </p>
                         <p className="text-[#64748B] text-xs mt-1.5 m-0 font-medium">

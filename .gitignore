@@ -36,6 +36,7 @@ Thumbs.db
 .vscode/
 .idea/
 Avinash_Bharti_Nodejs_Developer_Resume_Final.docx
+TG_Accounts_2026-27.docx
 
 # Audit and verification documentation
 flaws.md
@@ -44,4 +45,6 @@ terminology-audit.md
 verification-manual.md
 fixes.md
 implementation_plan.md
-system architecture.md
+system architecture.md.mcp.json
+.mcp.json
+load-testing/

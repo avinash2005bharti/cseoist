@@ -239,7 +239,7 @@ export default function HodSections() {
             const currentSem = Number(sec.semester) || 5;
             const currentYear = sec.year || Math.ceil(currentSem / 2);
             const studentCount = sec.studentCount || 0;
-            const capacity = sec.capacity || 60;
+            const capacity = sec.capacity || 90;
             const pct = Math.min(100, Math.round((studentCount / capacity) * 100));
 
             return (

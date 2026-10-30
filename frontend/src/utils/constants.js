@@ -3,8 +3,8 @@
  * Established for Indian Engineering College Conventions (OIST CSE)
  */
 
-export const DEFAULT_ACADEMIC_SESSION = '2025-26';
-export const FULL_ACADEMIC_SESSION = '2025-2026';
+export const DEFAULT_ACADEMIC_SESSION = '2026-27';
+export const FULL_ACADEMIC_SESSION = '2026-2027';
 
 export const STATUS_LABELS = {
   PENDING: 'Pending',

@@ -58,7 +58,7 @@ export default function TeacherPasscodeManagementPage() {
   };
 
   return (
-    <section className="max-w-2xl mx-auto space-y-6">
+    <section className="mx-auto flex max-w-2xl flex-col gap-6">
       <button
         type="button"
         onClick={() => navigate(`/${currentRole === 'admin' ? 'admin' : 'hod'}`)}
@@ -67,7 +67,7 @@ export default function TeacherPasscodeManagementPage() {
         <ArrowLeft size={16} />
         Back to dashboard
       </button>
-      <div className="space-y-1">
+      <div className="flex flex-col gap-1">
         <p className="text-xs font-black uppercase tracking-wider text-blue-600">Security settings</p>
         <h1 className="text-2xl font-black leading-tight text-slate-900">Teacher Passcode</h1>
         <p className="text-sm leading-6 text-slate-500">The shared four-digit code is never shown or returned by the API.</p>
@@ -84,14 +84,14 @@ export default function TeacherPasscodeManagementPage() {
           <span>{notice.success}</span>
         </div>
       )}
-      <div className="card space-y-6 p-6 sm:p-8">
+      <div className="card flex flex-col gap-6 p-6 sm:p-8">
         <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-sm font-bold text-slate-700">Current status</span>
           <span className={`text-sm font-bold ${status?.configured ? 'font-mono tracking-widest text-slate-600' : 'text-slate-500'}`}>
             {loading ? 'Loading…' : status?.maskedPasscode || 'Not configured'}
           </span>
         </div>
-        <form onSubmit={submit} className="space-y-5">
+        <form onSubmit={submit} className="flex flex-col gap-5">
           <label className="flex flex-col gap-2 text-sm font-bold text-slate-700">
             <span>Your existing password</span>
             <input type="password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-3 font-normal text-slate-800 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100" autoComplete="current-password" />
@@ -100,7 +100,7 @@ export default function TeacherPasscodeManagementPage() {
             <span>New four-digit passcode</span>
             <input type="password" required inputMode="numeric" pattern="[0-9]{4}" maxLength={4} value={passcode} onChange={(event) => setPasscode(event.target.value.replace(/\D/g, '').slice(0, 4))} className="w-full rounded-xl border border-slate-300 px-3 py-3 font-normal tracking-[0.5em] text-slate-800 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100" />
           </label>
-          <div className="space-y-3 pt-1">
+          <div className="flex flex-col gap-3 pt-1">
             <button type="submit" className="btn btn-primary inline-flex w-full items-center justify-center gap-2"><KeyRound size={16} />{status?.configured ? 'Change Passcode' : 'Configure Passcode'}</button>
           <button
             type="button"
@@ -116,7 +116,7 @@ export default function TeacherPasscodeManagementPage() {
           </div>
         </form>
         {showResetConfirm && status?.configured && (
-          <div className="space-y-4 rounded-xl border border-rose-200 bg-rose-50 p-4">
+          <div className="flex flex-col gap-4 rounded-xl border border-rose-200 bg-rose-50 p-4">
             <div>
               <h2 className="text-sm font-bold text-rose-800">Confirm passcode reset</h2>
               <p className="mt-1 text-xs leading-5 text-rose-700">

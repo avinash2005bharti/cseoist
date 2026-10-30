@@ -33,7 +33,7 @@ const sectionSchema = new mongoose.Schema(
     },
     capacity: {
       type: Number,
-      default: 60,
+      default: 90,
       min: 1,
       max: 500,
     },

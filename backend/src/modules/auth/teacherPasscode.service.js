@@ -184,7 +184,30 @@ export const getApprovedConsiderations = async (query = {}) => {
   const filter = { status: 'APPROVED_BY_HOD' };
   const [requests, total] = await Promise.all([
     ConsiderationRequest.find(filter)
-      .populate({ path: 'student', populate: [{ path: 'user', select: 'name email' }, { path: 'department', select: 'name' }] })
+      .populate({
+        path: 'student',
+        populate: [
+          { path: 'user', select: 'name email' },
+          { path: 'department', select: 'name' },
+          { path: 'section', select: 'name code year semester' },
+        ],
+      })
+      .populate({
+        path: 'groupMembers',
+        populate: [
+          { path: 'user', select: 'name email' },
+          { path: 'department', select: 'name' },
+          { path: 'section', select: 'name code year semester' },
+        ],
+      })
+      .populate({
+        path: 'sectionStudents',
+        populate: [
+          { path: 'user', select: 'name email' },
+          { path: 'department', select: 'name' },
+          { path: 'section', select: 'name code year semester' },
+        ],
+      })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)

@@ -67,9 +67,9 @@ export default function AdminUsers() {
   const [newSecName, setNewSecName] = useState('Section E');
   const [newSecSemester, setNewSecSemester] = useState(5);
   const [newSecCode, setNewSecCode] = useState('');
-  const [newSecCapacity, setNewSecCapacity] = useState(60);
+  const [newSecCapacity, setNewSecCapacity] = useState(90);
   const [editingSecCapacityId, setEditingSecCapacityId] = useState(null);
-  const [editCapacityVal, setEditCapacityVal] = useState(60);
+  const [editCapacityVal, setEditCapacityVal] = useState(90);
   const [creatingSection, setCreatingSection] = useState(false);
 
   // Create User Modal State
@@ -188,12 +188,12 @@ export default function AdminUsers() {
         code: codeToUse,
         semester: semNum,
         year: Math.ceil(semNum / 2),
-        capacity: Number(newSecCapacity) || 60,
+        capacity: Number(newSecCapacity) || 90,
       });
       addToast({
         type: 'success',
         title: 'Section Created',
-        message: `Section ${cleanName} created with capacity ${Number(newSecCapacity) || 60} for Semester ${semNum}.`,
+        message: `Section ${cleanName} created with capacity ${Number(newSecCapacity) || 90} for Semester ${semNum}.`,
       });
       setShowCreateSectionModal(false);
       setNewSecName('');
@@ -735,7 +735,7 @@ export default function AdminUsers() {
                         <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 text-xs">
                           <span className="text-slate-500 font-bold">Enrolled Students:</span>
                           <span className="font-black text-slate-900 bg-white px-2 py-0.5 rounded-lg border border-slate-200">
-                            {sec.studentCount} / {sec.capacity || 60} Students
+                            {sec.studentCount} / {sec.capacity || 90} Students
                           </span>
                         </div>
 
@@ -768,13 +768,13 @@ export default function AdminUsers() {
                         ) : (
                           <div className="flex items-center justify-between px-1 text-[11px]">
                             <span className="text-slate-500 font-medium">
-                              Capacity Quota: <strong className="text-slate-800">{sec.capacity || 60}</strong>
+                              Capacity Quota: <strong className="text-slate-800">{sec.capacity || 90}</strong>
                             </span>
                             <button
                               type="button"
                               onClick={() => {
                                 setEditingSecCapacityId(sec._id);
-                                setEditCapacityVal(sec.capacity || 60);
+                                setEditCapacityVal(sec.capacity || 90);
                               }}
                               className="text-blue-600 hover:text-blue-800 font-bold cursor-pointer"
                             >
