@@ -5,6 +5,11 @@ const targetBackend = process.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/',
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  },
   server: {
     port: 5173,
     strictPort: true,
