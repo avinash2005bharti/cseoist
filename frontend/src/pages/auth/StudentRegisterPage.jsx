@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/authApi.js';
-import { masterDataApi } from '../../api/modulesApi.js';
 import {
   GraduationCap,
   User,
@@ -37,6 +36,7 @@ export default function StudentRegisterPage() {
     year: '3rd Year',
     semester: 5,
     section: 'Section A',
+    sectionId: '',
     batchFrom: '2022',
     batchTo: '2026',
     phone: '',
@@ -51,14 +51,50 @@ export default function StudentRegisterPage() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Fetch available sections on mount
+  // Fetch the current department sections without requiring an authenticated account.
   useEffect(() => {
-    masterDataApi.getSections().then((res) => {
-      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-        setAvailableSections(res.data);
-      }
-    }).catch(() => {});
+    authApi
+      .getStudentRegistrationSections()
+      .then((res) => {
+        const list = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+        if (list.length > 0) {
+          setAvailableSections(list);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load student registration sections:', err);
+      });
   }, []);
+
+  useEffect(() => {
+    const semesterSections = availableSections.filter(
+      (section) => Number(section.semester) === Number(formData.semester)
+    );
+    if (semesterSections.length > 0) {
+      const match = semesterSections.find(
+        (s) => s.name === formData.section || s._id === formData.sectionId
+      );
+      if (match) {
+        if (formData.section !== match.name || formData.sectionId !== match._id) {
+          setFormData((prev) => ({
+            ...prev,
+            section: match.name,
+            sectionId: match._id,
+          }));
+        }
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          section: semesterSections[0].name,
+          sectionId: semesterSections[0]._id,
+        }));
+      }
+    } else {
+      if (!formData.section) {
+        setFormData((prev) => ({ ...prev, section: 'Section A', sectionId: '' }));
+      }
+    }
+  }, [availableSections, formData.semester]);
 
   // Resend countdown timer
   useEffect(() => {
@@ -239,7 +275,6 @@ export default function StudentRegisterPage() {
     setLoading(true);
 
     try {
-      const cleanSection = formData.section.replace(/Section\s*/i, '').trim() || 'A';
       const cleanYear = parseInt(formData.year) || 3;
       const computedBatch = `${formData.batchFrom}-${formData.batchTo}`;
 
@@ -251,7 +286,8 @@ export default function StudentRegisterPage() {
         enrollment_no: formData.enrollment_no.trim().toUpperCase(),
         year: cleanYear,
         semester: Number(formData.semester),
-        section: cleanSection,
+        section: formData.section,
+        sectionId: formData.sectionId || undefined,
         batch: computedBatch,
         enrollmentYear: Number(formData.batchFrom),
         phone: formData.phone.trim() || undefined,
@@ -485,25 +521,36 @@ export default function StudentRegisterPage() {
                   <select
                     name="section"
                     value={formData.section}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const matched = availableSections.find(
+                        (s) =>
+                          Number(s.semester) === Number(formData.semester) &&
+                          (s.name === val || s._id === val)
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        section: matched ? matched.name : val,
+                        sectionId: matched ? matched._id : '',
+                      }));
+                      if (error) setError('');
+                    }}
                     className="w-full px-3 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-sm text-slate-800 font-medium cursor-pointer"
                   >
                     {(() => {
-                      const semSecs = availableSections.filter((s) => Number(s.semester) === Number(formData.semester));
-                      const list = semSecs.length > 0 ? semSecs : availableSections;
-                      if (list.length === 0) {
-                        return (
-                          <>
-                            <option value="Section A">Section A</option>
-                            <option value="Section B">Section B</option>
-                            <option value="Section C">Section C</option>
-                            <option value="Section D">Section D</option>
-                          </>
-                        );
+                      const semSections = availableSections.filter(
+                        (s) => Number(s.semester) === Number(formData.semester)
+                      );
+                      if (semSections.length > 0) {
+                        return semSections.map((s) => (
+                          <option key={s._id} value={s.name}>
+                            {s.name} ({s.code})
+                          </option>
+                        ));
                       }
-                      return list.map((s) => (
-                        <option key={s._id} value={s.name}>
-                          {s.name} ({s.code} - Sem {s.semester})
+                      return ['Section A', 'Section B', 'Section C', 'Section D', 'Section E'].map((secName) => (
+                        <option key={secName} value={secName}>
+                          {secName}
                         </option>
                       ));
                     })()}

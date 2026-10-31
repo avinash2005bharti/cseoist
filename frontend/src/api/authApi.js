@@ -82,6 +82,11 @@ export const authApi = {
     return res.data;
   },
 
+  getStudentRegistrationSections: async () => {
+    const res = await apiClient.get('/auth/register/student/sections');
+    return res?.data ?? res;
+  },
+
   registerStudent: async (data) => {
     const res = await apiClient.post('/auth/register/student', data);
     return res.data;

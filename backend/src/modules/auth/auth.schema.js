@@ -55,6 +55,7 @@ export const registerStudentSchema = z.object({
   year: z.union([z.string(), z.number()]).nullish(),
   semester: z.union([z.string(), z.number()]).nullish(),
   section: z.string().trim().nullish(),
+  sectionId: z.string().trim().nullish(),
   batch: z.string().trim().nullish(),
   phone: z.union([z.string(), z.number()]).nullish().transform((v) => (v != null ? String(v).trim() : null)),
   enrollmentYear: z.union([z.string(), z.number()]).nullish(),

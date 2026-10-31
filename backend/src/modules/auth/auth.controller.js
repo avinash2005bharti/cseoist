@@ -114,6 +114,11 @@ export const verifyRegistrationOtp = asyncHandler(async (req, res) => {
   return sendSuccess(res, result);
 });
 
+export const getStudentRegistrationSections = asyncHandler(async (req, res) => {
+  const sections = await authService.getStudentRegistrationSections();
+  return sendSuccess(res, sections);
+});
+
 export const registerStudent = asyncHandler(async (req, res) => {
   const result = await authService.registerStudent(req.body);
   return sendSuccess(res, result, 201);
@@ -267,6 +272,7 @@ export default {
   getMe,
   sendStudentRegistrationOtp,
   verifyRegistrationOtp,
+  getStudentRegistrationSections,
   registerStudent,
   registerTeacher,
   teacherPasscodeLogin,

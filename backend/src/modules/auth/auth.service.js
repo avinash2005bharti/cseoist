@@ -24,6 +24,22 @@ export const hashOtp = (otp) => {
   return crypto.createHash('sha256').update(String(otp).trim()).digest('hex');
 };
 
+export const getStudentRegistrationSections = async () => {
+  let department = await Department.findOne({ code: 'CSE' }).select('_id');
+  if (!department) {
+    department = await Department.findOne().select('_id');
+  }
+
+  const filter = department
+    ? { $or: [{ department: department._id }, { department: null }] }
+    : {};
+
+  return Section.find(filter)
+    .select('_id name code year semester')
+    .sort({ semester: 1, name: 1, code: 1 })
+    .lean();
+};
+
 const generateAccessToken = (user, extraClaims = {}) => {
   return jwt.sign(
     {
@@ -421,6 +437,7 @@ export const registerStudent = async ({
   year,
   semester,
   section,
+  sectionId,
   batch,
   phone,
   enrollmentYear,
@@ -503,32 +520,52 @@ export const registerStudent = async ({
     }
   }
 
-  // Resolve Section (find by code or name or create, scoped by semester)
+  // Resolve Section (find by id, or by code/name, scoped by semester)
   const semNum = semester ? parseInt(semester, 10) || 5 : 5;
   const yrNum = year ? parseInt(year, 10) || Math.ceil(semNum / 2) || 3 : Math.ceil(semNum / 2) || 3;
-  const cleanSec = (section || 'A').replace(/^Section\s*/i, '').trim().toUpperCase();
-  let sec = await Section.findOne({
-    department: dept._id,
-    semester: semNum,
-    $or: [
-      { name: `Section ${cleanSec}` },
-      { code: `CSE-${cleanSec}-S${semNum}` },
-      { code: `CSE-${cleanSec}` },
-      { name: cleanSec },
-    ],
-  });
+  let sec = null;
+  if (sectionId && /^[0-9a-fA-F]{24}$/.test(String(sectionId))) {
+    sec = await Section.findById(sectionId);
+  }
+  if (!sec && section && /^[0-9a-fA-F]{24}$/.test(String(section))) {
+    sec = await Section.findById(section);
+  }
 
   if (!sec) {
-    let codeToUse = `CSE-${cleanSec}`;
+    const rawSec = (section || 'A').trim();
+    const letterMatch = rawSec.match(/([A-H])$/i);
+    const letter = letterMatch ? letterMatch[1].toUpperCase() : 'A';
+
+    sec = await Section.findOne({
+      department: dept._id,
+      semester: semNum,
+      $or: [
+        { name: rawSec },
+        { code: rawSec },
+        { name: `Section ${letter}` },
+        { name: `Year ${yrNum} Section ${letter}` },
+        { code: `CSE-${letter}-S${semNum}` },
+        { code: `CSE-${letter}` },
+        { code: `CSE-${yrNum}${letter}` },
+        { code: `CSE-${semNum}${letter}` },
+        { name: letter },
+      ],
+    });
+  }
+
+  if (!sec) {
+    const letterMatch = (section || 'A').match(/([A-H])$/i);
+    const letter = letterMatch ? letterMatch[1].toUpperCase() : 'A';
+    let codeToUse = `CSE-${letter}-S${semNum}`;
     const codeConflict = await Section.findOne({ code: codeToUse });
-    if (codeConflict && codeConflict.semester !== semNum) {
-      codeToUse = `CSE-${cleanSec}-S${semNum}`;
+    if (codeConflict) {
+      codeToUse = `CSE-${letter}-S${semNum}-${Date.now().toString().slice(-4)}`;
     }
     sec = await Section.create({
       department: dept._id,
       year: yrNum,
       semester: semNum,
-      name: `Section ${cleanSec}`,
+      name: `Section ${letter}`,
       code: codeToUse,
     });
   }
@@ -853,6 +890,7 @@ export default {
   getMe,
   sendStudentRegistrationOtp,
   verifyRegistrationOtp,
+  getStudentRegistrationSections,
   registerStudent,
   registerTeacher,
 };

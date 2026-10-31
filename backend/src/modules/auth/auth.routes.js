@@ -31,6 +31,7 @@ router.post('/teacher-passcode/reset', auth, authorize('ADMIN', 'HOD'), validate
 router.post('/register/student/send-otp', authLimiter, authController.sendStudentRegistrationOtp);
 router.post('/register/student/verify-otp', authLimiter, validateBody(verifyOtpSchema), authController.verifyRegistrationOtp);
 router.post('/verify-otp', authLimiter, validateBody(verifyOtpSchema), authController.verifyRegistrationOtp);
+router.get('/register/student/sections', authLimiter, authController.getStudentRegistrationSections);
 router.post('/register/student', authLimiter, validateBody(registerStudentSchema), authController.registerStudent);
 router.post('/register/teacher', auth, authorize('ADMIN', 'HOD'), validateBody(registerTeacherSchema), authController.registerTeacher);
 router.post('/forgot-password', authLimiter, validateBody(forgotPasswordSchema), authController.forgotPassword);
