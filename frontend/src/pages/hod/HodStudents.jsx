@@ -314,7 +314,7 @@ export default function HodStudents() {
             const rollNo = st.rollNumber || st.enrollmentNumber || 'N/A';
             const email = st.user?.email || 'N/A';
             const phone = st.user?.phone || 'N/A';
-            const sem = st.section?.semester ?? st.semester ?? 5;
+            const sem = st.semester ?? st.section?.semester ?? 5;
             const sec = getSectionLetter(st.section) || 'A';
             const batch = (() => {
               if (st.batch && typeof st.batch === 'string' && st.batch.trim()) {

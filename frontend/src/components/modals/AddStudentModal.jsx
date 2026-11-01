@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, UserPlus, Mail, Phone, Lock, Hash, Calendar, AlertCircle } from 'lucide-react';
 import { authApi, masterDataApi } from '../../api';
 import { useERP } from '../../context/ERPContext.jsx';
+import { formatSectionLabel } from '../../utils/constants.js';
 
 export default function AddStudentModal({ onClose, onSuccess }) {
   const { addToast } = useERP();
@@ -195,7 +196,7 @@ export default function AddStudentModal({ onClose, onSuccess }) {
                   }
                   return list.map((s) => (
                     <option key={s._id} value={s.name}>
-                      {s.name} ({s.code} - Sem {s.semester})
+                      {formatSectionLabel(s)}
                     </option>
                   ));
                 })()}

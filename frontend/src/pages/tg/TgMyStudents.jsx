@@ -11,7 +11,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import EditStudentModal from '../../components/modals/EditStudentModal.jsx';
-import { getSectionLetter } from '../../utils/constants.js';
+import { formatSectionLabel, getSectionLetter } from '../../utils/constants.js';
 
 export default function TgMyStudents() {
   const { addToast } = useERP();
@@ -96,10 +96,10 @@ export default function TgMyStudents() {
         <div className="flex items-center gap-2 shrink-0 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200">
           <span className="text-xs font-bold text-blue-900">Assigned Section:</span>
           <span className="px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-xs font-black">
-            {cohort?.section?.name
-              ? cohort.section.name
-              : cohort?.section?.code
-              ? `Section ${cohort.section.code.replace('CSE-', '')}`
+            {cohort?.section
+              ? formatSectionLabel(cohort.section, cohort.semester)
+              : cohort?.name
+              ? formatSectionLabel(cohort.name, cohort.semester)
               : (cohort?.semester ? `Semester ${cohort.semester}` : 'Assigned Section')}
           </span>
         </div>

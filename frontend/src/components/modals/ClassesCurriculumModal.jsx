@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  Plus,
   Trash2,
   Building2,
   Layers,
@@ -214,8 +213,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
               }}
               className="hod-btn-primary-blue px-3.5 py-2 rounded-xl text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
             >
-              <Plus size={15} />
-              <span>+ Provision Section</span>
+              <span>Create Section</span>
             </button>
             <button
               onClick={fetchSections}
@@ -355,8 +353,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                     </>
                   ) : (
                     <>
-                      <Plus size={14} />
-                      <span>Save Section to Database</span>
+                      <span>Create Section</span>
                     </>
                   )}
                 </button>
@@ -453,8 +450,7 @@ export default function ClassesCurriculumModal({ onClose, onUpdated }) {
                 }}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
               >
-                <Plus size={14} />
-                <span>+ Provision First Section</span>
+                <span>Create Section</span>
               </button>
             </div>
           ) : (

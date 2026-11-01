@@ -23,6 +23,7 @@ import AddFacultyModal from '../../components/modals/AddFacultyModal.jsx';
 import EditFacultyModal from '../../components/modals/EditFacultyModal.jsx';
 import SectionTgMatrixModal from '../../components/modals/SectionTgMatrixModal.jsx';
 import ConfirmRevokeTgModal from '../../components/modals/ConfirmRevokeTgModal.jsx';
+import { formatSectionLabel } from '../../utils/constants.js';
 
 export default function HodMentorship() {
   const { addToast } = useERP();
@@ -121,7 +122,7 @@ export default function HodMentorship() {
     ? (() => {
         const g = activeCohorts[0];
         const sem = g.semester || g.section?.semester || 5;
-        const sec = g.section?.name || g.section?.code || (g.name?.includes('CSE-') ? `Section ${g.name.split('CSE-')[1]}` : 'Section B');
+        const sec = formatSectionLabel(g.section || g.name || 'Section B', sem);
         return `Sec Semester ${sem} • ${sec}`;
       })()
     : 'Sec Semester 5 • Section B';
@@ -292,11 +293,10 @@ export default function HodMentorship() {
             const designation = t.designation || (isTg ? 'Assistant Professor (TG)' : 'Assistant Professor');
 
             const cohortSemester = cohort?.semester || cohort?.section?.semester || 5;
-            const cohortSection = cohort?.section?.name
-              ? cohort.section.name
-              : cohort?.section?.code
-              ? `Section ${cohort.section.code.replace('CSE-', '')}`
-              : (cohort?.name?.includes('CSE-') ? `Section ${cohort.name.split('CSE-')[1]}` : 'Section A');
+            const cohortSection = formatSectionLabel(
+              cohort?.section || cohort?.name || 'Section A',
+              cohortSemester
+            );
             const cohortLabel = `Semester ${cohortSemester} • ${cohortSection}`;
 
             return (

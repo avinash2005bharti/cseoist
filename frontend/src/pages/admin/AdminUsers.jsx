@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useERP } from '../../context/ERPContext.jsx';
 import { masterDataApi, mentorshipApi } from '../../api/modulesApi.js';
+import { formatSectionLabel } from '../../utils/constants.js';
 import {
   PageHeader,
   Card,
@@ -1361,7 +1362,7 @@ export default function AdminUsers() {
                             }
                             return listToRender.map((s) => (
                               <option key={s._id} value={s.name}>
-                                {s.name} ({s.code} - Sem {s.semester})
+                                {formatSectionLabel(s)}
                               </option>
                             ));
                           })()}
@@ -1439,7 +1440,7 @@ export default function AdminUsers() {
                             }
                             return listToRender.map((s) => (
                               <option key={s._id} value={s.name}>
-                                {s.name} ({s.code} - Sem {s.semester})
+                                {formatSectionLabel(s)}
                               </option>
                             ));
                           })()}
@@ -1688,7 +1689,7 @@ export default function AdminUsers() {
                       }
                       return listToRender.map((s) => (
                         <option key={s._id} value={s.name}>
-                          {s.name} ({s.code} - Sem {s.semester})
+                          {formatSectionLabel(s)}
                         </option>
                       ));
                     })()}

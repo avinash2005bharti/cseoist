@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/authApi.js';
+import { formatSectionLabel } from '../../utils/constants.js';
 import {
   GraduationCap,
   User,
@@ -544,13 +545,13 @@ export default function StudentRegisterPage() {
                       if (semSections.length > 0) {
                         return semSections.map((s) => (
                           <option key={s._id} value={s.name}>
-                            {s.name} ({s.code})
+                            {formatSectionLabel(s, formData.semester)}
                           </option>
                         ));
                       }
                       return ['Section A', 'Section B', 'Section C', 'Section D', 'Section E'].map((secName) => (
                         <option key={secName} value={secName}>
-                          {secName}
+                          {formatSectionLabel(secName, formData.semester)}
                         </option>
                       ));
                     })()}

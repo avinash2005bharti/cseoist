@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, User, Hash, Mail, Phone, Lock, AlertCircle, CheckCircle2, Copy, Check, Calendar } from 'lucide-react';
 import { masterDataApi } from '../../api';
 import { useERP } from '../../context/ERPContext.jsx';
-import { getSectionLetter } from '../../utils/constants.js';
+import { formatSectionLabel, getSectionLetter } from '../../utils/constants.js';
 
 const BASE_FROM_YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030];
 const BASE_TO_YEARS = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035];
@@ -176,7 +176,7 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
     ['A', 'B', 'C', 'D', 'E'].forEach((l) => {
       optionsMap.set(l, {
         value: l,
-        label: `Section ${l} (CSE-${l})`,
+        label: formatSectionLabel(`Section ${l}`, semester),
       });
     });
 
@@ -189,7 +189,7 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
       if (l && l.length <= 2) {
         optionsMap.set(l, {
           value: l,
-          label: `${s.name || `Section ${l}`} (${s.code || `CSE-${l}`}${s.semester ? ` - Sem ${s.semester}` : ''})`,
+          label: formatSectionLabel(s, semester),
         });
       }
     });
@@ -245,6 +245,12 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
 
     setSaving(true);
     try {
+      const selectedSectionDoc = availableSections.find(
+        (candidate) =>
+          Number(candidate.semester) === Number(semester) &&
+          getSectionLetter(candidate) === String(section).toUpperCase()
+      );
+
       await masterDataApi.updateStudent(student._id, {
         name: name.trim(),
         rollNumber: rollNumber.trim().toUpperCase(),
@@ -252,6 +258,7 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
         phone: phone.trim(),
         semester: Number(semester),
         section: section,
+        sectionId: selectedSectionDoc?._id,
         batch: `${batchFrom}-${batchTo}`,
         enrollmentYear: Number(batchFrom),
         status,

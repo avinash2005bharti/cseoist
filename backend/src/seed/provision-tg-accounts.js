@@ -33,18 +33,24 @@ export const provisionTutorGuardianAccounts = async () => {
   for (let year = 1; year <= 4; year += 1) {
     for (const sectionLetter of SECTIONS) {
       const email = `tgcse${year}${sectionLetter.toLowerCase()}@oist.in`;
-      const sectionCode = `CSE-${year}${sectionLetter}`;
       const semester = year * 2;
+      const sectionCode = `CSE-${sectionLetter}-SEM${semester}`;
+      const legacySectionCode = `CSE-${year}${sectionLetter}`;
 
       const section = await Section.findOneAndUpdate(
-        { department: department._id, semester, code: sectionCode },
+        {
+          department: department._id,
+          semester,
+          $or: [{ code: sectionCode }, { code: legacySectionCode }],
+        },
         {
           $set: {
             year,
-            name: `Year ${year} Section ${sectionLetter}`,
+            name: `Section ${sectionLetter}`,
+            code: sectionCode,
             capacity: 90,
           },
-          $setOnInsert: { department: department._id, semester, code: sectionCode },
+          $setOnInsert: { department: department._id, semester },
         },
         { new: true, upsert: true, setDefaultsOnInsert: true }
       );

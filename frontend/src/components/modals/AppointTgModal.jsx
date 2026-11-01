@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ShieldCheck, UserCheck, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 import { mentorshipApi, masterDataApi } from '../../api';
 import { useERP } from '../../context/ERPContext.jsx';
-import { getSectionLetter } from '../../utils/constants.js';
+import { formatSectionLabel, getSectionLetter } from '../../utils/constants.js';
 
 const CURRENT_ACADEMIC_SESSION = '2026-27';
 const ACADEMIC_SESSION_OPTIONS = Array.from({ length: 7 }, (_, index) => {
@@ -110,23 +110,25 @@ export default function AppointTgModal({
     }
 
     const semNum = parseInt(semester.replace(/\D/g, ''), 10) || 5;
-    const secLetter = section.replace('Section ', '').trim().toUpperCase() || 'A';
+    const secLetter = getSectionLetter(section) || 'A';
 
     // Find section doc if available
     const matchedDoc = availableSections.find(
       (s) =>
-        (Number(s.semester) === semNum || !s.semester) &&
+        Number(s.semester) === semNum &&
         (getSectionLetter(s) === secLetter ||
           s.code === `CSE-${secLetter}` ||
           s.code === `CSE-${secLetter}-S${semNum}` ||
+          s.code === `CSE-${secLetter}-SEM${semNum}` ||
           s.name === section ||
           s.code === section ||
           s.name === `Section ${secLetter}`)
     ) || availableSections.find(
       (s) =>
-        getSectionLetter(s) === secLetter ||
-        s.code === `CSE-${secLetter}` ||
-        s.name === `Section ${secLetter}`
+        Number(s.semester) === semNum &&
+        (getSectionLetter(s) === secLetter ||
+          s.code === `CSE-${secLetter}` ||
+          s.name === `Section ${secLetter}`)
     );
 
     const payload = {
@@ -286,16 +288,17 @@ export default function AppointTgModal({
                   if (list.length === 0) {
                     return (
                       <>
-                        <option value="Section A">Section A (CSE-A)</option>
-                        <option value="Section B">Section B (CSE-B)</option>
-                        <option value="Section C">Section C (CSE-C)</option>
-                        <option value="Section D">Section D (CSE-D)</option>
+                        {'ABCDEFGH'.split('').map((letter) => (
+                          <option key={letter} value={`Section ${letter}`}>
+                            {formatSectionLabel(`Section ${letter}`, selectedSemesterNumber)}
+                          </option>
+                        ))}
                       </>
                     );
                   }
                   return list.map((s) => (
                     <option key={s._id} value={s.name}>
-                      {s.name} ({s.code} - Sem {s.semester})
+                      {formatSectionLabel(s)}
                     </option>
                   ));
                 })()}

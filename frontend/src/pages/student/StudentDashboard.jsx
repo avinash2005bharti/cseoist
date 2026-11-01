@@ -193,7 +193,7 @@ export default function StudentDashboard() {
   const studentName = currentUser?.name || currentUser?.designation || 'Student';
   const enrollmentNo = studentProfile.enrollmentNumber || studentProfile.rollNumber || 'Not provided';
   const sectionName = studentProfile.section?.name || studentProfile.section?.code || 'Section B';
-  const semesterNum = studentProfile.section?.semester || studentProfile.semester || 5;
+  const semesterNum = studentProfile.semester ?? studentProfile.section?.semester ?? 5;
   const tgMentor = studentProfile.mentorGroup?.tg?.user;
   const tgTeacher = studentProfile.mentorGroup?.tg;
 

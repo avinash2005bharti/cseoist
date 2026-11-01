@@ -36,7 +36,13 @@ export default function SectionOverviewModal({
         masterDataApi.getSections(),
         mentorshipApi.listGroups(),
       ]);
-      if (studentsRes.status === 'fulfilled') setStudents(studentsRes.value?.data || []);
+      if (studentsRes.status === 'fulfilled') {
+        const studentData = studentsRes.value?.data;
+        const normalizedStudents = Array.isArray(studentData)
+          ? studentData
+          : (Array.isArray(studentData?.students) ? studentData.students : []);
+        setStudents(normalizedStudents);
+      }
       if (sectionsRes.status === 'fulfilled') setDbSections(sectionsRes.value?.data || []);
       if (groupsRes.status === 'fulfilled') setMentorGroups(groupsRes.value?.data || []);
     } finally {
@@ -80,18 +86,23 @@ export default function SectionOverviewModal({
     };
   });
 
+  const getStudentSemester = (student) => Number(student.semester || student.section?.semester);
+  const getStudentSectionLetter = (student) => getSectionLetter(
+    student.section || student.sectionCode || student.sectionName
+  );
+
   const semesterStudents = students.filter((s) => {
-    const sem = s.semester || s.section?.semester;
-    return Number(sem) === Number(currentSemester);
+    const sem = getStudentSemester(s);
+    return sem === Number(currentSemester);
   });
 
   // Count per section for the current semester using precise letter extraction
   const getSectionCount = (secId) => {
-    return semesterStudents.filter((s) => getSectionLetter(s.section) === secId).length;
+    return semesterStudents.filter((s) => getStudentSectionLetter(s) === secId).length;
   };
 
   const currentSectionStudents = semesterStudents.filter((s) => {
-    return getSectionLetter(s.section) === selectedSection;
+    return getStudentSectionLetter(s) === selectedSection;
   });
 
   const activeSecDoc = semesterDbSections.find((s) => getSectionLetter(s) === selectedSection);

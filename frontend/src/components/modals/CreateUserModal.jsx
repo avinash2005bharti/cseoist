@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { masterDataApi } from '../../api';
 import { useERP } from '../../context/ERPContext.jsx';
-import { getSectionLetter } from '../../utils/constants.js';
+import { formatSectionLabel, getSectionLetter } from '../../utils/constants.js';
 
 export default function CreateUserModal({
   initialRole = 'STUDENT',
@@ -73,11 +73,11 @@ export default function CreateUserModal({
     semesterSecs.length > 0
       ? semesterSecs.map((s) => {
           const letter = getSectionLetter(s) || s.code?.replace('CSE-', '') || s.name?.replace('Section ', '') || 'B';
-          return { value: `Section ${letter}`, label: `Section ${letter} (CSE-${letter})` };
+          return { value: `Section ${letter}`, label: formatSectionLabel(s, accountType === 'STUDENT' ? studentSemester : tgSemester) };
         })
       : ['A', 'B', 'C', 'D', 'E'].map((letter) => ({
           value: `Section ${letter}`,
-          label: `Section ${letter} (CSE-${letter})`,
+          label: formatSectionLabel(`Section ${letter}`, accountType === 'STUDENT' ? studentSemester : tgSemester),
         }));
 
   const copyToClipboard = (text, fieldName) => {

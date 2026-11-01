@@ -3,6 +3,7 @@ import { useERP } from '../../context/ERPContext.jsx';
 import { PageHeader, Card, CardHeader, CardTitle, Badge, Button } from '../../components/common';
 import { User, GraduationCap, ShieldCheck, Mail, Phone, Building2, Calendar, KeyRound } from 'lucide-react';
 import StudentAccountSettingsModal from '../../components/modals/StudentAccountSettingsModal.jsx';
+import { formatSectionLabel } from '../../utils/constants.js';
 
 export default function StudentProfile() {
   const { currentUser } = useERP();
@@ -76,7 +77,7 @@ export default function StudentProfile() {
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
               <span className="text-slate-400 font-bold block mb-1">Class Section</span>
               <span className="text-base font-extrabold text-slate-900">
-                {profile.section?.code || profile.section?.name || 'CSE-B'}
+                {formatSectionLabel(profile.section || 'Section B', profile.semester)}
               </span>
             </div>
 
@@ -104,7 +105,7 @@ export default function StudentProfile() {
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
               <span className="text-slate-400 font-bold block mb-1">Current Semester</span>
               <span className="text-sm font-extrabold text-slate-900">
-                Semester {profile.section?.semester || 5} (Enrolled)
+                Semester {profile.semester ?? profile.section?.semester ?? 5} (Enrolled)
               </span>
             </div>
           </div>
@@ -143,4 +144,3 @@ export default function StudentProfile() {
     </div>
   );
 }
-

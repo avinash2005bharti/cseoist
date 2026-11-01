@@ -2,7 +2,7 @@ import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext.jsx';
 import { dashboardApi, considerationApi, leaveApi, masterDataApi, noticeApi } from '../../api';
-import { getSectionLetter } from '../../utils/constants.js';
+import { formatSectionLabel, getSectionLetter } from '../../utils/constants.js';
 import {
   Calendar,
   CalendarDays,
@@ -238,9 +238,17 @@ export default function HodDashboard() {
   }, [academicYear, realAcademicYears]);
 
   const getSectionStudentCount = (section) => {
+    const sectionLetter = getSectionLetter(section);
     return students.filter((s) => {
       const sectionId = s.section?._id || s.section;
-      return String(sectionId) === String(section._id);
+      const studentSemester = Number(s.semester ?? s.section?.semester);
+      const sameSectionDocument =
+        String(sectionId) === String(section._id) &&
+        studentSemester === Number(section.semester);
+      const sameSemesterAndLetter =
+        studentSemester === Number(section.semester) &&
+        getSectionLetter(s.section) === sectionLetter;
+      return sameSectionDocument || sameSemesterAndLetter;
     }).length;
   };
 
@@ -252,6 +260,41 @@ export default function HodDashboard() {
       return Number(section.semester) === Number(selectedSemNumber);
     })
     .map((section) => ({ ...section, studentCount: getSectionStudentCount(section) }));
+
+  const visibleSectionKeys = new Set(
+    visibleSections.map((section) => `${section.semester}:${getSectionLetter(section)}`)
+  );
+  const studentBackedSections = students.reduce((fallbackSections, student) => {
+    const semester = Number(student.semester || student.section?.semester);
+    const letter = getSectionLetter(student.section);
+    if (!semester || !letter || (!isAllSemesters && semester !== Number(selectedSemNumber))) {
+      return fallbackSections;
+    }
+
+    const key = `${semester}:${letter}`;
+    if (visibleSectionKeys.has(key)) return fallbackSections;
+
+    const existing = fallbackSections.find((section) => section._fallbackKey === key);
+    if (existing) {
+      existing.studentCount += 1;
+      return fallbackSections;
+    }
+
+    fallbackSections.push({
+      _id: `student-backed-${key}`,
+      _fallbackKey: key,
+      semester,
+      year: Math.ceil(semester / 2),
+      name: `Section ${letter}`,
+      code: `CSE-${letter}-SEM${semester}`,
+      capacity: 90,
+      studentCount: 1,
+      isStudentBacked: true,
+    });
+    return fallbackSections;
+  }, []);
+
+  const sectionsWithStudentFallbacks = [...visibleSections, ...studentBackedSections];
 
   const openSectionDetails = (section) => {
     setSectionModalTarget({
@@ -330,7 +373,7 @@ export default function HodDashboard() {
   const tgRecommendedLeaves = pendingLeaves.filter(isTgRecommended);
   const totalTgRecommendations = tgRecommendedConsiderations.length + tgRecommendedLeaves.length;
 
-  const sectionsToDisplay = visibleSections;
+  const sectionsToDisplay = sectionsWithStudentFallbacks;
 
   return (
     <div data-appearance="light" className="w-full min-w-0">
@@ -833,7 +876,7 @@ export default function HodDashboard() {
                 <div className="hod-section-grid mt-6">
                   {sectionsToDisplay.map((section) => {
                     const secLetter = getSectionLetter(section);
-                    const displaySecCode = secLetter ? `CSE-${secLetter}` : (section.code || section.name || 'CSE-A');
+                    const displaySecCode = formatSectionLabel(section, section.semester) || 'Section A';
 
                     return (
                       <div

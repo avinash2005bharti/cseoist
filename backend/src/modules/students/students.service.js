@@ -190,7 +190,36 @@ export const updateStudent = async (id, data, actorUser = null) => {
   }
 
   // Update Section if provided
-  if (data.section) {
+  if (data.sectionId) {
+    const resolvedSection = await Section.findById(data.sectionId);
+    if (!resolvedSection) {
+      throw ApiError.notFound('Selected section was not found');
+    }
+    const targetSemester = student.semester || 5;
+    if (Number(resolvedSection.semester) !== Number(targetSemester)) {
+      throw ApiError.badRequest(`Selected section does not belong to Semester ${targetSemester}`);
+    }
+
+    const oldSectionId = student.section ? student.section.toString() : null;
+    const newSectionId = resolvedSection._id.toString();
+    student.section = resolvedSection._id;
+
+    if (oldSectionId !== newSectionId) {
+      if (student.mentorGroup) {
+        await MentorGroup.findByIdAndUpdate(student.mentorGroup, { $pull: { students: student._id } });
+        student.mentorGroup = null;
+      }
+
+      const activeMentorGroup = await MentorGroup.findOne({
+        section: resolvedSection._id,
+        isActive: true,
+      });
+      if (activeMentorGroup) {
+        student.mentorGroup = activeMentorGroup._id;
+        await MentorGroup.findByIdAndUpdate(activeMentorGroup._id, { $addToSet: { students: student._id } });
+      }
+    }
+  } else if (data.section) {
     let resolvedSection = null;
     const isObjectId = mongoose.Types.ObjectId.isValid(data.section) && /^[0-9a-fA-F]{24}$/.test(String(data.section));
     if (isObjectId) {

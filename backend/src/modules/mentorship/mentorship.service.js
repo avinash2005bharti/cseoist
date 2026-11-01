@@ -55,32 +55,29 @@ export const createMentorGroup = async (
   if (targetSectionId) {
     resolvedSectionDoc = await Section.findById(targetSectionId);
   } else if (targetCodeOrName) {
-    const cleanedCode = targetCodeOrName.replace(/Section\s*/i, '').replace(/^CSE-/i, '').trim();
-    resolvedSectionDoc = await Section.findOne({
+    const cleanedCode = targetCodeOrName
+      .replace(/^.*Section\s*/i, '')
+      .replace(/^CSE-/i, '')
+      .replace(/^(?:\d+[-\s]*)/i, '')
+      .replace(/(?:-S|-SEM)\d+$/i, '')
+      .trim();
+    const sectionQuery = {
+      department: department || teacher.department,
+      ...(parsedSemester ? { semester: parsedSemester } : {}),
       $or: [
         { code: targetCodeOrName },
         { code: `CSE-${cleanedCode}` },
         { code: `CSE-${cleanedCode}-S${parsedSemester || 5}` },
+        { code: `CSE-${cleanedCode}-SEM${parsedSemester || 5}` },
         { name: targetCodeOrName },
         { name: `Section ${cleanedCode}` },
         { name: new RegExp(`^Section\\s*${cleanedCode}$`, 'i') },
-        { code: new RegExp(`^CSE-${cleanedCode}(?:-S\\d+)?$`, 'i') },
-        { code: new RegExp(`-${cleanedCode}(?:-|$)`, 'i') },
+        { code: new RegExp(`^CSE-${cleanedCode}(?:-S|-SEM)?\\d*$`, 'i') },
       ],
+    };
+    resolvedSectionDoc = await Section.findOne({
+      ...sectionQuery,
     });
-
-    if (!resolvedSectionDoc && (department || teacher.department)) {
-      resolvedSectionDoc = await Section.findOne({
-        department: department || teacher.department,
-        $or: [
-          { code: `CSE-${cleanedCode}-S${parsedSemester || 5}` },
-          { code: `CSE-${cleanedCode}` },
-          { name: `Section ${cleanedCode}` },
-          { name: new RegExp(`^Section\\s*${cleanedCode}$`, 'i') },
-          { code: new RegExp(`^CSE-${cleanedCode}(?:-S\\d+)?$`, 'i') },
-        ],
-      });
-    }
   }
 
   const finalSemester = parsedSemester || resolvedSectionDoc?.semester || 5;
@@ -236,32 +233,29 @@ export const updateMentorGroup = async (
   if (targetSectionId) {
     resolvedSectionDoc = await Section.findById(targetSectionId);
   } else if (targetCodeOrName) {
-    const cleanedCode = targetCodeOrName.replace(/Section\s*/i, '').replace(/^CSE-/i, '').trim();
-    resolvedSectionDoc = await Section.findOne({
+    const cleanedCode = targetCodeOrName
+      .replace(/^.*Section\s*/i, '')
+      .replace(/^CSE-/i, '')
+      .replace(/^(?:\d+[-\s]*)/i, '')
+      .replace(/(?:-S|-SEM)\d+$/i, '')
+      .trim();
+    const sectionQuery = {
+      department: group.department,
+      ...(parsedSemester ? { semester: parsedSemester } : {}),
       $or: [
         { code: targetCodeOrName },
         { code: `CSE-${cleanedCode}` },
         { code: `CSE-${cleanedCode}-S${parsedSemester || group.semester || 5}` },
+        { code: `CSE-${cleanedCode}-SEM${parsedSemester || group.semester || 5}` },
         { name: targetCodeOrName },
         { name: `Section ${cleanedCode}` },
         { name: new RegExp(`^Section\\s*${cleanedCode}$`, 'i') },
-        { code: new RegExp(`^CSE-${cleanedCode}(?:-S\\d+)?$`, 'i') },
-        { code: new RegExp(`-${cleanedCode}(?:-|$)`, 'i') },
+        { code: new RegExp(`^CSE-${cleanedCode}(?:-S|-SEM)?\\d*$`, 'i') },
       ],
+    };
+    resolvedSectionDoc = await Section.findOne({
+      ...sectionQuery,
     });
-
-    if (!resolvedSectionDoc && group.department) {
-      resolvedSectionDoc = await Section.findOne({
-        department: group.department,
-        $or: [
-          { code: `CSE-${cleanedCode}-S${parsedSemester || group.semester || 5}` },
-          { code: `CSE-${cleanedCode}` },
-          { name: `Section ${cleanedCode}` },
-          { name: new RegExp(`^Section\\s*${cleanedCode}$`, 'i') },
-          { code: new RegExp(`^CSE-${cleanedCode}(?:-S\\d+)?$`, 'i') },
-        ],
-      });
-    }
   }
 
   const activeYear = academicYear || group.academicYear || '2026-27';

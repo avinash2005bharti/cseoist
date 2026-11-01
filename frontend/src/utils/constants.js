@@ -213,6 +213,9 @@ export function getSectionLetter(sectionObjOrStr) {
       : (sectionObjOrStr.code || sectionObjOrStr.name || '')
   ).trim().toUpperCase();
 
+  const yearPrefixedCseMatch = str.match(/CSE[\s\-_]*\d*[\s\-_]*([A-Z])(?:[\s\-_]*(?:SEM|S)\d+)?$/i);
+  if (yearPrefixedCseMatch) return yearPrefixedCseMatch[1].toUpperCase();
+
   const cseMatch = str.match(/CSE[\s\-_]*(?:SEM\s*\d+[\s\-_]*|\d+[\s\-_]*)?([A-Z0-9]+)/i);
   if (cseMatch) return cseMatch[1].toUpperCase();
 
@@ -223,6 +226,28 @@ export function getSectionLetter(sectionObjOrStr) {
   if (endMatch) return endMatch[1].toUpperCase();
 
   return str;
+}
+
+/**
+ * Format a section consistently across the portal without exposing year-prefixed
+ * provisioning identifiers such as CSE-3G.
+ */
+export function formatSectionLabel(sectionObjOrStr, semesterOverride) {
+  if (!sectionObjOrStr) return '';
+
+  const section = typeof sectionObjOrStr === 'object' ? sectionObjOrStr : {};
+  const raw = typeof sectionObjOrStr === 'string' ? sectionObjOrStr : (section.code || section.name || '');
+  const letter = getSectionLetter(sectionObjOrStr);
+  if (!letter) return String(raw);
+
+  const code = String(section.code || raw);
+  const semesterMatch = code.match(/(?:^|[-\s])S(?:EM)?[-\s]*(\d+)/i)
+    || String(section.name || '').match(/Sem(?:ester)?[-\s]*(\d+)/i);
+  const semester = semesterOverride || section.semester || (semesterMatch ? semesterMatch[1] : '');
+
+  return semester
+    ? `Section ${letter} (CSE-${letter} - Sem ${semester})`
+    : `Section ${letter} (CSE-${letter})`;
 }
 
 export default {
@@ -242,4 +267,5 @@ export default {
   getFacultyDisplayName,
   getStudentDisplayName,
   getSectionLetter,
+  formatSectionLabel,
 };

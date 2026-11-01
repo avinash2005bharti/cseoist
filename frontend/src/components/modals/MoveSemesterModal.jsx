@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Layers, ArrowRight, ArrowLeft, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { useERP } from '../../context/ERPContext.jsx';
 import { masterDataApi } from '../../api';
+import { formatSectionLabel } from '../../utils/constants.js';
 
 export default function MoveSemesterModal({
   section,
@@ -66,7 +67,7 @@ export default function MoveSemesterModal({
                 {isPromote ? 'Promote Section to Next Semester' : 'Demote Section to Previous Semester'}
               </h3>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {section.name || `Section ${section.code}`} ({section.code})
+                {formatSectionLabel(section)}
               </p>
             </div>
           </div>

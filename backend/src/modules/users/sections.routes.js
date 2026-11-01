@@ -39,15 +39,31 @@ const getSectionIdentity = ({ name, code }) => {
 
 const getDestinationSection = async (section, newYear) => {
   const letter = getSectionLetter(section);
+  const destinationSemester = newYear * 2 - 1;
   if (!letter) return null;
+
+  const exactDestination = await Section.findOne({
+    department: section.department?._id || section.department,
+    year: newYear,
+    semester: destinationSemester,
+    $or: [
+      { code: new RegExp(`^CSE-${letter}(?:-S|-SEM)?${destinationSemester}$`, 'i') },
+      { code: new RegExp(`^CSE-${newYear}${letter}$`, 'i') },
+      { name: new RegExp(`^Year\\s*${newYear}\\s*Section\\s*${letter}$`, 'i') },
+      { name: new RegExp(`^Section\\s*${letter}$`, 'i') },
+    ],
+  }).sort({ semester: 1 });
+
+  if (exactDestination) return exactDestination;
 
   return Section.findOne({
     department: section.department?._id || section.department,
     year: newYear,
     $or: [
-      { code: new RegExp(`-${newYear}${letter}$`, 'i') },
-      { code: new RegExp(`-${letter}-S\\d+$`, 'i') },
+      { code: new RegExp(`^CSE-${letter}(?:-S|-SEM)?\\d+$`, 'i') },
+      { code: new RegExp(`^CSE-${newYear}${letter}$`, 'i') },
       { name: new RegExp(`^Year\\s*${newYear}\\s*Section\\s*${letter}$`, 'i') },
+      { name: new RegExp(`^Section\\s*${letter}$`, 'i') },
     ],
   }).sort({ semester: 1 });
 };
@@ -74,6 +90,25 @@ router.get(
     // Count students per section in bulk
     const studentCounts = await Student.aggregate([
       { $match: { section: { $in: sectionIds } } },
+      {
+        $lookup: {
+          from: Section.collection.name,
+          localField: 'section',
+          foreignField: '_id',
+          as: 'sectionDocument',
+        },
+      },
+      { $unwind: '$sectionDocument' },
+      {
+        $match: {
+          $expr: {
+            $eq: [
+              { $ifNull: ['$semester', '$sectionDocument.semester'] },
+              '$sectionDocument.semester',
+            ],
+          },
+        },
+      },
       { $group: { _id: '$section', count: { $sum: 1 } } },
     ]);
     const countMap = new Map();
@@ -319,10 +354,39 @@ router.post(
     if (yearChanged && isPromotion) {
       destinationSection = await getDestinationSection(section, newYear);
       if (!destinationSection) {
-        throw ApiError.notFound(
-          `Destination section for Year ${newYear}, Section ${getSectionLetter(section) || 'matching section'} was not found`
+        const letter = getSectionLetter(section);
+        if (!letter) {
+          throw ApiError.notFound(`Destination section for Year ${newYear} was not found`);
+        }
+        destinationSection = await Section.create({
+          department: secDeptId,
+          year: newYear,
+          semester: newYear * 2 - 1,
+          name: `Section ${letter}`,
+          code: `CSE-${letter}-SEM${newYear * 2 - 1}`,
+          capacity: section.capacity || 90,
+        });
+      }
+
+      const oldYearOpeningSemester = newYear * 2 - 3;
+      const oldSectionCode = `CSE-${getSectionLetter(section)}-SEM${oldYearOpeningSemester}`;
+      const oldSectionCollision = await Section.findOne({
+        _id: { $ne: section._id },
+        department: secDeptId,
+        semester: oldYearOpeningSemester,
+        code: oldSectionCode,
+      });
+      if (oldSectionCollision) {
+        throw ApiError.conflict(
+          `Cannot reset ${section.name || section.code} to Semester ${oldYearOpeningSemester}: section code '${oldSectionCode}' already exists.`
         );
       }
+
+      section.year = newYear;
+      section.semester = oldYearOpeningSemester;
+      section.name = `Section ${getSectionLetter(section)}`;
+      section.code = oldSectionCode;
+      await section.save();
 
       const currentAcademicYear = await MentorGroup.findOne({
         section: section._id,
@@ -331,6 +395,12 @@ router.post(
       destinationAcademicYear = getNextAcademicYear(currentAcademicYear?.academicYear || '2026-27');
 
       const destinationOddSemester = newYear * 2 - 1;
+      if (destinationSection.semester !== destinationOddSemester) {
+        destinationSection.semester = destinationOddSemester;
+        destinationSection.name = `Section ${getSectionLetter(destinationSection)}`;
+        destinationSection.code = `CSE-${getSectionLetter(destinationSection)}-SEM${destinationOddSemester}`;
+        await destinationSection.save();
+      }
       const letter = getSectionLetter(section);
       const destinationUser = await User.findOne({
         email: `tgcse${newYear}${letter.toLowerCase()}@oist.in`,

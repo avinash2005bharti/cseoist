@@ -15,6 +15,7 @@ import {
   Download,
   CheckCircle2,
 } from 'lucide-react';
+import { formatSectionLabel } from '../../utils/constants.js';
 
 export default function HodTeachers() {
   const { addToast } = useERP();
@@ -51,7 +52,7 @@ export default function HodTeachers() {
     const tid = (g.tg?._id || g.tg?.user?._id || g.tg)?.toString();
     if (tid) {
       const sem = g.semester || g.section?.semester || 5;
-      const sec = g.section?.name || (g.section?.code ? `Section ${g.section.code.replace('CSE-', '')}` : 'Section B');
+      const sec = formatSectionLabel(g.section || 'Section B', sem);
       teacherCohortMap.set(tid, `Semester ${sem} • ${sec}`);
     }
   });
