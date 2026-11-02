@@ -62,13 +62,10 @@ export default function StudentConsiderations() {
       const res = await considerationApi.getMine(params);
       const data = res?.data || [];
       setRequests(data);
-      if (data.length > 0) {
-        setSelectedRequest((prev) => {
-          if (!prev) return data[0];
-          const found = data.find((r) => r._id === prev._id);
-          return found || data[0];
-        });
-      }
+      setSelectedRequest((prev) => {
+        if (!prev) return null;
+        return data.find((r) => r._id === prev._id) || null;
+      });
     } finally {
       setLoading(false);
     }

@@ -49,13 +49,10 @@ export default function StudentLeaves() {
       const res = await leaveApi.getMine(params);
       const data = res?.data || [];
       setLeaves(data);
-      if (data.length > 0) {
-        setSelectedLeave((prev) => {
-          if (!prev) return data[0];
-          const found = data.find((l) => l._id === prev._id);
-          return found || data[0];
-        });
-      }
+      setSelectedLeave((prev) => {
+        if (!prev) return null;
+        return data.find((l) => l._id === prev._id) || null;
+      });
     } finally {
       setLoading(false);
     }
