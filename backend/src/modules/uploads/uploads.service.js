@@ -162,7 +162,16 @@ export const generateSignedUrl = async (fileId, user) => {
     }
   }
 
-  // 1. If stored attachment has a direct valid URL, return it
+  // Prefer a URL stored with the attachment when one is available. This is
+  // useful for uploads created by older clients that already persisted a
+  // signed/public URL.
+  if (targetAttachment?.url && /^https?:\/\//i.test(targetAttachment.url)) {
+    return {
+      url: targetAttachment.url,
+      expiresIn: null,
+    };
+  }
+
   const ik = getImageKit();
   if (!ik) {
     return {
@@ -171,35 +180,38 @@ export const generateSignedUrl = async (fileId, user) => {
     };
   }
 
-  // 2. Fetch details from ImageKit
+  // Fetch details from ImageKit when possible so the current storage path is
+  // authoritative. Fall back to the path stored with the application for
+  // legacy uploads whose file-details lookup is no longer available.
+  let filePath = targetAttachment?.filePath || '';
   if (!fileId.startsWith('local-')) {
     try {
       const details = await ik.getFileDetails(fileId);
-      const cleanPath = (details.filePath || '').replace(/^\/+/, '');
-      const signedUrl = ik.url({
-        path: cleanPath,
-        signed: true,
-        expireSeconds: 3600,
-      });
-
-      return {
-        url: signedUrl || details.url,
-        expiresIn: 3600,
-      };
-    } catch {
-      // Fall through to fallback
+      filePath = details.filePath || filePath;
+    } catch (err) {
+      if (!filePath) {
+        throw ApiError.notFound(`Attachment is not available in ImageKit: ${err.message}`);
+      }
     }
   }
 
-  // Default institutional document preview
-  const defaultSignedUrl = ik.url({
-    path: 'default-image.jpg',
+  const cleanPath = filePath.replace(/^\/+/, '');
+  if (!cleanPath) {
+    throw ApiError.notFound('Attachment path is missing');
+  }
+
+  const signedUrl = ik.url({
+    path: cleanPath,
     signed: true,
     expireSeconds: 3600,
   });
 
+  if (!signedUrl) {
+    throw ApiError.notFound('Unable to generate an ImageKit preview URL');
+  }
+
   return {
-    url: defaultSignedUrl,
+    url: signedUrl,
     expiresIn: 3600,
   };
 };
