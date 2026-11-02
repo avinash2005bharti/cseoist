@@ -333,8 +333,8 @@ export default function StudentRegisterPage() {
           <div className="auth-brand-title-row">
             <div className="auth-brand-emblem">
               <img
-                src="/iit.png"
-                alt="IIT Logo"
+                src="/oist.png"
+                alt="OIST Logo"
                 className="w-full h-full object-contain"
               />
             </div>

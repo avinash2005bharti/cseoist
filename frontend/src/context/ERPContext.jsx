@@ -285,8 +285,8 @@ export function ERPProvider({ children }) {
     }
 
     const defaultOptions = {
-      icon: '/iit.png',
-      badge: '/iit.png',
+      icon: '/oist.png',
+      badge: '/oist.png',
       vibrate: [200, 100, 200],
       ...options,
     };

@@ -102,8 +102,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body,
-    icon: data.icon || '/iit.png',
-    badge: data.badge || '/iit.png',
+    icon: data.icon || '/oist.png',
+    badge: data.badge || '/oist.png',
     vibrate: [200, 100, 200, 100, 200],
     tag: `reminder-${data.data?.slot || 'attendance'}-${Date.now()}`,
     renotify: true,
@@ -154,8 +154,8 @@ self.addEventListener('message', (event) => {
     const { title, body, url, tag } = event.data;
     self.registration.showNotification(title || 'CampusFlow Reminder', {
       body: body || 'Please review student consideration requests and update attendance.',
-      icon: '/iit.png',
-      badge: '/iit.png',
+      icon: '/oist.png',
+      badge: '/oist.png',
       vibrate: [150, 75, 150],
       tag: tag || 'campusflow-notice',
       data: { url: url || '/' },
@@ -166,4 +166,3 @@ self.addEventListener('message', (event) => {
     });
   }
 });
-
