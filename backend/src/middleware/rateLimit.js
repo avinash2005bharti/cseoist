@@ -13,7 +13,14 @@ export const generalLimiter = rateLimit({
 
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // limit login attempts
+  max: 20,
+  keyGenerator: (req) => {
+    const identifier = typeof req.body?.email === 'string'
+      ? req.body.email.trim().toLowerCase()
+      : 'missing-identifier';
+
+    return `account:${identifier}`;
+  },
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res, next) => {
@@ -21,7 +28,18 @@ export const authLimiter = rateLimit({
   },
 });
 
+export const authIpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res, next) => {
+    next(ApiError.rateLimited('Too many authentication requests from this network. Please try again later.'));
+  },
+});
+
 export default {
   generalLimiter,
   authLimiter,
+  authIpLimiter,
 };

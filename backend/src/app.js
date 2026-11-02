@@ -35,6 +35,7 @@ const app = express();
 // Security Middlewares
 app.use(helmet());
 app.use(cors(corsOptions));
+app.set('trust proxy', env.TRUST_PROXY);
 app.use(generalLimiter);
 
 // Parsers
