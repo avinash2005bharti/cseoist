@@ -69,12 +69,13 @@ export default function TgMyStudents() {
 
   const filteredStudents = students.filter((st) => {
     const name = (st.user?.name || '').toLowerCase();
-    const roll = (st.rollNumber || '').toLowerCase();
+    const roll = (st.rollNumber || st.enrollmentNumber || '').toLowerCase();
+    const enrollment = (st.enrollmentNumber || '').toLowerCase();
     const email = (st.user?.email || '').toLowerCase();
     const phone = (st.user?.phone || '').toLowerCase();
     const q = search.toLowerCase().trim();
 
-    return !q || name.includes(q) || roll.includes(q) || email.includes(q) || phone.includes(q);
+    return !q || name.includes(q) || roll.includes(q) || enrollment.includes(q) || email.includes(q) || phone.includes(q);
   });
 
   return (
@@ -117,7 +118,7 @@ export default function TgMyStudents() {
           </div>
         ) : (
           filteredStudents.map((st) => {
-            const userName = st.user?.name || st.designation || 'Student';
+            const userName = st.user?.name || st.name || 'Student';
             const rollNo = st.enrollmentNumber || st.rollNumber || 'Not provided';
             const isActive = st.user?.isActive !== false;
             const initials = userName
@@ -127,7 +128,7 @@ export default function TgMyStudents() {
               .toUpperCase()
               .slice(0, 2) || 'ST';
             const secName = getSectionLetter(st.section) || (cohort?.section ? getSectionLetter(cohort.section) : '—');
-            const semNum = st.semester || st.section?.semester || 5;
+            const semNum = st.semester || st.section?.semester || cohort?.semester || 'Not provided';
             const email = st.user?.email || 'Not provided';
             const phone = st.user?.phone || 'Not provided';
             const batchDisplay = (() => {
@@ -138,7 +139,7 @@ export default function TgMyStudents() {
               if (st.enrollmentYear) {
                 return `Batch ${st.enrollmentYear}-${st.enrollmentYear + 4}`;
               }
-              return 'Batch 2024-2028';
+              return 'Batch not provided';
             })();
 
             return (
