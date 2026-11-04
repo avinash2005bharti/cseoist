@@ -358,8 +358,8 @@ export default function StudentRegisterPage() {
               <span>Student Self-Registration Portal</span>
             </div>
             <p className="text-xs sm:text-sm text-slate-200 leading-relaxed m-0 font-normal">
-              Create your official student profile. Once enrolled, your attendance tracking, timetable sync,
-              leave approvals, and exam eligibility are automatically managed through the departmental database.
+              Create your official student profile. Once enrolled, your attendance consideration tracking,
+              leave approvals are automatically managed through the departmental database.
             </p>
           </div>
         </div>
@@ -432,7 +432,7 @@ export default function StudentRegisterPage() {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder="e.g. Ayush Sharma"
+                    placeholder="e.g. John Doe"
                     required
                     className="w-full pl-11 pr-4 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-sm text-slate-800 font-medium"
                   />
@@ -470,7 +470,7 @@ export default function StudentRegisterPage() {
                       name="enrollment_no"
                       value={formData.enrollment_no}
                       onChange={handleChange}
-                      placeholder="0103CS211001"
+                      placeholder="0103CS241001"
                       required
                       className="w-full pl-11 pr-4 py-3 bg-[#F8FAFC] focus:bg-white border border-slate-300 focus:border-blue-600 rounded-xl text-sm text-slate-800 font-medium uppercase"
                     />
