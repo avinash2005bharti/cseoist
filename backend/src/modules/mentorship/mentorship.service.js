@@ -504,15 +504,12 @@ export const getMyCohort = async (teacherId) => {
   // Ensure that every student in group.students strictly belongs to group.section
   if (group.section) {
     const groupSecId = (group.section._id || group.section).toString();
-    const validStudents = [];
     const prunedIds = [];
 
     for (const st of (group.students || [])) {
       if (!st) continue;
       const stSecId = (st.section?._id || st.section)?.toString();
-      if (stSecId === groupSecId) {
-        validStudents.push(st);
-      } else {
+      if (stSecId !== groupSecId) {
         prunedIds.push(st._id);
       }
     }
@@ -526,8 +523,24 @@ export const getMyCohort = async (teacherId) => {
         { _id: { $in: prunedIds }, mentorGroup: group._id },
         { $set: { mentorGroup: null } }
       );
-      group.students = validStudents;
     }
+
+    // The section is the source of truth for a TG cohort. Rebuild the
+    // membership from it so newly imported or moved students are not omitted
+    // when the mentor group's denormalized array is stale.
+    const sectionStudents = await Student.find({ section: groupSecId })
+      .populate('user', 'name email phone')
+      .populate('section', 'name code year semester');
+    const sectionStudentIds = sectionStudents.map((student) => student._id);
+
+    await MentorGroup.findByIdAndUpdate(group._id, {
+      $set: { students: sectionStudentIds },
+    });
+    await Student.updateMany(
+      { section: groupSecId },
+      { $set: { mentorGroup: group._id } }
+    );
+    group.students = sectionStudents;
   }
 
   return group;

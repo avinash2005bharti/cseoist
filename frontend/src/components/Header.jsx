@@ -479,7 +479,7 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
               </div>
               <div className="text-left">
                 <p className="font-semibold text-sm text-foreground m-0 leading-tight">
-                  {currentUser?.name || 'Hod cse'}
+                  {currentUser?.name || 'HOD'}
                 </p>
                 <p className="text-muted-foreground text-xs m-0 mt-0.5">
                   HOD
@@ -495,7 +495,7 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
               </div>
               <div className="text-left">
                 <div className="font-semibold text-sm text-foreground leading-tight truncate max-w-[140px]">
-                  {currentUser?.name || 'Ayush Mishra'}
+                  {currentUser?.name || 'Student'}
                 </div>
                 <div className="text-muted-foreground text-xs font-semibold uppercase tracking-wider mt-0.5">
                   STUDENT
@@ -511,7 +511,7 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
               </div>
               <div>
                 <p className="font-semibold text-sm text-foreground m-0 leading-tight">
-                  {currentUser?.name || 'Test Teacher'}
+                  {currentUser?.name || 'Tutor Guardian'}
                 </p>
                 <p className="uppercase text-muted-foreground text-xs tracking-wider m-0 mt-0.5">
                   {currentUser?.role === 'TEACHER' ? 'Teacher' : (currentUser?.role || 'Teacher')}

@@ -99,7 +99,9 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
   // Controlled form states initialized from current student's real data
   const initialUser = student?.user || {};
   const [name, setName] = useState(() => initialUser.name || student?.name || '');
-  const [rollNumber, setRollNumber] = useState(() => student?.rollNumber || student?.enrollmentNumber || '');
+  const [enrollmentNumber, setEnrollmentNumber] = useState(
+    () => student?.rollNumber || student?.enrollmentNumber || ''
+  );
   const [status, setStatus] = useState(() => {
     if (student?.status) return student.status;
     return initialUser.isActive === false ? 'SUSPENDED' : 'ACTIVE';
@@ -133,7 +135,7 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
     if (!student) return;
     const studentUser = student.user || {};
     setName(studentUser.name || student.name || '');
-    setRollNumber(student.rollNumber || student.enrollmentNumber || '');
+    setEnrollmentNumber(student.rollNumber || student.enrollmentNumber || '');
     setStatus(student.status || (studentUser.isActive === false ? 'SUSPENDED' : 'ACTIVE'));
     setEmail(studentUser.email || student.email || '');
     setPhone(studentUser.phone || student.phone || '');
@@ -253,7 +255,8 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
 
       await masterDataApi.updateStudent(student._id, {
         name: name.trim(),
-        rollNumber: rollNumber.trim().toUpperCase(),
+        rollNumber: enrollmentNumber.trim().toUpperCase(),
+        enrollmentNumber: enrollmentNumber.trim().toUpperCase(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         semester: Number(semester),
@@ -291,7 +294,7 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
                 Edit Student Details
               </h3>
               <p className="text-xs text-slate-500 m-0">
-                Department Record Update for {student?.enrollmentNumber || student?.rollNumber || 'Enrolled Student'}
+                Department Record Update for {student?.rollNumber || student?.enrollmentNumber || 'Enrolled Student'}
               </p>
             </div>
           </div>
@@ -334,8 +337,8 @@ export default function EditStudentModal({ student, onClose, onSuccess }) {
               </label>
               <input
                 type="text"
-                value={rollNumber}
-                onChange={(e) => setRollNumber(e.target.value)}
+                value={enrollmentNumber}
+                onChange={(e) => setEnrollmentNumber(e.target.value)}
                 required
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:outline-none uppercase"
               />

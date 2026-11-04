@@ -139,6 +139,7 @@ export const updateStudent = async (id, data, actorUser = null) => {
     if (
       data.status !== undefined ||
       data.rollNumber ||
+      data.enrollmentNumber ||
       data.enrollmentYear ||
       data.batch ||
       data.section ||
@@ -162,8 +163,28 @@ export const updateStudent = async (id, data, actorUser = null) => {
     }
   }
 
+  if (data.enrollmentNumber) {
+    const enrollmentNumber = data.enrollmentNumber.trim().toUpperCase();
+    const duplicate = await Student.findOne({
+      enrollmentNumber,
+      _id: { $ne: student._id },
+    }).select('_id');
+    if (duplicate) {
+      throw ApiError.conflict(`Enrollment number '${enrollmentNumber}' is already assigned to another student`);
+    }
+    student.enrollmentNumber = enrollmentNumber;
+  }
+
   if (data.rollNumber) {
-    student.rollNumber = data.rollNumber.trim().toUpperCase();
+    const rollNumber = data.rollNumber.trim().toUpperCase();
+    const duplicate = await Student.findOne({
+      rollNumber,
+      _id: { $ne: student._id },
+    }).select('_id');
+    if (duplicate) {
+      throw ApiError.conflict(`Roll number '${rollNumber}' is already assigned to another student`);
+    }
+    student.rollNumber = rollNumber;
   }
 
   // Update Semester if provided

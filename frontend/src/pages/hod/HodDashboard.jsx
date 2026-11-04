@@ -390,7 +390,7 @@ export default function HodDashboard() {
                 <span>HOD Office</span>
               </span>
               <h1 className="font-black text-3xl sm:text-4xl tracking-tight mt-5 text-[#0F172A]">
-                {getGreeting()}, {currentUser?.name || 'Hod cse'}! 👋
+                {getGreeting()}, {currentUser?.name || 'HOD'}! 👋
               </h1>
               <p className="text-[#64748B] text-sm sm:text-base mt-2.5 font-normal">
                 Here's what's happening in your CSE department today.

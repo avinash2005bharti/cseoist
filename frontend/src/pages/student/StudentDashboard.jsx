@@ -534,7 +534,7 @@ export default function StudentDashboard() {
                   Assigned Mentor / Tutor Guardian
                 </p>
                 <h2 className="font-semibold text-lg mt-2 text-foreground m-0">
-                  {tgMentor?.name || 'Test Teacher'}
+                  {tgMentor?.name || 'Not assigned'}
                 </h2>
                 <p className="text-muted-foreground text-sm mt-1 m-0">
                   {tgTeacher?.designation || 'Assistant Professor'} · {sectionName}
@@ -563,10 +563,10 @@ export default function StudentDashboard() {
                 <h2 className="font-bold text-sm mt-1 text-foreground m-0">
                   {tgMentor?.name
                     ? `${tgMentor.name} (${tgTeacher?.designation || 'Assistant Professor (TG)'})`
-                    : 'Test Teacher (Assistant Professor (TG))'}
+                    : 'Not assigned'}
                 </h2>
                 <p className="text-muted-foreground text-xs leading-5 mt-1 m-0">
-                  Academic Session: {studentProfile.mentorGroup?.academicYear || '2025-26'} · Section: {sectionName} · Email: {tgMentor?.email || 'test_teacher@mail.in'}
+                  Academic Session: {studentProfile.mentorGroup?.academicYear || 'Not provided'} · Section: {sectionName} · Email: {tgMentor?.email || 'Not provided'}
                 </p>
               </div>
             </div>

@@ -1,7 +1,8 @@
-const CACHE_NAME = 'campusflow-shell-v2';
+const CACHE_NAME = 'campusflow-shell-v3';
 const APP_SHELL = [
   '/',
   '/manifest.json',
+  '/oist.png',
   '/icons/icon-192x192.png',
   '/icons/icon-192x192-maskable.png',
   '/icons/icon-512x512.png',

@@ -94,7 +94,7 @@ export default function TgDashboard() {
             </div>
             <div>
               <h1 className="font-bold text-2xl sm:text-3xl tracking-tight text-foreground">
-                Welcome back, {currentUser?.name || 'Test Teacher'}!
+                Welcome back, {currentUser?.name || 'Tutor Guardian'}!
               </h1>
               <p className="text-muted-foreground mt-2 text-sm sm:text-base">
                 Here is the real-time overview for your assigned student section.

@@ -214,9 +214,9 @@ export default function Sidebar({ isOpen, onClose }) {
             <div className="flex flex-col min-w-0">
               <span
                 className="font-extrabold text-slate-900 text-sm truncate leading-snug"
-                title={currentUser?.name || (isTgMode ? 'Test Teacher' : isStudent ? 'Ayush Mishra' : 'Hod cse')}
+                title={currentUser?.name || (isTgMode ? 'Tutor Guardian' : isStudent ? 'Student' : 'HOD')}
               >
-                {currentUser?.name || (isTgMode ? 'Test Teacher' : isStudent ? 'Ayush Mishra' : 'Hod cse')}
+                {currentUser?.name || (isTgMode ? 'Tutor Guardian' : isStudent ? 'Student' : 'HOD')}
               </span>
               <span
                 className="text-xs text-slate-600 truncate leading-tight mt-0.5 font-medium uppercase tracking-wider"

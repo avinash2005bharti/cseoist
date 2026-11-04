@@ -361,8 +361,25 @@ export const updateUser = async (id, updates = {}) => {
   if (user.role === 'STUDENT' || previousRole === 'STUDENT') {
     const student = await Student.findOne({ user: user._id });
     if (student) {
-      if (updates.rollNumber) student.rollNumber = updates.rollNumber.trim().toUpperCase();
-      if (updates.enrollmentNumber) student.enrollmentNumber = updates.enrollmentNumber.trim().toUpperCase();
+      if (updates.rollNumber) {
+        const rollNumber = updates.rollNumber.trim().toUpperCase();
+        const duplicate = await Student.findOne({ rollNumber, _id: { $ne: student._id } }).select('_id');
+        if (duplicate) {
+          throw ApiError.conflict(`Roll number '${rollNumber}' is already assigned to another student`);
+        }
+        student.rollNumber = rollNumber;
+      }
+      if (updates.enrollmentNumber) {
+        const enrollmentNumber = updates.enrollmentNumber.trim().toUpperCase();
+        const duplicate = await Student.findOne({
+          enrollmentNumber,
+          _id: { $ne: student._id },
+        }).select('_id');
+        if (duplicate) {
+          throw ApiError.conflict(`Enrollment number '${enrollmentNumber}' is already assigned to another student`);
+        }
+        student.enrollmentNumber = enrollmentNumber;
+      }
       if (updates.enrollmentYear) student.enrollmentYear = parseInt(updates.enrollmentYear);
       if (updates.semester) student.semester = parseInt(updates.semester);
       if (updates.sectionId && updates.sectionId.toString() !== student.section?.toString()) {
