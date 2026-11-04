@@ -1,7 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useERP } from '../../context/ERPContext.jsx';
-import { dashboardApi, considerationApi, leaveApi, masterDataApi, noticeApi } from '../../api';
+import { dashboardApi, considerationApi, leaveApi, masterDataApi, noticeApi, settingsApi } from '../../api';
 import { formatSectionLabel, getSectionLetter } from '../../utils/constants.js';
 import {
   Calendar,
@@ -82,6 +82,7 @@ export default function HodDashboard() {
   // Academic Year State & Dropdown
   const [academicYear, setAcademicYear] = useState('');
   const [showYearDropdown, setShowYearDropdown] = useState(false);
+  const [savingAcademicYear, setSavingAcademicYear] = useState(false);
 
   // Formatted date and time (synchronously initialized to prevent layout shift / CLS)
   const getFormattedDateTime = () => {
@@ -118,13 +119,14 @@ export default function HodDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const [sumRes, consRes, leavesRes, studentsRes, noticesRes, sectionsRes] = await Promise.allSettled([
+      const [sumRes, consRes, leavesRes, studentsRes, noticesRes, sectionsRes, academicYearRes] = await Promise.allSettled([
         dashboardApi.getSummary(),
         considerationApi.getHODQueue({ all: 'true' }),
         leaveApi.getHODQueue({ all: 'true' }),
         masterDataApi.getStudents({ all: 'true' }),
         noticeApi.getNotices(),
         masterDataApi.getSections(),
+        settingsApi.getAcademicYear(),
       ]);
 
       const rejectedIds = getStoredRejectedIds();
@@ -167,6 +169,13 @@ export default function HodDashboard() {
       }
       if (noticesRes.status === 'fulfilled') {
         setNotices(noticesRes.value?.data || []);
+      }
+      if (academicYearRes.status === 'fulfilled') {
+        setAcademicYear(
+          academicYearRes.value?.data?.academicYear ||
+          academicYearRes.value?.academicYear ||
+          '2026-27'
+        );
       }
     } finally {
       setLoading(false);
@@ -231,11 +240,29 @@ export default function HodDashboard() {
     }
   }, [sections, selectedSemNumber]);
 
-  useEffect(() => {
-    if (!academicYear && realAcademicYears.length > 0) {
-      setAcademicYear(realAcademicYears[0]);
+  const handleAcademicYearChange = async (event) => {
+    const nextYear = event.target.value;
+    setSavingAcademicYear(true);
+    try {
+      const result = await settingsApi.setAcademicYear(nextYear);
+      const savedYear = result?.data?.academicYear || result?.academicYear || nextYear;
+      setAcademicYear(savedYear);
+      addToast(
+        'Academic Year Updated',
+        `All student and faculty cohorts are now synchronized to ${savedYear}.`,
+        'success'
+      );
+      await fetchDashboardData();
+    } catch (error) {
+      addToast(
+        'Academic Year Update Failed',
+        error.message || 'Could not synchronize the academic year.',
+        'danger'
+      );
+    } finally {
+      setSavingAcademicYear(false);
     }
-  }, [academicYear, realAcademicYears]);
+  };
 
   const getSectionStudentCount = (section) => {
     const sectionLetter = getSectionLetter(section);
@@ -406,6 +433,21 @@ export default function HodDashboard() {
                 <Clock3 className="text-[#2563EB] size-4 shrink-0" />
                 <span>{currentTime}</span>
               </div>
+
+              <label className="font-semibold rounded-xl bg-white border border-[#E2E8F0] text-xs sm:text-sm text-[#475569] flex items-center gap-2 px-3 py-2 shadow-2xs">
+                <span>Academic year</span>
+                <select
+                  value={academicYear || '2026-27'}
+                  onChange={handleAcademicYearChange}
+                  disabled={savingAcademicYear}
+                  className="bg-transparent border-0 text-[#1D4ED8] font-bold focus:outline-none cursor-pointer disabled:opacity-60"
+                  aria-label="Update academic year"
+                >
+                  {['2025-26', '2026-27', '2027-28', '2028-29', '2029-30', '2030-31'].map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </label>
 
               <button
                 type="button"

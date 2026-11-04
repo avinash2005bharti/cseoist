@@ -9,12 +9,19 @@ router.use(auth);
 
 // View current consideration timing window setting (all authenticated roles)
 router.get('/consideration-window', settingsController.getConsiderationWindow);
+router.get('/academic-year', settingsController.getAcademicYear);
 
 // Toggle / update consideration timing window (ADMIN only)
 router.patch(
   '/consideration-window',
   authorize('ADMIN'),
   settingsController.setConsiderationWindow
+);
+
+router.patch(
+  '/academic-year',
+  authorize('HOD', 'ADMIN'),
+  settingsController.setAcademicYear
 );
 
 export default router;

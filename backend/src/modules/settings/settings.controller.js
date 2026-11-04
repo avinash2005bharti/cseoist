@@ -13,7 +13,19 @@ export const setConsiderationWindow = asyncHandler(async (req, res) => {
   return sendSuccess(res, result);
 });
 
+export const getAcademicYear = asyncHandler(async (req, res) => {
+  const result = await settingsService.getAcademicYearSetting();
+  return sendSuccess(res, result);
+});
+
+export const setAcademicYear = asyncHandler(async (req, res) => {
+  const result = await settingsService.setAcademicYearSetting(req.user, req.body.academicYear);
+  return sendSuccess(res, result);
+});
+
 export default {
+  getAcademicYear,
+  setAcademicYear,
   getConsiderationWindow,
   setConsiderationWindow,
 };
