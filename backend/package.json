@@ -11,6 +11,7 @@
     "seed": "node src/seed/seed.js",
     "seed:tg-accounts": "node src/seed/provision-tg-accounts.js",
     "update:tg-semesters": "node src/seed/update-tg-semesters.js",
+    "update:academic-year": "node src/seed/update-academic-year.js",
     "update:section-capacity": "node src/seed/update-section-capacity.js",
     "cleanup:duplicate-sections": "node src/seed/cleanup-duplicate-sections.js",
     "test": "node --test tests/*.test.js"

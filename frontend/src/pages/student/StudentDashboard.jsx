@@ -540,7 +540,7 @@ export default function StudentDashboard() {
                   {tgTeacher?.designation || 'Assistant Professor'} · {sectionName}
                 </p>
                 <p className="text-muted-foreground text-sm mt-2 m-0">
-                  Academic Session: {studentProfile.mentorGroup?.academicYear || '2025–26'}
+                  Academic Session: {studentProfile.mentorGroup?.academicYear || '2026-27'}
                 </p>
                 <p className="text-muted-foreground text-sm leading-6 mt-4 max-w-2xl m-0">
                   Your Tutor Guardian reviews attendance consideration applications and

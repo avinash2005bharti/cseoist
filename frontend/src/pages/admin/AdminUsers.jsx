@@ -94,7 +94,7 @@ export default function AdminUsers() {
   const [newSpecialization, setNewSpecialization] = useState('Computer Science & Engineering');
   const [newTgSemester, setNewTgSemester] = useState(5);
   const [newTgSection, setNewTgSection] = useState('Section B');
-  const [newAcademicYear, setNewAcademicYear] = useState('2025-26');
+  const [newAcademicYear, setNewAcademicYear] = useState('2026-27');
 
   const [creating, setCreating] = useState(false);
   const [createdInfo, setCreatedInfo] = useState(null);
@@ -107,7 +107,7 @@ export default function AdminUsers() {
   const [tgActionTarget, setTgActionTarget] = useState(null); // { user, type: 'appoint' | 'remove', cohort }
   const [tgModalSemester, setTgModalSemester] = useState(5);
   const [tgModalSection, setTgModalSection] = useState('Section B');
-  const [tgModalSession, setTgModalSession] = useState('2025-26');
+  const [tgModalSession, setTgModalSession] = useState('2026-27');
   const [actionProcessing, setActionProcessing] = useState(false);
 
   // Move Semester Modal State

@@ -175,11 +175,11 @@ export const runSeed = async () => {
     });
     console.log('👩‍🏫 Created Teachers: Test Teacher (Section B TG), Prof. Ananya (Section A TG), Prof. Kavita Sen');
 
-    // 6. Mentor Groups (Academic Session 2025-2026)
+    // 6. Mentor Groups (Academic Session 2026-27)
     const groupB = await MentorGroup.create({
       department: cseDept._id,
       tg: tgTestTeacher._id,
-      academicYear: '2025-2026',
+      academicYear: '2026-27',
       semester: 5,
       section: secB._id,
       students: [],
@@ -189,7 +189,7 @@ export const runSeed = async () => {
     const groupA = await MentorGroup.create({
       department: cseDept._id,
       tg: tgAnanyaTeacher._id,
-      academicYear: '2025-2026',
+      academicYear: '2026-27',
       semester: 5,
       section: secA._id,
       students: [],
@@ -207,7 +207,7 @@ export const runSeed = async () => {
         tgName: 'Test Teacher',
         section: 'CSE-B',
         semester: 5,
-        academicYear: '2025-2026',
+        academicYear: '2026-27',
       },
     });
 
@@ -221,7 +221,7 @@ export const runSeed = async () => {
         tgName: 'Prof. Ananya Verma',
         section: 'CSE-A',
         semester: 5,
-        academicYear: '2025-2026',
+        academicYear: '2026-27',
       },
     });
 

@@ -175,7 +175,7 @@ export const createUser = async (data) => {
         department: dept._id,
         year: yearNumber,
         semester: semNumber,
-        academicYear: data.academicYear || '2025-26',
+        academicYear: data.academicYear || '2026-27',
       });
     }
 
@@ -257,7 +257,7 @@ export const createUser = async (data) => {
           }
         }
 
-        const tgSession = data.academicYear || data.session || '2025-26';
+        const tgSession = data.academicYear || data.session || '2026-27';
 
         let tgStudentIds = [];
         if (tgSection) {
@@ -667,7 +667,7 @@ export const appointTG = async (userId, data = {}, actorUser = null) => {
   }
 
   const finalSemester = parseInt(data.semester, 10) || 5;
-  const activeYear = data.academicYear || data.session || '2025-26';
+  const activeYear = data.academicYear || data.session || '2026-27';
 
   // Resolve section
   let resolvedSectionDoc = null;

@@ -125,7 +125,7 @@ export default function SectionTgMatrixModal({
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-500">Academic Session:</span>
             <span className="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-xs font-black">
-              2025-26
+              2026-27
             </span>
           </div>
         </div>

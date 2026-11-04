@@ -56,7 +56,7 @@ export default function CreateUserModal({
   const [isTg, setIsTg] = useState(false);
   const [tgSemester, setTgSemester] = useState(5);
   const [tgSection, setTgSection] = useState('Section B');
-  const [academicYear, setAcademicYear] = useState('2025-26');
+  const [academicYear, setAcademicYear] = useState('2026-27');
 
   // State
   const [submitting, setSubmitting] = useState(false);
