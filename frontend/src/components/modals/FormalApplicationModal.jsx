@@ -408,14 +408,16 @@ export default function FormalApplicationModal({ item, onClose }) {
     item.student?.name ||
     item.applicant?.name ||
     item.studentName ||
-    'Avinash Bharti';
+    'Student';
 
   const enrollmentNo =
     item.student?.enrollmentNumber ||
     item.student?.rollNumber ||
+    item.applicant?.enrollmentNumber ||
     item.applicant?.rollNumber ||
+    item.enrollmentNumber ||
     item.enrollmentNo ||
-    '0105CS241101';
+    'Not provided';
 
   const semVal =
     item.student?.semester ||
