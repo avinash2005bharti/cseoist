@@ -173,7 +173,7 @@ export default function LoginPage() {
           <div className="auth-brand-title-row">
             <div className="auth-brand-emblem">
               <img
-                src="/oist.png"
+                src="/ogi.png"
                 alt="OIST Emblem"
                 className="w-full h-full object-contain"
               />
@@ -228,7 +228,7 @@ export default function LoginPage() {
           <div className="lg:hidden flex flex-col items-center text-center mb-6">
             <div className="w-16 h-16 rounded-2xl bg-white p-2 shadow-md border border-slate-200/80 mb-3 flex items-center justify-center">
               <img
-                src="/oist.png"
+                src="/ogi.png"
                 alt="OIST Logo"
                 className="w-full h-full object-contain"
               />

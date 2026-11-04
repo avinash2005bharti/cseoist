@@ -1,12 +1,8 @@
-const CACHE_NAME = 'campusflow-shell-v3';
+const CACHE_NAME = 'campusflow-shell-v4';
 const APP_SHELL = [
   '/',
   '/manifest.json',
-  '/oist.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-192x192-maskable.png',
-  '/icons/icon-512x512.png',
-  '/icons/icon-512x512-maskable.png'
+  '/ogi.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -103,8 +99,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body,
-    icon: data.icon || '/oist.png',
-    badge: data.badge || '/oist.png',
+    icon: data.icon || '/ogi.png',
+    badge: data.badge || '/ogi.png',
     vibrate: [200, 100, 200, 100, 200],
     tag: `reminder-${data.data?.slot || 'attendance'}-${Date.now()}`,
     renotify: true,
@@ -155,8 +151,8 @@ self.addEventListener('message', (event) => {
     const { title, body, url, tag } = event.data;
     self.registration.showNotification(title || 'CampusFlow Reminder', {
       body: body || 'Please review student consideration requests and update attendance.',
-      icon: '/oist.png',
-      badge: '/oist.png',
+      icon: '/ogi.png',
+      badge: '/ogi.png',
       vibrate: [150, 75, 150],
       tag: tag || 'campusflow-notice',
       data: { url: url || '/' },

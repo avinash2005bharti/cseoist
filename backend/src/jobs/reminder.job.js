@@ -140,8 +140,8 @@ export const runAttendanceReminder = async (slot = 'MIDDAY', mockClock = null) =
       const delivered = await sendPushToUser(u._id.toString(), {
         title,
         body: message,
-        icon: '/iit.png',
-        badge: '/iit.png',
+        icon: '/ogi.png',
+        badge: '/ogi.png',
         url: targetLink,
         data: {
           url: targetLink,
@@ -155,8 +155,8 @@ export const runAttendanceReminder = async (slot = 'MIDDAY', mockClock = null) =
     pushDelivered += await sendPushToSharedTeacher({
       title,
       body: message,
-      icon: '/iit.png',
-      badge: '/iit.png',
+      icon: '/ogi.png',
+      badge: '/ogi.png',
       url: '/teacher/considerations',
       data: {
         url: '/teacher/considerations',

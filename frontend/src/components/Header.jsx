@@ -176,7 +176,7 @@ export default function Header({ isSidebarOpen, onToggleSidebar }) {
             >
               <div className="w-9 h-9 rounded-xl bg-white p-0.5 flex items-center justify-center border border-slate-200 shadow-xs group-hover:scale-105 transition-transform overflow-hidden">
                 <img
-                  src="/oist.png"
+                  src="/ogi.png"
                   alt="OIST Logo"
                   className="w-full h-full object-contain"
                   onError={(e) => {

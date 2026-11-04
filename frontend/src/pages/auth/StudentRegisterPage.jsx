@@ -333,7 +333,7 @@ export default function StudentRegisterPage() {
           <div className="auth-brand-title-row">
             <div className="auth-brand-emblem">
               <img
-                src="/oist.png"
+                src="/ogi.png"
                 alt="OIST Logo"
                 className="w-full h-full object-contain"
               />
