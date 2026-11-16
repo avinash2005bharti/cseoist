@@ -51,6 +51,15 @@ function formatDateSlash(dStr) {
   return dStr;
 }
 
+function getSectionIdentity(section) {
+  const name = String(section?.name || '').replace(/^Section\s*/i, '').trim();
+  if (name) return name.toUpperCase();
+
+  const code = String(section?.code || '').replace(/^CSE-/i, '').trim();
+  const match = code.match(/^([A-Z]+)(?:-S(?:EM)?\d+)?$/i);
+  return (match ? match[1] : code).toUpperCase();
+}
+
 export default function OfficialClearancesLedgerModal({
   initialTab = 'considerations', // 'considerations' | 'leaves'
   onClose,
@@ -138,31 +147,35 @@ export default function OfficialClearancesLedgerModal({
           ? null
           : parseInt(String(semesterFilter).replace(/\D/g, ''), 10);
       if (selectedSemester && Number(section.semester) !== selectedSemester) return;
-      const identity = (section.name || section.code || '')
-        .replace(/^Section\s*/i, '')
-        .replace(/^CSE-/i, '')
-        .trim()
-        .toUpperCase();
+      const identity = getSectionIdentity(section);
       if (identity) identities.set(identity, identity);
     });
-    if (currentUser?.sharedTeacher && allocatedSections.length === 0) {
-      [...considerations, ...leaves].forEach((item) => {
-        const student = item.student || {};
-        const section = student.section || {};
-        const identity = String(section.name || section.code || '').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim().toUpperCase();
-        if (identity && identity !== 'UNASSIGNED') identities.set(identity, identity);
-      });
-    }
     return Array.from(identities.values()).sort();
-  }, [allocatedSections, considerations, currentUser?.sharedTeacher, leaves, semesterFilter]);
+  }, [allocatedSections, semesterFilter]);
 
   useEffect(() => {
     let cancelled = false;
     const loadSections = async () => {
       if (currentUser?.sharedTeacher) {
-        setAllocatedSections([]);
-        setSectionsError('');
-        setSectionsLoading(false);
+        const selectedSemester =
+          semesterFilter === 'All Semesters'
+            ? 'ALL'
+            : parseInt(String(semesterFilter).replace(/\D/g, ''), 10);
+        try {
+          const response = await considerationApi.getTeacherApproved({
+            limit: 1,
+            semester: selectedSemester,
+          });
+          const sections = Array.isArray(response?.meta?.sections) ? response.meta.sections : [];
+          if (!cancelled) setAllocatedSections(sections);
+        } catch (error) {
+          if (!cancelled) {
+            setAllocatedSections([]);
+            setSectionsError(error?.message || 'Unable to load allocated sections.');
+          }
+        } finally {
+          if (!cancelled) setSectionsLoading(false);
+        }
         return;
       }
       setSectionsLoading(true);
@@ -240,9 +253,7 @@ export default function OfficialClearancesLedgerModal({
         : [];
       setConsiderations(rawConList);
       if (isTeacherView && currentUser?.sharedTeacher) {
-        setAllocatedSections(
-          Array.isArray(rawCon?.meta?.sections) ? rawCon.meta.sections : []
-        );
+        setAllocatedSections(Array.isArray(rawCon?.meta?.sections) ? rawCon.meta.sections : []);
       }
 
       const rawLeave = leaveRes.status === 'fulfilled' ? leaveRes.value : null;
