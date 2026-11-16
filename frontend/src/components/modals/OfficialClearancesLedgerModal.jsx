@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { masterDataApi, reportApi } from '../../api';
 import considerationApi from '../../api/considerationApi.js';
 import AttendanceLeaveReportsModal from './AttendanceLeaveReportsModal.jsx';
+import { useERP } from '../../context/ERPContext.jsx';
 import {
   FileText,
   FileSpreadsheet,
@@ -59,6 +60,7 @@ export default function OfficialClearancesLedgerModal({
   initialDateMode = 'today',
   isTeacherView = false,
 }) {
+  const { currentUser } = useERP();
   const todayStr = getTodayISTString();
 
   const [activeTab, setActiveTab] = useState(initialTab);
