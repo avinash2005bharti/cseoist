@@ -81,6 +81,13 @@ router.get(
     } else if (req.user.role === 'HOD' || (req.user.role !== 'ADMIN' && req.user.departmentId)) {
       filter.department = req.user.departmentId;
     }
+    if (req.query.semester !== undefined && req.query.semester !== 'ALL') {
+      const semester = Number.parseInt(String(req.query.semester).replace(/\D/g, ''), 10);
+      if (!Number.isInteger(semester) || semester < 1 || semester > 8) {
+        throw ApiError.badRequest('Semester must be a number between 1 and 8');
+      }
+      filter.semester = semester;
+    }
     const sections = await Section.find(filter)
       .populate('department', 'name code')
       .sort({ semester: 1, name: 1, code: 1 });

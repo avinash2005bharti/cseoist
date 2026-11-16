@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { reportApi } from '../../api';
+import { masterDataApi, reportApi } from '../../api';
 import considerationApi from '../../api/considerationApi.js';
 import AttendanceLeaveReportsModal from './AttendanceLeaveReportsModal.jsx';
 import {
@@ -124,25 +124,74 @@ export default function OfficialClearancesLedgerModal({
   const [considerations, setConsiderations] = useState([]);
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [allocatedSections, setAllocatedSections] = useState([]);
+  const [sectionsLoading, setSectionsLoading] = useState(false);
+  const [sectionsError, setSectionsError] = useState('');
 
   const dynamicSections = useMemo(() => {
-    const letters = new Set(['A', 'B', 'C', 'D', 'E']);
-    considerations.forEach((item) => {
-      const sec = (item.student?.section?.name || item.student?.section?.code || '')
+    const identities = new Map();
+    allocatedSections.forEach((section) => {
+      const identity = (section.name || section.code || '')
         .replace(/^Section\s*/i, '')
         .replace(/^CSE-/i, '')
-        .trim();
-      if (sec) letters.add(sec.toUpperCase());
+        .trim()
+        .toUpperCase();
+      if (identity) identities.set(identity, identity);
     });
-    leaves.forEach((item) => {
-      const sec = (item.student?.section?.name || item.student?.section?.code || '')
-        .replace(/^Section\s*/i, '')
-        .replace(/^CSE-/i, '')
-        .trim();
-      if (sec) letters.add(sec.toUpperCase());
-    });
-    return Array.from(letters).sort();
-  }, [considerations, leaves]);
+    if (currentUser?.sharedTeacher) {
+      [...considerations, ...leaves].forEach((item) => {
+        const student = item.student || {};
+        const section = student.section || {};
+        const identity = String(section.name || section.code || '').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim().toUpperCase();
+        if (identity && identity !== 'UNASSIGNED') identities.set(identity, identity);
+      });
+    }
+    return Array.from(identities.values()).sort();
+  }, [allocatedSections, considerations, currentUser?.sharedTeacher, leaves]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadSections = async () => {
+      if (currentUser?.sharedTeacher) {
+        setAllocatedSections([]);
+        setSectionsError('');
+        setSectionsLoading(false);
+        return;
+      }
+      setSectionsLoading(true);
+      setSectionsError('');
+      try {
+        const selectedSemester =
+          semesterFilter === 'All Semesters'
+            ? 'ALL'
+            : parseInt(String(semesterFilter).replace(/\D/g, ''), 10);
+        const response = await masterDataApi.getSections({ semester: selectedSemester });
+        const sections = Array.isArray(response?.data)
+          ? response.data
+          : Array.isArray(response)
+          ? response
+          : [];
+        if (!cancelled) setAllocatedSections(sections);
+      } catch (error) {
+        if (!cancelled) {
+          setAllocatedSections([]);
+          setSectionsError(error?.message || 'Unable to load allocated sections.');
+        }
+      } finally {
+        if (!cancelled) setSectionsLoading(false);
+      }
+    };
+    loadSections();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.sharedTeacher, semesterFilter]);
+
+  useEffect(() => {
+    if (sectionFilter !== 'All' && !dynamicSections.includes(sectionFilter.toUpperCase())) {
+      setSectionFilter('All');
+    }
+  }, [dynamicSections, sectionFilter]);
 
   // Print Modal state
   const [showPrintModal, setShowPrintModal] = useState(false);
@@ -295,8 +344,8 @@ export default function OfficialClearancesLedgerModal({
             studentName: leader.user?.name || item.applicant?.name || leader.designation || 'Student',
             enrollmentNumber: leader.enrollmentNumber || leader.rollNumber || item.applicant?.rollNumber || 'Not provided',
             section: leader.section,
-            sectionName: (leader.section?.name || leader.section?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
-            semester: leader.section?.semester || leader.semester || 5,
+            sectionName: (leader.section?.name || leader.section?.code || 'Unassigned').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
+            semester: leader.section?.semester || leader.semester || 'N/A',
             eventTitle: item.eventTitle,
             category: item.eventType || 'Consideration',
             description: item.description || item.reason || 'Attendance consideration',
@@ -335,8 +384,8 @@ export default function OfficialClearancesLedgerModal({
               studentName: member.user?.name || member.name || member.rollNumber || 'Team Member',
               enrollmentNumber: member.enrollmentNumber || member.rollNumber || 'Not provided',
               section: memberSec,
-              sectionName: (memberSec?.name || memberSec?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
-              semester: memberSec?.semester || member.semester || leader?.section?.semester || 5,
+              sectionName: (memberSec?.name || memberSec?.code || 'Unassigned').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
+              semester: memberSec?.semester || member.semester || leader?.section?.semester || 'N/A',
               eventTitle: item.eventTitle,
               category: item.eventType || 'Consideration',
               description: item.description || item.reason || 'Attendance consideration',
@@ -378,8 +427,8 @@ export default function OfficialClearancesLedgerModal({
         studentName: item.applicant?.name || student.user?.name || student.designation || 'Student',
         enrollmentNumber: student.enrollmentNumber || student.rollNumber || item.applicant?.rollNumber || 'N/A',
         section: student.section,
-        sectionName: (student.section?.name || student.section?.code || 'B').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
-        semester: student.section?.semester || student.semester || 5,
+        sectionName: (student.section?.name || student.section?.code || 'Unassigned').replace(/^Section\s*/i, '').replace(/^CSE-/i, '').trim(),
+        semester: student.section?.semester || student.semester || 'N/A',
         eventTitle: `${item.leaveType} Leave`,
         category: item.leaveType,
         description: item.reason || item.description || 'Student leave application',
@@ -474,15 +523,15 @@ export default function OfficialClearancesLedgerModal({
     const list = filteredList;
     let csv = '';
     if (activeTab === 'considerations') {
-      csv = 'Student Name,Enrollment,Section,Role,Periods,Time From,Time To,Date From,Date To,Number of Days,Status\n';
+      csv = 'Student Name,Enrollment,Section,Semester,Role,Periods,Time From,Time To,Date From,Date To,Number of Days,Status\n';
       list.forEach((row) => {
         const role = row.isLeader ? 'Group Leader' : row.isGroup ? 'Group Member' : 'Individual';
-        csv += `"${row.studentName}","${row.enrollmentNumber}","${row.sectionName}","${role}","${row.periodsStr}","${row.timeFrom}","${row.timeTo}","${row.startDate}","${row.endDate}","${row.totalDays} Day${row.totalDays !== 1 ? 's' : ''}","APPROVED"\n`;
+        csv += `"${row.studentName}","${row.enrollmentNumber}","${row.sectionName}","Semester ${row.semester}","${role}","${row.periodsStr}","${row.timeFrom}","${row.timeTo}","${row.startDate}","${row.endDate}","${row.totalDays} Day${row.totalDays !== 1 ? 's' : ''}","APPROVED"\n`;
       });
     } else {
-      csv = 'Student Name,Enrollment,Section,Category,Date From,Date To,Number of Days,Status\n';
+      csv = 'Student Name,Enrollment,Section,Semester,Category,Date From,Date To,Number of Days,Status\n';
       list.forEach((row) => {
-        csv += `"${row.studentName}","${row.enrollmentNumber}","${row.sectionName}","${row.category}","${row.startDate}","${row.endDate}","${row.totalDays} Days","APPROVED"\n`;
+        csv += `"${row.studentName}","${row.enrollmentNumber}","${row.sectionName}","Semester ${row.semester}","${row.category}","${row.startDate}","${row.endDate}","${row.totalDays} Days","APPROVED"\n`;
       });
     }
 
@@ -674,6 +723,7 @@ export default function OfficialClearancesLedgerModal({
             <td style="padding: 7px 8px; font-weight: 800; color: #0F172A;">${studentName}${roleTag}</td>
             <td style="padding: 7px 8px; font-family: monospace; color: #334155;">${enrollNo}</td>
             <td style="padding: 7px 6px; text-align: center; font-weight: 700; color: #1E3A8A;">${sec}</td>
+            <td style="padding: 7px 6px; text-align: center; font-weight: 700; color: #1E3A8A;">Semester ${row.semester}</td>
             <td style="padding: 7px 8px; font-weight: 700; color: #334155;">${periods}</td>
             <td style="padding: 7px 8px; text-align: center; color: #475569;">${timeStr}</td>
             <td style="padding: 7px 8px; text-align: center; color: #475569; white-space: nowrap;">${dateStr}</td>
@@ -810,6 +860,7 @@ export default function OfficialClearancesLedgerModal({
                 <th style="text-align: left;">Student Name</th>
                 <th style="text-align: left;">Enrollment No.</th>
                 <th>Section</th>
+                <th>Semester</th>
                 <th style="text-align: left;">${activeTab === 'leaves' ? 'Category' : 'Lectures / Periods'}</th>
                 <th>Time (From - To)</th>
                 <th>Date (From - To)</th>
@@ -1048,11 +1099,20 @@ export default function OfficialClearancesLedgerModal({
                   className="bg-background text-foreground text-xs font-bold rounded-lg px-2.5 py-1 border border-input outline-none cursor-pointer focus:ring-2 focus:ring-primary shadow-2xs"
                 >
                   <option value="All">All Sections</option>
-                  {dynamicSections.map((sec) => (
-                    <option key={sec} value={sec}>Section {sec}</option>
-                  ))}
+                {sectionsLoading && <option disabled>Loading sections...</option>}
+                {!sectionsLoading && dynamicSections.length === 0 && (
+                  <option disabled>{sectionsError ? 'Sections unavailable' : 'No sections allocated'}</option>
+                )}
+                {dynamicSections.map((sec) => (
+                  <option key={sec} value={sec}>Section {sec}</option>
+                ))}
                 </select>
               </div>
+              {sectionsError && (
+                <span className="text-[11px] font-medium text-red-600" role="alert">
+                {sectionsError}
+                </span>
+              )}
             </div>
           )}
 
@@ -1395,11 +1455,20 @@ export default function OfficialClearancesLedgerModal({
                       className="w-full text-xs font-bold h-9 px-2 rounded-lg border border-input bg-background outline-none text-foreground"
                     >
                       <option value="All">All Sections</option>
+                      {sectionsLoading && <option disabled>Loading sections...</option>}
+                      {!sectionsLoading && dynamicSections.length === 0 && (
+                        <option disabled>{sectionsError ? 'Sections unavailable' : 'No sections allocated'}</option>
+                      )}
                       {dynamicSections.map((sec) => (
                         <option key={sec} value={sec}>Section {sec}</option>
                       ))}
                     </select>
                   </div>
+                  {sectionsError && (
+                    <p className="text-[11px] font-medium text-red-600 col-span-2" role="alert">
+                      {sectionsError}
+                    </p>
+                  )}
                 </div>
               )}
               <input

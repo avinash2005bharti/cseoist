@@ -724,7 +724,7 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
   } else {
     const sectionFilter = targetSemester ? { semester: targetSemester } : {};
     const dbSections = await Section.find(sectionFilter);
-    const sectionLetters = new Set(['A', 'B', 'C', 'D']);
+    const sectionLetters = new Set();
     dbSections.forEach((s) => {
       const letCode = extractSectionLetter(s);
       if (letCode && letCode !== 'Unassigned') sectionLetters.add(letCode);
@@ -816,6 +816,7 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
     { header: 'Student Name', key: 'studentName', width: 22 },
     { header: 'Roll Number', key: 'rollNumber', width: 16 },
     { header: 'Section', key: 'section', width: 14 },
+    { header: 'Semester', key: 'semester', width: 12 },
     { header: 'Event Title', key: 'eventTitle', width: 26 },
     { header: 'Application Type', key: 'eventType', width: 18 },
     { header: 'Start Date', key: 'startDate', width: 14 },
@@ -854,6 +855,7 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
       studentName: row.studentName,
       rollNumber: row.rollNumber,
       section: row.sectionStr,
+      semester: row.student?.section?.semester || row.student?.semester || 'N/A',
       eventTitle: req.eventTitle,
       eventType: req.eventType,
       startDate: req.startDate,
@@ -885,6 +887,7 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
         studentName: `No consideration records found for Section ${secLetter} in the selected date range.`,
         rollNumber: '-',
         section: `CSE-${secLetter}`,
+        semester: targetSemester ? `Semester ${targetSemester}` : '-',
         eventTitle: '-',
         eventType: '-',
         startDate: '-',
@@ -906,6 +909,7 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
           studentName: row.studentName,
           rollNumber: row.rollNumber,
           section: row.sectionStr,
+          semester: row.student?.section?.semester || row.student?.semester || 'N/A',
           eventTitle: req.eventTitle,
           eventType: req.eventType,
           startDate: req.startDate,
@@ -1021,7 +1025,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
   } else {
     const sectionFilter = targetSemester ? { semester: targetSemester } : {};
     const dbSections = await Section.find(sectionFilter);
-    const sectionLetters = new Set(['A', 'B', 'C', 'D']);
+    const sectionLetters = new Set();
     dbSections.forEach((s) => {
       const letCode = extractSectionLetter(s);
       if (letCode && letCode !== 'Unassigned') sectionLetters.add(letCode);
@@ -1054,6 +1058,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
     { header: 'Role', key: 'role', width: 14 },
     { header: 'Roll Number / ID', key: 'rollOrId', width: 18 },
     { header: 'Section', key: 'section', width: 14 },
+    { header: 'Semester', key: 'semester', width: 12 },
     { header: 'Leave Type', key: 'leaveType', width: 16 },
     { header: 'Start Date', key: 'startDate', width: 14 },
     { header: 'End Date', key: 'endDate', width: 14 },
@@ -1080,6 +1085,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
       role: l.applicantRole === 'TEACHER' ? 'Faculty' : l.applicantRole,
       rollOrId: l.student?.rollNumber || l.teacher?.employeeId || 'N/A',
       section: l.student?.section?.code || l.student?.section?.name || (l.applicantRole === 'TEACHER' ? 'Faculty' : 'N/A'),
+      semester: l.student?.section?.semester || l.student?.semester || (l.applicantRole === 'TEACHER' ? 'N/A' : 'Unknown'),
       leaveType: l.leaveType,
       startDate: l.startDate,
       endDate: l.endDate,
@@ -1110,6 +1116,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
         role: '-',
         rollOrId: '-',
         section: `CSE-${secLetter}`,
+        semester: targetSemester ? `Semester ${targetSemester}` : '-',
         leaveType: '-',
         startDate: '-',
         endDate: '-',
@@ -1129,6 +1136,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
           role: 'STUDENT',
           rollOrId: l.student?.rollNumber || 'N/A',
           section: l.student?.section?.code || l.student?.section?.name || `Section ${secLetter}`,
+          semester: l.student?.section?.semester || l.student?.semester || 'N/A',
           leaveType: l.leaveType,
           startDate: l.startDate,
           endDate: l.endDate,
@@ -1158,6 +1166,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
         role: 'Faculty',
         rollOrId: l.teacher?.employeeId || 'N/A',
         section: 'Faculty',
+        semester: 'N/A',
         leaveType: l.leaveType,
         startDate: l.startDate,
         endDate: l.endDate,
