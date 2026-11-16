@@ -133,6 +133,11 @@ export default function OfficialClearancesLedgerModal({
   const dynamicSections = useMemo(() => {
     const identities = new Map();
     allocatedSections.forEach((section) => {
+      const selectedSemester =
+        semesterFilter === 'All Semesters'
+          ? null
+          : parseInt(String(semesterFilter).replace(/\D/g, ''), 10);
+      if (selectedSemester && Number(section.semester) !== selectedSemester) return;
       const identity = (section.name || section.code || '')
         .replace(/^Section\s*/i, '')
         .replace(/^CSE-/i, '')
@@ -140,7 +145,7 @@ export default function OfficialClearancesLedgerModal({
         .toUpperCase();
       if (identity) identities.set(identity, identity);
     });
-    if (currentUser?.sharedTeacher) {
+    if (currentUser?.sharedTeacher && allocatedSections.length === 0) {
       [...considerations, ...leaves].forEach((item) => {
         const student = item.student || {};
         const section = student.section || {};
@@ -149,7 +154,7 @@ export default function OfficialClearancesLedgerModal({
       });
     }
     return Array.from(identities.values()).sort();
-  }, [allocatedSections, considerations, currentUser?.sharedTeacher, leaves]);
+  }, [allocatedSections, considerations, currentUser?.sharedTeacher, leaves, semesterFilter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -234,6 +239,11 @@ export default function OfficialClearancesLedgerModal({
         ? rawCon
         : [];
       setConsiderations(rawConList);
+      if (isTeacherView && currentUser?.sharedTeacher) {
+        setAllocatedSections(
+          Array.isArray(rawCon?.meta?.sections) ? rawCon.meta.sections : []
+        );
+      }
 
       const rawLeave = leaveRes.status === 'fulfilled' ? leaveRes.value : null;
       const rawLeaveList = Array.isArray(rawLeave?.data?.leaves)

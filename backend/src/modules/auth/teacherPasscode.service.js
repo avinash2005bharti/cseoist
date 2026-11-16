@@ -6,6 +6,7 @@ import ApiError from '../../utils/ApiError.js';
 import User from '../../models/User.js';
 import SystemSetting from '../../models/SystemSetting.js';
 import ConsiderationRequest from '../../models/ConsiderationRequest.js';
+import Section from '../../models/Section.js';
 import TeacherPasscodeAttempt from '../../models/TeacherPasscodeAttempt.js';
 
 const SETTING_KEY = 'teacher_shared_passcode';
@@ -182,7 +183,7 @@ export const getApprovedConsiderations = async (query = {}) => {
   const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
   const limit = Math.min(Math.max(Number.parseInt(query.limit, 10) || 20, 1), 100);
   const filter = { status: 'APPROVED_BY_HOD' };
-  const [requests, total] = await Promise.all([
+  const [requests, total, sections] = await Promise.all([
     ConsiderationRequest.find(filter)
       .populate({
         path: 'student',
@@ -213,8 +214,19 @@ export const getApprovedConsiderations = async (query = {}) => {
       .limit(limit)
       .lean(),
     ConsiderationRequest.countDocuments(filter),
+    Section.find(
+      query.semester && query.semester !== 'ALL'
+        ? { semester: Number.parseInt(String(query.semester).replace(/\D/g, ''), 10) }
+        : {}
+    )
+      .select('name code semester')
+      .sort({ semester: 1, name: 1, code: 1 })
+      .lean(),
   ]);
-  return { requests, meta: { page, limit, total, pages: Math.ceil(total / limit) } };
+  return {
+    requests,
+    meta: { page, limit, total, pages: Math.ceil(total / limit), sections },
+  };
 };
 
 export default { login, getStatus, setPasscode, resetPasscode, getApprovedConsiderations, isSharedTeacherTokenCurrent };
