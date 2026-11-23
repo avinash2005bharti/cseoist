@@ -98,9 +98,26 @@ export const createConsideration = async (user, data, options = {}) => {
   }
 
   const isGroup = Boolean(data.isGroup) && Array.isArray(data.groupMembers) && data.groupMembers.length > 0;
-  const timeFrom = data.timeFrom || '10:50 AM';
-  const timeTo = data.timeTo || '01:20 PM';
-  const periodTiming = data.periodTiming || `${timeFrom} - ${timeTo}`;
+  const isFullDay =
+    Boolean(data.isFullDay) ||
+    data.timeFrom === 'Full Day' ||
+    data.timeTo === 'Full Day' ||
+    (data.timeFrom?.includes('10:00') && (data.timeTo?.includes('04:30') || data.timeTo?.includes('04:40'))) ||
+    /full\s*day/i.test(data.periodTiming || '') ||
+    (Array.isArray(data.selectedPeriods) && data.selectedPeriods.length >= 8) ||
+    data.requestedPeriods === 8;
+
+  const timeFrom = isFullDay ? '10:00 AM' : (data.timeFrom || '10:00 AM');
+  const timeTo = isFullDay ? '04:40 PM' : (data.timeTo || '01:20 PM');
+  const periodTiming = data.periodTiming || (isFullDay ? 'Full Day (10:00 AM – 4:40 PM)' : `${timeFrom} - ${timeTo}`);
+  const requestedPeriods = isFullDay
+    ? 8
+    : (data.requestedPeriods || (Array.isArray(data.selectedPeriods) && data.selectedPeriods.length ? data.selectedPeriods.length : 4));
+  const selectedPeriods = Array.isArray(data.selectedPeriods) && data.selectedPeriods.length > 0
+    ? data.selectedPeriods
+    : isFullDay
+    ? ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8']
+    : ['P1', 'P2', 'P3', 'P4'];
 
   if (!isGroup) {
     // Derive TG from student's active MentorGroup or auto-resolve
@@ -120,8 +137,8 @@ export const createConsideration = async (user, data, options = {}) => {
       timeFrom,
       timeTo,
       isGroup: false,
-      requestedPeriods: data.requestedPeriods,
-      selectedPeriods: data.selectedPeriods || [],
+      requestedPeriods,
+      selectedPeriods,
       periodTiming,
       description: data.description,
       attachments: data.attachments || [],
@@ -280,8 +297,8 @@ export const createConsideration = async (user, data, options = {}) => {
       groupLeader: student._id,
       groupMembers: uniqueMemberIds,
       sectionStudents: sectionMemberIds,
-      requestedPeriods: data.requestedPeriods,
-      selectedPeriods: data.selectedPeriods || [],
+      requestedPeriods,
+      selectedPeriods,
       periodTiming,
       description: data.description,
       attachments: data.attachments || [],
@@ -1057,8 +1074,17 @@ export const hodReview = async (id, user, { decision, remarks, approvedPeriods }
   }
 
   if (decision === 'APPROVE') {
-    if (!approvedPeriods || approvedPeriods < 1 || approvedPeriods > request.requestedPeriods) {
-      approvedPeriods = request.requestedPeriods || 1;
+    const isFullDayReq =
+      request.timeFrom === 'Full Day' ||
+      request.timeTo === 'Full Day' ||
+      (request.timeFrom?.includes('10:00') && (request.timeTo?.includes('04:30') || request.timeTo?.includes('04:40'))) ||
+      /full\s*day/i.test(request.periodTiming || '') ||
+      request.requestedPeriods === 8 ||
+      (Array.isArray(request.selectedPeriods) && request.selectedPeriods.length >= 8);
+
+    const maxPeriods = isFullDayReq ? 8 : (request.requestedPeriods || 8);
+    if (!approvedPeriods || approvedPeriods < 1 || approvedPeriods > maxPeriods) {
+      approvedPeriods = isFullDayReq ? 8 : (request.requestedPeriods || 1);
     }
   }
 

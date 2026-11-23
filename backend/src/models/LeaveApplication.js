@@ -85,6 +85,7 @@ const leaveApplicationSchema = new mongoose.Schema(
       remarks: String,
       reviewedAt: Date,
       reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      approvedPeriods: Number,
     },
     escalated: {
       type: Boolean,
@@ -100,8 +101,38 @@ const leaveApplicationSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+// Virtual properties so leave applications serialize with full-day lecture consideration metrics
+leaveApplicationSchema.virtual('requestedPeriods').get(function () {
+  return (this.totalDays || 1) * 8;
+});
+
+leaveApplicationSchema.virtual('approvedPeriods').get(function () {
+  return this.finalReview?.approvedPeriods || (this.totalDays || 1) * 8;
+});
+
+leaveApplicationSchema.virtual('selectedPeriods').get(function () {
+  return ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'];
+});
+
+leaveApplicationSchema.virtual('timeFrom').get(function () {
+  return '10:00 AM';
+});
+
+leaveApplicationSchema.virtual('timeTo').get(function () {
+  return '04:40 PM';
+});
+
+leaveApplicationSchema.virtual('periodTiming').get(function () {
+  const days = this.totalDays || 1;
+  return days > 1
+    ? `${days} Days • Full Day (${days * 8} Lectures considered)`
+    : 'Full Day (10:00 AM – 4:40 PM • 8 Lectures)';
+});
 
 leaveApplicationSchema.index({ applicant: 1, startDate: 1 });
 leaveApplicationSchema.index({ tg: 1, status: 1 });

@@ -16,6 +16,17 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
 
+  const getDurationDays = (start, end) => {
+    if (!start || !end) return 1;
+    const s = new Date(start);
+    const e = new Date(end);
+    if (isNaN(s.getTime()) || isNaN(e.getTime())) return 1;
+    const diff = Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1;
+    return diff > 0 ? diff : 1;
+  };
+  const daysCount = getDurationDays(startDate, endDate);
+  const lecturesConsidered = daysCount * 8;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
@@ -43,7 +54,7 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
 
       addToast(
         'Leave Application Submitted',
-        `Your ${category.toLowerCase()} application has been submitted and routed to your Tutor Guardian.`,
+        `Your ${category.toLowerCase()} application has been submitted for ${daysCount} day(s) (${lecturesConsidered} lectures considered) and routed to your Tutor Guardian.`,
         'success'
       );
       window.dispatchEvent(new CustomEvent('campusflow_refresh_leaves'));
@@ -153,6 +164,16 @@ export default function ApplyLeaveModal({ onClose, onSuccess }) {
                 className="w-full rounded-xl border border-slate-200 bg-white text-slate-900 px-3.5 py-2.5 text-sm outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 cursor-pointer transition-all"
               />
             </div>
+          </div>
+
+          {/* Full-Day Leave Duration & Considered Lectures Indicator */}
+          <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-indigo-50/70 border border-indigo-100 text-xs">
+            <span className="font-semibold text-indigo-900">
+              Duration: {daysCount} Full Day{daysCount > 1 ? 's' : ''}
+            </span>
+            <span className="font-bold text-indigo-700 bg-white px-2.5 py-0.5 rounded-full border border-indigo-200 shadow-2xs">
+              {lecturesConsidered} Lectures Considered (8/day)
+            </span>
           </div>
 
           {/* Reason / Justification */}

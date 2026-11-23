@@ -15,8 +15,24 @@ export default function ReviewModal({
 
   const [decision, setDecision] = useState(role === 'TG' ? 'RECOMMEND' : 'APPROVE');
   const [remarks, setRemarks] = useState('');
+  const isItemLeave = type === 'LEAVE' || item.requestKind === 'LEAVE' || Boolean(item.leaveType);
+  const isItemFullDay =
+    isItemLeave ||
+    item.isFullDay ||
+    item.timeFrom === 'Full Day' ||
+    item.timeTo === 'Full Day' ||
+    (item.timeFrom?.includes('10:00') && (item.timeTo?.includes('04:30') || item.timeTo?.includes('04:40'))) ||
+    /full\s*day/i.test(item.periodTiming || '') ||
+    item.requestedPeriods === 8;
+
+  const defaultPeriods = isItemLeave
+    ? (item.totalDays || 1) * 8
+    : isItemFullDay
+    ? 8
+    : (Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : (item.requestedPeriods || 1));
+
   const [approvedPeriods, setApprovedPeriods] = useState(
-    item.approvedPeriods || (Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : (item.requestedPeriods || 1))
+    item.approvedPeriods || defaultPeriods
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -311,7 +327,11 @@ export default function ReviewModal({
                   Sanctioned Lectures
                 </span>
                 <span className="block text-[11px] font-medium text-slate-500 mt-0.5">
-                  Requested: {Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : (item.requestedPeriods || 1)} periods
+                  Requested: {isItemLeave
+                    ? `${(item.totalDays || 1) * 8} lectures (${item.totalDays || 1} day${(item.totalDays || 1) > 1 ? 's' : ''})`
+                    : isItemFullDay
+                    ? '8 lectures (Full Day)'
+                    : `${Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : (item.requestedPeriods || 1)} periods`}
                 </span>
               </div>
 

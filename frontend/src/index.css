@@ -10864,7 +10864,7 @@ select option:hover {
   }
 }
 
-/* Consideration & Leave Modal Period Selection Chips (P1-P7) */
+/* Consideration & Leave Modal Period Selection Chips (P1-P8) */
 button[class*="period-chip"],
 div[class*="period-select"] button,
 .modal-container button[class*="border"]:has(span:only-child) {

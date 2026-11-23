@@ -140,7 +140,7 @@ export const createLeave = async (user, data) => {
         const notif = await Notification.create({
           user: tgTeacher.user._id,
           title: 'New Student Leave Application',
-          message: `${user.name} applied for ${data.leaveType.toLowerCase()} leave (${totalDays} day${totalDays > 1 ? 's' : ''}).`,
+          message: `${user.name} applied for ${data.leaveType.toLowerCase()} leave (${totalDays} day${totalDays > 1 ? 's' : ''} • ${totalDays * 8} lectures considered).`,
           type: 'LEAVE',
           link: `/tg/leaves/${leave._id}`,
         });
@@ -778,11 +778,13 @@ export const finalReviewLeave = async (id, user, { decision, remarks }) => {
     newStatus = decision === 'APPROVE' ? 'APPROVED' : 'REJECTED';
   }
 
+  const approvedPeriods = (leave.totalDays || 1) * 8;
   leave.status = newStatus;
   leave.finalReview = {
     remarks: remarks || '',
     reviewedAt: now,
     reviewedBy: user._id,
+    ...(decision === 'APPROVE' ? { approvedPeriods } : {}),
   };
   leave.history.push({
     status: newStatus,

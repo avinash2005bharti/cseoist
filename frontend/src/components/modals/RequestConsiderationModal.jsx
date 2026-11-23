@@ -56,7 +56,7 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
   const [eventType, setEventType] = useState('HACKATHON');
   const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [timeFrom, setTimeFrom] = useState('10:50 AM');
+  const [timeFrom, setTimeFrom] = useState('10:00 AM');
   const [timeTo, setTimeTo] = useState('01:20 PM');
   const [lecturesCount, setLecturesCount] = useState(1);
   const [selectedPeriods, setSelectedPeriods] = useState([1]);
@@ -101,11 +101,11 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
 
-  const quickLecturePresets = [1, 2, 3, 4, 6, 7];
+  const quickLecturePresets = [1, 2, 3, 4, 5, 6, 7, 8];
   const timePresets = [
-    { label: 'Morning (10:50 AM - 01:20 PM)', from: '10:50 AM', to: '01:20 PM' },
-    { label: 'Afternoon (01:40 PM - 04:10 PM)', from: '01:40 PM', to: '04:10 PM' },
-    { label: 'Full Day (10:00 AM - 04:30 PM)', from: '10:00 AM', to: '04:30 PM' },
+    { label: 'Morning (10:00 AM - 01:20 PM)', from: '10:00 AM', to: '01:20 PM', periods: [1, 2, 3, 4] },
+    { label: 'Afternoon (02:00 PM - 04:40 PM)', from: '02:00 PM', to: '04:40 PM', periods: [5, 6, 7, 8] },
+    { label: 'Full Day (10:00 AM - 04:40 PM)', from: '10:00 AM', to: '04:40 PM', periods: [1, 2, 3, 4, 5, 6, 7, 8] },
   ];
 
   // Fetch all students directory when Group mode is active
@@ -733,7 +733,7 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
               })}
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {[5, 6, 7].map((p) => {
+              {[5, 6, 7, 8].map((p) => {
                 const isChecked = selectedPeriods.includes(p);
                 return (
                   <label
@@ -781,6 +781,10 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
                     onClick={() => {
                       setTimeFrom(p.from);
                       setTimeTo(p.to);
+                      if (p.periods) {
+                        setSelectedPeriods(p.periods);
+                        setLecturesCount(p.periods.length);
+                      }
                     }}
                     className={`schedule-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                       isActive
@@ -804,7 +808,7 @@ export default function RequestConsiderationModal({ onClose, onSuccess }) {
                   type="text"
                   value={timeFrom}
                   onChange={(e) => setTimeFrom(e.target.value)}
-                  placeholder="e.g., 10:50 AM"
+                  placeholder="e.g., 10:00 AM"
                   required
                   disabled={submitting}
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none transition-colors font-mono"

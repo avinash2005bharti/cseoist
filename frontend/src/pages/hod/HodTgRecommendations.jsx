@@ -76,24 +76,58 @@ function formatDateSlash(dateStr) {
   }
 }
 
-function formatPeriodsDisplay(periods) {
+function formatPeriodsDisplay(periods, item = null) {
   const periodSchedule = {
-    1: '10:00 AM - 10:50 AM',
-    2: '10:50 AM - 11:40 AM',
-    3: '11:40 AM - 12:30 PM',
-    4: '12:30 PM - 01:20 PM',
-    5: '02:00 PM - 02:50 PM',
-    6: '02:50 PM - 03:40 PM',
-    7: '03:40 PM - 04:30 PM',
+    1: '10:00 AM – 10:50 AM',
+    2: '10:50 AM – 11:40 AM',
+    3: '11:40 AM – 12:30 PM',
+    4: '12:30 PM – 1:20 PM',
+    5: '2:00 PM – 2:40 PM',
+    6: '2:40 PM – 3:20 PM',
+    7: '3:20 PM – 4:00 PM',
+    8: '4:00 PM – 4:40 PM',
   };
 
+  const isFullDay =
+    (item && (
+      item.requestKind === 'LEAVE' ||
+      Boolean(item.leaveType) ||
+      item.isFullDay ||
+      item.timeFrom === 'Full Day' ||
+      item.timeTo === 'Full Day' ||
+      (item.timeFrom?.includes('10:00') && (item.timeTo?.includes('04:30') || item.timeTo?.includes('04:40'))) ||
+      /full\s*day/i.test(item.periodTiming || '') ||
+      item.requestedPeriods === 8
+    )) ||
+    periods === 8 ||
+    (Array.isArray(periods) && periods.length >= 8);
+
+  if (isFullDay) {
+    const days = item?.totalDays || 1;
+    if (days > 1) {
+      return `${days} Days • ${days * 8} Lectures (Full Day • P1 to P8 • 10:00 AM – 4:40 PM)`;
+    }
+    return '8 Lectures • Full Day (P1 to P8 • 10:00 AM – 4:40 PM)';
+  }
+
+  if (typeof periods === 'number') {
+    if (periods >= 8) {
+      return '8 Lectures • Full Day (P1 to P8 • 10:00 AM – 4:40 PM)';
+    }
+    const slots = [];
+    for (let i = 1; i <= periods; i++) {
+      slots.push(`P${i} (${periodSchedule[i] || ''})`);
+    }
+    return `${periods} Period${periods > 1 ? 's' : ''} • ${slots.join(', ')}`;
+  }
+
   if (!periods || !Array.isArray(periods) || periods.length === 0) {
-    return '3 Periods • P2 (10:50 AM - 11:40 AM), P3 (11:40 AM - 12:30 PM), P4 (12:30 PM - 01:20 PM)';
+    return '4 Periods • P1 (10:00 AM – 10:50 AM), P2 (10:50 AM – 11:40 AM), P3 (11:40 AM – 12:30 PM), P4 (12:30 PM – 1:20 PM)';
   }
 
   const formattedSlots = periods.map((p) => {
     const num = typeof p === 'string' ? parseInt(p.replace(/\D/g, ''), 10) || 1 : p;
-    const time = periodSchedule[num] || '10:50 AM - 11:40 AM';
+    const time = periodSchedule[num] || '10:00 AM – 10:50 AM';
     return `P${num} (${time})`;
   });
 
@@ -321,9 +355,26 @@ export default function HodTgRecommendations() {
 
       const initialCounts = {};
       tgEndorsedItems.forEach((item) => {
+        const isItemLeave = item.requestKind === 'LEAVE' || Boolean(item.leaveType);
+        const totalLeaveLectures = (item.totalDays || 1) * 8;
+        const isItemFullDay =
+          isItemLeave ||
+          item.isFullDay ||
+          item.timeFrom === 'Full Day' ||
+          item.timeTo === 'Full Day' ||
+          (item.timeFrom?.includes('10:00') && (item.timeTo?.includes('04:30') || item.timeTo?.includes('04:40'))) ||
+          /full\s*day/i.test(item.periodTiming || '') ||
+          item.requestedPeriods === 8;
+
         initialCounts[item._id] =
           item.approvedPeriods ||
-          (Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : (item.requestedPeriods || 3));
+          (isItemLeave
+            ? totalLeaveLectures
+            : isItemFullDay
+            ? 8
+            : (Array.isArray(item.requestedPeriods)
+            ? item.requestedPeriods.length
+            : (item.requestedPeriods || 3)));
       });
       setSanctionedPeriods((prev) => ({ ...initialCounts, ...prev }));
     } finally {
@@ -441,14 +492,32 @@ export default function HodTgRecommendations() {
 
   const handleStepChange = (itemId, delta, maxSlots = 8) => {
     setSanctionedPeriods((prev) => {
-      const current = prev[itemId] !== undefined ? prev[itemId] : 3;
+      const current = prev[itemId] !== undefined ? prev[itemId] : (maxSlots || 8);
       const next = Math.max(1, Math.min(maxSlots, current + delta));
       return { ...prev, [itemId]: next };
     });
   };
 
   const handleQuickApprove = async (item) => {
-    const sanctioned = sanctionedPeriods[item._id] || item.approvedPeriods || 3;
+    const isItemLeave = item.requestKind === 'LEAVE' || Boolean(item.leaveType);
+    const totalLeaveLectures = (item.totalDays || 1) * 8;
+    const isItemFullDay =
+      isItemLeave ||
+      item.isFullDay ||
+      item.timeFrom === 'Full Day' ||
+      item.timeTo === 'Full Day' ||
+      (item.timeFrom?.includes('10:00') && (item.timeTo?.includes('04:30') || item.timeTo?.includes('04:40'))) ||
+      /full\s*day/i.test(item.periodTiming || '') ||
+      item.requestedPeriods === 8;
+
+    const sanctioned =
+      sanctionedPeriods[item._id] ||
+      item.approvedPeriods ||
+      (isItemLeave
+        ? totalLeaveLectures
+        : isItemFullDay
+        ? 8
+        : (Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : (item.requestedPeriods || 3)));
     try {
       if (item.requestKind === 'LEAVE') {
         await leaveApi.finalReview(item._id, {
@@ -465,7 +534,7 @@ export default function HodTgRecommendations() {
 
       addToast(
         'TG Recommendation Approved',
-        `Successfully sanctioned ${item.requestKind === 'LEAVE' ? 'Leave' : `${sanctioned} periods`} for ${item.student?.user?.name || item.student?.name || 'Student'}.`,
+        `Successfully sanctioned ${item.requestKind === 'LEAVE' ? `${totalLeaveLectures} lectures (${item.totalDays || 1}d leave)` : `${sanctioned} periods`} for ${item.student?.user?.name || item.student?.name || 'Student'}.`,
         'success'
       );
 
@@ -506,10 +575,27 @@ export default function HodTgRecommendations() {
         ? `Endorsed and approved based on TG recommendation.`
         : ''
     );
+    const isItemLeave = item.requestKind === 'LEAVE' || Boolean(item.leaveType);
+    const totalLeaveLectures = (item.totalDays || 1) * 8;
+    const isItemFullDay =
+      isItemLeave ||
+      item.isFullDay ||
+      item.timeFrom === 'Full Day' ||
+      item.timeTo === 'Full Day' ||
+      (item.timeFrom?.includes('10:00') && (item.timeTo?.includes('04:30') || item.timeTo?.includes('04:40'))) ||
+      /full\s*day/i.test(item.periodTiming || '') ||
+      item.requestedPeriods === 8;
+
     const periods =
       sanctionedPeriods[item._id] ||
       item.approvedPeriods ||
-      (Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : 3);
+      (isItemLeave
+        ? totalLeaveLectures
+        : isItemFullDay
+        ? 8
+        : (Array.isArray(item.requestedPeriods)
+        ? item.requestedPeriods.length
+        : (item.requestedPeriods || 3)));
     setReviewApprovedPeriods(periods);
     setReviewError(null);
   };
@@ -844,7 +930,7 @@ export default function HodTgRecommendations() {
       ) : (
         <div className="space-y-4">
           {filteredItems.map((item) => {
-            const isLeave = item.requestKind === 'LEAVE';
+            const isLeave = item.requestKind === 'LEAVE' || Boolean(item.leaveType);
             const student = item.student || {};
             const studentName =
               item.applicant?.name ||
@@ -875,12 +961,16 @@ export default function HodTgRecommendations() {
             const isItemRejected = isRejected(item);
             const isPending = isPendingHodSignoff(item);
 
+            const totalLeaveLectures = (item.totalDays || 1) * 8;
+
             const sanctioned =
               sanctionedPeriods[item._id] !== undefined
                 ? sanctionedPeriods[item._id]
                 : item.approvedPeriods ||
                   (Array.isArray(item.requestedPeriods)
                     ? item.requestedPeriods.length
+                    : isLeave
+                    ? totalLeaveLectures
                     : 3);
 
             const tgReviewerName =
@@ -1030,8 +1120,8 @@ export default function HodTgRecommendations() {
                       </div>
                       <div className="hod-info-value">
                         {isLeave
-                          ? `${item.totalDays || 1} Day${(item.totalDays || 1) > 1 ? 's' : ''} (Full Day)`
-                          : formatPeriodsDisplay(item.requestedPeriods || item.selectedPeriods)}
+                          ? `${item.totalDays || 1} Day${(item.totalDays || 1) > 1 ? 's' : ''} (Full Day • ${(item.totalDays || 1) * 8} Lectures)`
+                          : formatPeriodsDisplay(item.selectedPeriods?.length ? item.selectedPeriods : item.requestedPeriods, item)}
                       </div>
                     </div>
 
@@ -1044,7 +1134,7 @@ export default function HodTgRecommendations() {
                         <div className="hod-stepper-control">
                           <button
                             type="button"
-                            onClick={() => isPending && handleStepChange(item._id, -1)}
+                            onClick={() => isPending && handleStepChange(item._id, -1, isLeave ? totalLeaveLectures : 8)}
                             disabled={!isPending}
                             className="hod-stepper-btn"
                             aria-label="Decrease periods"
@@ -1056,7 +1146,7 @@ export default function HodTgRecommendations() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => isPending && handleStepChange(item._id, 1)}
+                            onClick={() => isPending && handleStepChange(item._id, 1, isLeave ? totalLeaveLectures : 8)}
                             disabled={!isPending}
                             className="hod-stepper-btn"
                             aria-label="Increase periods"
@@ -1065,7 +1155,7 @@ export default function HodTgRecommendations() {
                           </button>
                         </div>
                         <span className="text-xs font-semibold text-slate-600">
-                          {isLeave ? 'Days' : 'Periods'}
+                          {isLeave ? 'Lectures (Full Day: 8/Day)' : 'Lectures'}
                         </span>
                       </div>
                     </div>
@@ -1404,7 +1494,9 @@ export default function HodTgRecommendations() {
                       Sanctioned Lectures
                     </span>
                     <span className="block text-[11px] font-medium text-slate-500 mt-0.5">
-                      Requested: {Array.isArray(reviewingItem.requestedPeriods) ? reviewingItem.requestedPeriods.length : (reviewingItem.requestedPeriods || 3)} periods
+                      Requested: {reviewingItem.isFullDay || reviewingItem.timeFrom === 'Full Day' || reviewingItem.requestedPeriods === 8
+                        ? '8 lectures (Full Day)'
+                        : `${Array.isArray(reviewingItem.requestedPeriods) ? reviewingItem.requestedPeriods.length : (reviewingItem.requestedPeriods || 3)} periods`}
                     </span>
                   </div>
 
@@ -1429,6 +1521,23 @@ export default function HodTgRecommendations() {
                       +
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* Full-Day Leave Clearance Information */}
+              {reviewingItem.requestKind === 'LEAVE' && reviewDecision === 'APPROVE' && (
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="block text-xs font-bold text-slate-900 leading-tight">
+                      Full-Day Leave Clearance
+                    </span>
+                    <span className="block text-[11px] font-medium text-slate-500 mt-0.5">
+                      {reviewingItem.totalDays || 1} Academic Day(s) • {(reviewingItem.totalDays || 1) * 8} Lectures considered (8/day)
+                    </span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold">
+                    {(reviewingItem.totalDays || 1) * 8} Lectures
+                  </span>
                 </div>
               )}
 

@@ -49,3 +49,9 @@ system architecture.md.mcp.json
 .mcp.json
 load-testing/
 temp_chrome*/
+
+# Reports and Data Exports (Student & Faculty PII)
+*.xlsx
+*.xls
+*.csv
+
