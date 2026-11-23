@@ -72,15 +72,15 @@ export default function StudentDashboard() {
   const [quickEndDate, setQuickEndDate] = useState('');
   const [quickPeriods, setQuickPeriods] = useState([]);
   const [quickTimeFrom, setQuickTimeFrom] = useState('10:00 AM');
-  const [quickTimeTo, setQuickTimeTo] = useState('04:30 PM');
+  const [quickTimeTo, setQuickTimeTo] = useState('04:40 PM');
   const [quickJustification, setQuickJustification] = useState('');
   const [quickAttachment, setQuickAttachment] = useState(null);
   const [quickSubmitting, setQuickSubmitting] = useState(false);
 
   const quickTimePresets = [
-    { label: 'Morning (10:50 AM – 01:20 PM)', from: '10:50 AM', to: '01:20 PM' },
-    { label: 'Afternoon (01:40 PM – 04:10 PM)', from: '01:40 PM', to: '04:10 PM' },
-    { label: 'Full Day (10:00 AM – 04:30 PM)', from: '10:00 AM', to: '04:30 PM' },
+    { label: 'Morning (10:00 AM – 01:20 PM)', from: '10:00 AM', to: '01:20 PM', periods: [1, 2, 3, 4] },
+    { label: 'Afternoon (02:00 PM – 04:40 PM)', from: '02:00 PM', to: '04:40 PM', periods: [5, 6, 7, 8] },
+    { label: 'Full Day (10:00 AM – 04:40 PM)', from: '10:00 AM', to: '04:40 PM', periods: [1, 2, 3, 4, 5, 6, 7, 8] },
   ];
 
   const toggleQuickPeriod = (p) => {
@@ -96,7 +96,7 @@ export default function StudentDashboard() {
     setQuickEndDate('');
     setQuickPeriods([]);
     setQuickTimeFrom('10:00 AM');
-    setQuickTimeTo('04:30 PM');
+    setQuickTimeTo('04:40 PM');
     setQuickJustification('');
     setQuickAttachment(null);
   };
@@ -994,7 +994,7 @@ export default function StudentDashboard() {
                   })}
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  {[5, 6, 7].map((p) => {
+                  {[5, 6, 7, 8].map((p) => {
                     const isChecked = quickPeriods.includes(p);
                     return (
                       <label
@@ -1042,6 +1042,9 @@ export default function StudentDashboard() {
                         onClick={() => {
                           setQuickTimeFrom(p.from);
                           setQuickTimeTo(p.to);
+                          if (p.periods) {
+                            setQuickPeriods(p.periods);
+                          }
                         }}
                         className={`schedule-preset-btn px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                           isActive
@@ -1065,7 +1068,7 @@ export default function StudentDashboard() {
                       type="text"
                       value={quickTimeFrom}
                       onChange={(e) => setQuickTimeFrom(e.target.value)}
-                      placeholder="e.g., 10:50 AM"
+                      placeholder="e.g., 10:00 AM"
                       required
                       disabled={quickSubmitting}
                       className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none transition-colors font-mono"

@@ -292,7 +292,7 @@ export default function TgRequests() {
               : (`${item.startDate || ''} to ${item.endDate || ''}`);
             const quantity = isAttendance
               ? `${item.requestedPeriods || 1} Lectures`
-              : `${item.totalDays || 1} Days`;
+              : `${item.totalDays || 1} Day${(item.totalDays || 1) > 1 ? 's' : ''} (${(item.totalDays || 1) * 8} Lectures)`;
             const justification = item.description || item.reason || 'Participated in an approved department activity.';
 
             let badgeLabel = 'Pending Review';
@@ -707,6 +707,17 @@ export default function TgRequests() {
                     {selectedDetailsItem.status}
                   </span>
                 </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-muted/40 border border-border flex items-center justify-between text-xs">
+                <span className="text-muted-foreground font-semibold">
+                  {selectedDetailsItem.totalDays ? 'Leave Duration & Clearance:' : 'Requested Clearance:'}
+                </span>
+                <span className="font-bold text-card-foreground">
+                  {selectedDetailsItem.totalDays
+                    ? `${selectedDetailsItem.totalDays} Day(s) • ${selectedDetailsItem.totalDays * 8} Lectures (Full Day)`
+                    : `${selectedDetailsItem.requestedPeriods || 1} Lectures`}
+                </span>
               </div>
 
               {Boolean(selectedDetailsItem.isGroup && selectedDetailsItem.sectionStudents?.length > 0) && (

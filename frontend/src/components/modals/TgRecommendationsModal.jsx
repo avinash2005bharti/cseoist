@@ -221,7 +221,20 @@ export default function TgRecommendationsModal({
                 const reason = item.reason || item.description || '—';
                 const fromDate = formatDate(item.startDate);
                 const toDate = formatDate(item.endDate || item.startDate);
-                const periods = item.requestedPeriods || item.periods || 1;
+                const isItemLeave = item.requestKind === 'LEAVE' || Boolean(item.leaveType);
+                const isItemFullDay =
+                  isItemLeave ||
+                  item.isFullDay ||
+                  item.timeFrom === 'Full Day' ||
+                  item.timeTo === 'Full Day' ||
+                  (item.timeFrom?.includes('10:00') && (item.timeTo?.includes('04:30') || item.timeTo?.includes('04:40'))) ||
+                  /full\s*day/i.test(item.periodTiming || '') ||
+                  item.requestedPeriods === 8;
+                const periods = isItemLeave
+                  ? (item.totalDays || 1) * 8
+                  : isItemFullDay
+                  ? 8
+                  : (item.requestedPeriods || item.periods || 1);
                 const tgName = item.tg?.user?.name || item.tg?.name || 'Teacher Guardian';
                 const tgRemarks = item.tgReview?.remarks || 'Recommended for HOD authorization.';
 
@@ -322,7 +335,7 @@ export default function TgRecommendationsModal({
                         <span className="text-slate-300">•</span>
                         <span className="inline-flex items-center gap-1 text-slate-700 font-semibold">
                           <Clock size={13} className="text-slate-400" />
-                          <span>{periods} {Number(periods) === 1 ? 'Period' : 'Periods'}</span>
+                          <span>{periods} {Number(periods) === 1 ? (isItemLeave ? 'Lecture' : 'Period') : (isItemLeave ? 'Lectures' : 'Periods')}</span>
                         </span>
                       </div>
 

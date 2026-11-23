@@ -111,7 +111,7 @@ const considerationRequestSchema = new mongoose.Schema(
     },
     timeFrom: {
       type: String,
-      default: '10:50 AM',
+      default: '10:00 AM',
       trim: true,
     },
     timeTo: {

@@ -375,7 +375,7 @@ export default function OfficialClearancesLedgerModal({
             selectedPeriods: item.selectedPeriods,
             requestedPeriods: item.requestedPeriods,
             periodsStr,
-            timeFrom: item.timeFrom || '10:50 AM',
+            timeFrom: item.timeFrom || '10:00 AM',
             timeTo: item.timeTo || '01:20 PM',
             startDate: item.startDate,
             endDate: item.endDate || item.startDate,
@@ -415,7 +415,7 @@ export default function OfficialClearancesLedgerModal({
               selectedPeriods: item.selectedPeriods,
               requestedPeriods: item.requestedPeriods,
               periodsStr,
-              timeFrom: item.timeFrom || '10:50 AM',
+              timeFrom: item.timeFrom || '10:00 AM',
               timeTo: item.timeTo || '01:20 PM',
               startDate: item.startDate,
               endDate: item.endDate || item.startDate,
@@ -455,7 +455,8 @@ export default function OfficialClearancesLedgerModal({
         eventTitle: `${item.leaveType} Leave`,
         category: item.leaveType,
         description: item.reason || item.description || 'Student leave application',
-        periodsStr: item.leaveType || 'Sanctioned Leave',
+        requestedPeriods: (item.totalDays || 1) * 8,
+        periodsStr: `Full Day (8 Lectures/Day)`,
         timeFrom: 'Full Day',
         timeTo: 'Full Day',
         startDate: item.startDate,
@@ -546,15 +547,17 @@ export default function OfficialClearancesLedgerModal({
     const list = filteredList;
     let csv = '';
     if (activeTab === 'considerations') {
-      csv = 'Student Name,Enrollment,Section,Semester,Role,Periods,Time From,Time To,Date From,Date To,Number of Days,Status\n';
+      csv = 'Student Name,Enrollment,Section,Semester,Role,Periods,Time From,Time To,Applied Date,Date From,Date To,Number of Days,Status\n';
       list.forEach((row) => {
         const role = row.isLeader ? 'Group Leader' : row.isGroup ? 'Group Member' : 'Individual';
-        csv += `"${row.studentName}","${row.enrollmentNumber}","${row.sectionName}","Semester ${row.semester}","${role}","${row.periodsStr}","${row.timeFrom}","${row.timeTo}","${row.startDate}","${row.endDate}","${row.totalDays} Day${row.totalDays !== 1 ? 's' : ''}","APPROVED"\n`;
+        const appliedDate = row.createdAt ? new Date(row.createdAt).toISOString().slice(0, 10) : row.startDate;
+        csv += `"${row.studentName}","${row.enrollmentNumber}","${row.sectionName}","Semester ${row.semester}","${role}","${row.periodsStr}","${row.timeFrom}","${row.timeTo}","${appliedDate}","${row.startDate}","${row.endDate}","${row.totalDays} Day${row.totalDays !== 1 ? 's' : ''}","APPROVED"\n`;
       });
     } else {
-      csv = 'Student Name,Enrollment,Section,Semester,Category,Date From,Date To,Number of Days,Status\n';
+      csv = 'Student Name,Enrollment,Section,Semester,Category,Applied Date,Date From,Date To,Number of Days,Status\n';
       list.forEach((row) => {
-        csv += `"${row.studentName}","${row.enrollmentNumber}","${row.sectionName}","Semester ${row.semester}","${row.category}","${row.startDate}","${row.endDate}","${row.totalDays} Days","APPROVED"\n`;
+        const appliedDate = row.createdAt ? new Date(row.createdAt).toISOString().slice(0, 10) : row.startDate;
+        csv += `"${row.studentName}","${row.enrollmentNumber}","${row.sectionName}","Semester ${row.semester}","${row.category}","${appliedDate}","${row.startDate}","${row.endDate}","${row.totalDays} Days","APPROVED"\n`;
       });
     }
 

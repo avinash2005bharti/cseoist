@@ -441,7 +441,7 @@ export default function StudentMyRequests() {
               ? (item.hodReview?.approvedPeriods
                   ? `Approved lectures: ${item.hodReview.approvedPeriods} lectures`
                   : `Requested lectures: ${item.requestedPeriods || 1} lectures`)
-              : `${item.totalDays || 1} days leave`;
+              : `${item.totalDays || 1} day${(item.totalDays || 1) > 1 ? 's' : ''} leave (${(item.totalDays || 1) * 8} lectures)`;
 
             const subStatus = getSubStatusText(item.status);
 
@@ -622,7 +622,7 @@ export default function StudentMyRequests() {
                     <Clock3 className="size-3.5 text-primary" />
                     {selectedDetailItem.itemType === 'CONSIDERATION'
                       ? `${selectedDetailItem.requestedPeriods || 1} Lectures`
-                      : `${selectedDetailItem.totalDays || 1} Days`}
+                      : `${selectedDetailItem.totalDays || 1} Day${(selectedDetailItem.totalDays || 1) > 1 ? 's' : ''} (${(selectedDetailItem.totalDays || 1) * 8} Lectures considered)`}
                   </span>
                 </div>
               </div>

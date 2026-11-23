@@ -250,11 +250,14 @@ export default function PrintClearanceReportModal({
               item.leaveType ||
               item.type ||
               (item.requestKind === 'LEAVE' ? 'Student Leave' : 'Consideration');
+            const isLeave = item.requestKind === 'LEAVE' || Boolean(item.leaveType);
             const periods =
               Array.isArray(item.selectedPeriods) && item.selectedPeriods.length > 0
                 ? item.selectedPeriods.join(', ')
                 : Array.isArray(item.requestedPeriods)
                 ? item.requestedPeriods.map((p) => `P${p}`).join(', ')
+                : isLeave
+                ? `Full Day (${(item.totalDays || 1) * 8} Lectures)`
                 : '—';
             const timeStr = item.timeFrom && item.timeTo ? `${item.timeFrom} - ${item.timeTo}` : '—';
             const dateStr = item.startDate ? `${item.startDate}${item.endDate && item.endDate !== item.startDate ? ` - ${item.endDate}` : ''}` : '—';

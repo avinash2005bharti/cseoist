@@ -193,7 +193,7 @@ export default function StudentLeaves() {
                         <div>
                           <span className="text-[10px] uppercase font-bold text-slate-400 block">Duration</span>
                           <span className="font-bold text-slate-900">
-                            {l.totalDays} Day{l.totalDays !== 1 ? 's' : ''}
+                            {l.totalDays} Day{l.totalDays !== 1 ? 's' : ''} ({l.totalDays * 8} Lectures)
                           </span>
                         </div>
                       </div>
@@ -255,7 +255,7 @@ export default function StudentLeaves() {
                             {l.startDate} {l.endDate !== l.startDate ? `to ${l.endDate}` : ''}
                           </TableCell>
                           <TableCell className="font-bold text-slate-800">
-                            {l.totalDays} Day{l.totalDays !== 1 ? 's' : ''}
+                            {l.totalDays} Day{l.totalDays !== 1 ? 's' : ''} ({l.totalDays * 8} Lectures)
                           </TableCell>
                           <TableCell>{getStatusBadge(l.status)}</TableCell>
                           <TableCell>
@@ -311,7 +311,7 @@ export default function StudentLeaves() {
                     Leave Details
                   </div>
                   <h3 className="text-base font-extrabold text-slate-900 m-0 mt-0.5">
-                    {selectedLeave.leaveType} Leave ({selectedLeave.totalDays}d)
+                    {selectedLeave.leaveType} Leave ({selectedLeave.totalDays}d • {selectedLeave.totalDays * 8} Lectures)
                   </h3>
                 </div>
                 <button
@@ -332,6 +332,13 @@ export default function StudentLeaves() {
                   <span className="text-slate-500 font-semibold">Date Range:</span>{' '}
                   <span className="text-slate-900 font-bold">
                     {selectedLeave.startDate} to {selectedLeave.endDate}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-slate-500 font-semibold">Duration & Clearance:</span>{' '}
+                  <span className="text-slate-900 font-bold">
+                    {selectedLeave.totalDays} Day{selectedLeave.totalDays !== 1 ? 's' : ''} ({selectedLeave.totalDays * 8} Lectures considered)
                   </span>
                 </div>
 

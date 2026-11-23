@@ -40,17 +40,18 @@ function formatPeriodSlots(periods, count = 3) {
     1: '10:00 AM – 10:50 AM',
     2: '10:50 AM – 11:40 AM',
     3: '11:40 AM – 12:30 PM',
-    4: '12:30 PM – 01:20 PM',
-    5: '02:00 PM – 02:50 PM',
-    6: '02:50 PM – 03:40 PM',
-    7: '03:40 PM – 04:30 PM',
+    4: '12:30 PM – 1:20 PM',
+    5: '2:00 PM – 2:40 PM',
+    6: '2:40 PM – 3:20 PM',
+    7: '3:20 PM – 4:00 PM',
+    8: '4:00 PM – 4:40 PM',
   };
 
   let pList = [];
   if (Array.isArray(periods) && periods.length > 0) {
     pList = periods;
   } else if (typeof count === 'number' && count > 0) {
-    pList = Array.from({ length: Math.min(count, 7) }, (_, i) => i + 2);
+    pList = Array.from({ length: Math.min(count, 8) }, (_, i) => i + 2);
   } else {
     pList = [2, 3, 4];
   }
@@ -461,7 +462,11 @@ export default function FormalApplicationModal({ item, onClose }) {
   const approvedPeriodsCount =
     item.approvedPeriods ||
     item.hodReview?.approvedPeriods ||
-    (Array.isArray(item.requestedPeriods) ? item.requestedPeriods.length : 3);
+    (Array.isArray(item.requestedPeriods)
+      ? item.requestedPeriods.length
+      : isLeave
+      ? (item.totalDays || 1) * 8
+      : 3);
 
   const justificationText =
     item.description ||
@@ -614,6 +619,10 @@ export default function FormalApplicationModal({ item, onClose }) {
                 <span className="text-slate-600 font-medium">Days Approved:</span>{' '}
                 <strong className="font-bold text-blue-700 mx-1">
                   {item.totalDays || 1} Academic Day(s)
+                </strong>{' '}
+                <span className="text-slate-600 font-medium ml-2">Lectures Considered:</span>{' '}
+                <strong className="font-bold text-blue-700 mx-1">
+                  {(item.totalDays || 1) * 8} Lectures (8 Lectures/Day)
                 </strong>{' '}
                 <span className="text-slate-600 font-medium ml-2">Effective Period:</span>{' '}
                 <strong className="text-slate-800 ml-1">

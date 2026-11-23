@@ -113,6 +113,8 @@ export const getDashboardSummary = async (user) => {
         approved: approvedLeaves,
         approvedDays,
         pendingDays,
+        approvedLectures: approvedDays * 8,
+        pendingLectures: pendingDays * 8,
       },
     };
   }
@@ -541,7 +543,7 @@ const formatTimeFromTo = (req) => {
   if (req.timeFrom) return req.timeFrom;
   if (req.timeTo) return req.timeTo;
   if (req.periodTiming) return req.periodTiming;
-  return '10:50 AM - 01:20 PM';
+  return '10:00 AM - 01:20 PM';
 };
 
 const TAB_COLORS = {
@@ -819,6 +821,7 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
     { header: 'Semester', key: 'semester', width: 12 },
     { header: 'Event Title', key: 'eventTitle', width: 26 },
     { header: 'Application Type', key: 'eventType', width: 18 },
+    { header: 'Applied Date', key: 'appliedDate', width: 14 },
     { header: 'Start Date', key: 'startDate', width: 14 },
     { header: 'End Date', key: 'endDate', width: 14 },
     { header: 'Time (From - To)', key: 'timeRange', width: 22 },
@@ -858,6 +861,7 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
       semester: row.student?.section?.semester || row.student?.semester || 'N/A',
       eventTitle: req.eventTitle,
       eventType: req.eventType,
+      appliedDate: req.createdAt ? new Date(req.createdAt).toISOString().slice(0, 10) : (req.startDate || '-'),
       startDate: req.startDate,
       endDate: req.endDate,
       timeRange: formatTimeFromTo(req),
@@ -890,6 +894,7 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
         semester: targetSemester ? `Semester ${targetSemester}` : '-',
         eventTitle: '-',
         eventType: '-',
+        appliedDate: '-',
         startDate: '-',
         endDate: '-',
         timeRange: '-',
@@ -912,6 +917,7 @@ export const exportConsiderationsToExcel = async (query, res, user) => {
           semester: row.student?.section?.semester || row.student?.semester || 'N/A',
           eventTitle: req.eventTitle,
           eventType: req.eventType,
+          appliedDate: req.createdAt ? new Date(req.createdAt).toISOString().slice(0, 10) : (req.startDate || '-'),
           startDate: req.startDate,
           endDate: req.endDate,
           timeRange: formatTimeFromTo(req),
@@ -1060,6 +1066,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
     { header: 'Section', key: 'section', width: 14 },
     { header: 'Semester', key: 'semester', width: 12 },
     { header: 'Leave Type', key: 'leaveType', width: 16 },
+    { header: 'Applied Date', key: 'appliedDate', width: 14 },
     { header: 'Start Date', key: 'startDate', width: 14 },
     { header: 'End Date', key: 'endDate', width: 14 },
     { header: 'Total Days', key: 'totalDays', width: 12 },
@@ -1087,6 +1094,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
       section: l.student?.section?.code || l.student?.section?.name || (l.applicantRole === 'TEACHER' ? 'Faculty' : 'N/A'),
       semester: l.student?.section?.semester || l.student?.semester || (l.applicantRole === 'TEACHER' ? 'N/A' : 'Unknown'),
       leaveType: l.leaveType,
+      appliedDate: l.createdAt ? new Date(l.createdAt).toISOString().slice(0, 10) : (l.startDate || '-'),
       startDate: l.startDate,
       endDate: l.endDate,
       totalDays: l.totalDays,
@@ -1118,6 +1126,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
         section: `CSE-${secLetter}`,
         semester: targetSemester ? `Semester ${targetSemester}` : '-',
         leaveType: '-',
+        appliedDate: '-',
         startDate: '-',
         endDate: '-',
         totalDays: 0,
@@ -1138,6 +1147,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
           section: l.student?.section?.code || l.student?.section?.name || `Section ${secLetter}`,
           semester: l.student?.section?.semester || l.student?.semester || 'N/A',
           leaveType: l.leaveType,
+          appliedDate: l.createdAt ? new Date(l.createdAt).toISOString().slice(0, 10) : (l.startDate || '-'),
           startDate: l.startDate,
           endDate: l.endDate,
           totalDays: l.totalDays,
@@ -1168,6 +1178,7 @@ export const exportLeavesToExcel = async (query, res, user) => {
         section: 'Faculty',
         semester: 'N/A',
         leaveType: l.leaveType,
+        appliedDate: l.createdAt ? new Date(l.createdAt).toISOString().slice(0, 10) : (l.startDate || '-'),
         startDate: l.startDate,
         endDate: l.endDate,
         totalDays: l.totalDays,
